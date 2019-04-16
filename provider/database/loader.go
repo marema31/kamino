@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/marema31/kamino/provider"
+	"github.com/marema31/kamino/provider/common"
 )
 
-type dbLoader struct {
+//DbLoader specifc state for database Loader provider
+type DbLoader struct {
 	kaminoDb
 	rows     *sql.Rows
 	scanned  []interface{}
@@ -16,12 +17,13 @@ type dbLoader struct {
 	colNames []string
 }
 
-func NewLoader(ctx context.Context, c *ConnectionInfo, table string) (*dbLoader, error) {
-	k, err := New(c, table)
+//NewLoader open the database connection, make the data query and return a Loader compatible object
+func NewLoader(ctx context.Context, config map[string]string) (*DbLoader, error) {
+	k, err := new(config)
 	if err != nil {
 		return nil, err
 	}
-	rows, err := k.db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s", table))
+	rows, err := k.db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s", k.table))
 	if err != nil {
 		return nil, err
 	}
@@ -41,20 +43,27 @@ func NewLoader(ctx context.Context, c *ConnectionInfo, table string) (*dbLoader,
 		scanned[i] = &rawBytes[i]
 	}
 
-	return &dbLoader{*k, rows, scanned, rawBytes, columnsname}, nil
+	return &DbLoader{*k, rows, scanned, rawBytes, columnsname}, nil
 }
 
-func (dl *dbLoader) Next() bool {
+//Next moves to next record and return false if there is no more records
+func (dl *DbLoader) Next() bool {
 	return dl.rows.Next()
 }
 
-func (dl *dbLoader) Load() (provider.Record, error) {
+//Load reads the next record and return it
+func (dl *DbLoader) Load() (common.Record, error) {
 	err := dl.rows.Scan(dl.scanned...)
 	if err != nil {
 		return nil, err
 	}
 
-	record := make(provider.Record, len(dl.colNames))
+	// Rows.Err will report the last error encountered by Rows.Scan.
+	if err = dl.rows.Err(); err != nil {
+		return nil, err
+	}
+
+	record := make(common.Record, len(dl.colNames))
 	for i, col := range dl.colNames {
 		record[col] = string(dl.rawBytes[i])
 	}
@@ -63,8 +72,8 @@ func (dl *dbLoader) Load() (provider.Record, error) {
 
 }
 
-func (dl *dbLoader) Close() {
+//Close closes the datasource
+func (dl *DbLoader) Close() {
 	dl.rows.Close()
 	dl.db.Close()
-	return
 }
