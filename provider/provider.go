@@ -4,7 +4,7 @@ type Record map[string]string
 
 type Saver interface {
 	Save(Record) error
-	Close()
+	//	Close()
 }
 
 type Loader interface {

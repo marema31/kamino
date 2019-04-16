@@ -3,7 +3,10 @@ package main
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
+
+	"github.com/marema31/kamino/provider"
 
 	"github.com/marema31/kamino/database"
 )
@@ -19,7 +22,6 @@ func main() {
 	user := "root"
 	password := "123soleil"
 	sourcedbname := "source1"
-	destdbname := "copy2"
 	table := "table1"
 
 	ctx := context.Background()
@@ -33,29 +35,37 @@ func main() {
 		Password: password,
 	}
 
-	l, err := database.NewLoader(ctx, &dbConnection, table)
+	source, err := database.NewLoader(ctx, &dbConnection, table)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer l.Close()
+	defer source.Close()
 
-	dbConnection.Database = destdbname
-	s, err := database.NewSaver(ctx, &dbConnection, table)
-	if err != nil {
-		log.Fatal(err)
+	var destinations []provider.Saver
+
+	for i := 1; 3 > i; i++ {
+		dbConnection.Database = fmt.Sprintf("copy%d", i)
+		d, err := database.NewSaver(ctx, &dbConnection, table)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer d.Close()
+
+		destinations = append(destinations, d)
 	}
-	defer s.Close()
 
-	for l.Next() {
-		record, err := l.Load()
+	for source.Next() {
+		record, err := source.Load()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		//		fmt.Printf("%v\n", record["entier"])
 
-		if err = s.Save(record); err != nil {
-			log.Fatal(err)
+		for _, d := range destinations {
+			if err = d.Save(record); err != nil {
+				log.Fatal(err)
+			}
 		}
 
 	}
