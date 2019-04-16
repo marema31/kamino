@@ -2,40 +2,28 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 
 	"github.com/marema31/kamino/provider"
-
-	"github.com/marema31/kamino/database"
-)
-
-var (
-	ctx context.Context
-	db  *sql.DB
 )
 
 func main() {
-	host := "192.168.9.122"
-	port := 3306
-	user := "root"
-	password := "123soleil"
-	sourcedbname := "source1"
-	table := "table1"
 
 	ctx := context.Background()
 
-	dbConnection := database.ConnectionInfo{
-		Engine:   "mysql",
-		Database: sourcedbname,
-		Host:     host,
-		Port:     port,
-		User:     user,
-		Password: password,
+	dbConnection := map[string]string{
+		"type":     "database",
+		"engine":   "mysql",
+		"database": "source1",
+		"host":     "192.168.9.122",
+		"port":     "3306",
+		"user":     "root",
+		"password": "123soleil",
+		"table":    "table1",
 	}
 
-	source, err := database.NewLoader(ctx, &dbConnection, table)
+	source, err := provider.NewLoader(ctx, dbConnection)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,8 +32,8 @@ func main() {
 	var destinations []provider.Saver
 
 	for i := 1; 3 > i; i++ {
-		dbConnection.Database = fmt.Sprintf("copy%d", i)
-		d, err := database.NewSaver(ctx, &dbConnection, table)
+		dbConnection["database"] = fmt.Sprintf("copy%d", i)
+		d, err := provider.NewSaver(ctx, dbConnection)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -70,8 +58,4 @@ func main() {
 
 	}
 
-	// Rows.Err will report the last error encountered by Rows.Scan.
-	//	if err := rows.Err(); err != nil {
-	//		log.Fatal(err)
-	//	}
 }
