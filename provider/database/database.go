@@ -15,20 +15,20 @@ type kaminoDb struct {
 	table    string
 }
 
-func new(config map[string]string) (*kaminoDb, error) {
+func newKaminoDb(config map[string]string) (*kaminoDb, error) {
 	var url, driver string
 
 	engine, ok := config["engine"]
 	if !ok {
-		return nil, fmt.Errorf("the configuration block does not precise the engine name")
+		return nil, fmt.Errorf("the configuration block does not provide the engine name")
 	}
 	database, ok := config["database"]
 	if !ok {
-		return nil, fmt.Errorf("the configuration block does not precise the database name")
+		return nil, fmt.Errorf("the configuration block does not provide the database name")
 	}
 	table, ok := config["table"]
 	if !ok {
-		return nil, fmt.Errorf("the configuration block does not precise the table name")
+		return nil, fmt.Errorf("the configuration block does not provide the table name")
 	}
 
 	password, ok := config["password"]

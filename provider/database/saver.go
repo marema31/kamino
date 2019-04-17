@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/marema31/kamino/provider/common"
@@ -19,7 +18,7 @@ type DbSaver struct {
 
 //NewSaver open the database connection, prepare the insert statement and return a Saver compatible object
 func NewSaver(ctx context.Context, config map[string]string) (*DbSaver, error) {
-	k, err := new(config)
+	k, err := newKaminoDb(config)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +42,7 @@ func NewSaver(ctx context.Context, config map[string]string) (*DbSaver, error) {
 
 	stmt, err := k.db.Prepare(fmt.Sprintf("INSERT INTO %s ( %s) VALUES ( %s )", k.table, strings.Join(columnsname[:], ","), strings.Join(questionmark[:], ",")))
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	return &DbSaver{*k, stmt, columnsname}, nil

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/marema31/kamino/provider/common"
+	"github.com/marema31/kamino/provider/csv"
 	"github.com/marema31/kamino/provider/database"
 )
 
@@ -25,12 +26,18 @@ type Loader interface {
 func NewLoader(ctx context.Context, config map[string]string) (Loader, error) {
 	_, ok := config["type"]
 	if !ok {
-		return nil, fmt.Errorf("the configuration block for this source does not precise the type")
+		return nil, fmt.Errorf("the configuration block for this source does not provide the type")
 	}
 
 	switch config["type"] {
 	case "database":
 		return database.NewLoader(ctx, config)
+	case "csv":
+		reader, err := common.OpenReader(config)
+		if err != nil {
+			return nil, err
+		}
+		return csv.NewLoader(ctx, config, reader)
 	default:
 		return nil, fmt.Errorf("don't know how to manage %s", config["type"])
 	}
@@ -40,12 +47,18 @@ func NewLoader(ctx context.Context, config map[string]string) (Loader, error) {
 func NewSaver(ctx context.Context, config map[string]string) (Saver, error) {
 	_, ok := config["type"]
 	if !ok {
-		return nil, fmt.Errorf("the configuration block for this source does not precise the type")
+		return nil, fmt.Errorf("the configuration block for this source does not provide the type")
 	}
 
 	switch config["type"] {
 	case "database":
 		return database.NewSaver(ctx, config)
+	case "csv":
+		writer, err := common.OpenWriter(config)
+		if err != nil {
+			return nil, err
+		}
+		return csv.NewSaver(ctx, config, writer)
 	default:
 		return nil, fmt.Errorf("don't know how to manage %s", config["type"])
 	}
