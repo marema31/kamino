@@ -19,7 +19,7 @@ type DbLoader struct {
 
 //NewLoader open the database connection, make the data query and return a Loader compatible object
 func NewLoader(ctx context.Context, config map[string]string) (*DbLoader, error) {
-	k, err := new(config)
+	k, err := newKaminoDb(config)
 	if err != nil {
 		return nil, err
 	}

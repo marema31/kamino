@@ -22,8 +22,13 @@ func main() {
 		"password": "123soleil",
 		"table":    "table1",
 	}
+	//source, err := provider.NewLoader(ctx, dbConnection)
 
-	source, err := provider.NewLoader(ctx, dbConnection)
+	csvInput := map[string]string{
+		"type": "csv",
+		"file": "/tmp/kaminoin.csv",
+	}
+	source, err := provider.NewLoader(ctx, csvInput)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,6 +46,18 @@ func main() {
 
 		destinations = append(destinations, d)
 	}
+
+	csvOutput := map[string]string{
+		"type": "csv",
+		"file": "/tmp/kaminoOut.csv",
+	}
+	d, err := provider.NewSaver(ctx, csvOutput)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer d.Close()
+
+	destinations = append(destinations, d)
 
 	for source.Next() {
 		record, err := source.Load()
