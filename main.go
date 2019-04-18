@@ -59,6 +59,18 @@ func main() {
 
 	destinations = append(destinations, d)
 
+	stdOutput := map[string]string{
+		"type": "csv",
+		"std":  "true",
+	}
+	d, err = provider.NewSaver(ctx, stdOutput)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer d.Close()
+
+	destinations = append(destinations, d)
+
 	for source.Next() {
 		record, err := source.Load()
 		if err != nil {

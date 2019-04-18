@@ -11,22 +11,23 @@ import (
 	"strings"
 )
 
-//TODO: Input from stdin
-
 //OpenReader analyze the config block and return the corresponding io.ReadCloser to be used by other providers
 func OpenReader(config map[string]string) (io.ReadCloser, error) {
+	_, okstd := config["std"]
 	file, okfile := config["file"]
 	url, okurl := config["url"]
 	inline, okinline := config["inline"]
 
-	if !okfile && !okurl && !okinline {
+	if !okfile && !okurl && !okinline && !okstd {
 		return nil, fmt.Errorf("the configuration block does not provide the filename or url or inline text")
 	}
 
 	var reader io.ReadCloser
 	var err error
 
-	if okfile {
+	if okstd {
+		reader = os.Stdin
+	} else if okfile {
 		reader, err = os.Open(file)
 		if err != nil {
 			return nil, err
@@ -63,19 +64,24 @@ func OpenReader(config map[string]string) (io.ReadCloser, error) {
 	return reader, nil
 }
 
-//TODO: Output to stdout
-
 //OpenWriter analyze the config block and return the corresponding io.WriteCloser to be used by other providers
 func OpenWriter(config map[string]string) (io.WriteCloser, error) {
-	file, ok := config["file"]
-	if !ok {
-		return nil, fmt.Errorf("the configuration block does not provide the file name")
+	_, okstd := config["std"]
+	file, okfile := config["file"]
+	if !okfile && !okstd {
+		return nil, fmt.Errorf("the configuration block does not provide the filename or url or inline text")
 	}
 
 	var writer io.WriteCloser
-	writer, err := os.Create(file)
-	if err != nil {
-		return nil, err
+	var err error
+
+	if okstd {
+		writer = os.Stdout
+	} else if okfile {
+		writer, err = os.Create(file)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	gs, ok := config["gzip"]
