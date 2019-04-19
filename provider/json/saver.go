@@ -8,7 +8,7 @@ import (
 	"github.com/marema31/kamino/provider/common"
 )
 
-//KaminoJsonSaver specifc state for database Saver provider
+//KaminoJSONSaver specifc state for database Saver provider
 type KaminoJSONSaver struct {
 	file    io.WriteCloser
 	content []map[string]string

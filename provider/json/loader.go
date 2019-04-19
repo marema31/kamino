@@ -10,7 +10,7 @@ import (
 	"github.com/marema31/kamino/provider/common"
 )
 
-//KaminoJsonLoader specifc state for database Saver provider
+//KaminoJSONLoader specifc state for database Saver provider
 type KaminoJSONLoader struct {
 	file       io.ReadCloser
 	content    []map[string]string
