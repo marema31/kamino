@@ -45,7 +45,8 @@ func (cs *KaminoCsvSaver) Save(record common.Record) error {
 }
 
 //Close closes the destination
-func (cs *KaminoCsvSaver) Close() {
+func (cs *KaminoCsvSaver) Close() error {
 	cs.writer.Flush()
 	cs.file.Close()
+	return nil
 }

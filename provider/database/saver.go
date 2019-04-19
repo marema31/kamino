@@ -60,6 +60,7 @@ func (ds *DbSaver) Save(record common.Record) error {
 }
 
 //Close closes the destination
-func (ds *DbSaver) Close() {
+func (ds *DbSaver) Close() error {
 	ds.db.Close()
+	return nil
 }

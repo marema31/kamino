@@ -7,12 +7,13 @@ import (
 	"github.com/marema31/kamino/provider/common"
 	"github.com/marema31/kamino/provider/csv"
 	"github.com/marema31/kamino/provider/database"
+	"github.com/marema31/kamino/provider/json"
 )
 
 //Saver provides way to save record by record
 type Saver interface {
 	Save(common.Record) error
-	Close()
+	Close() error
 }
 
 //Loader provides way to load record by record
@@ -38,6 +39,12 @@ func NewLoader(ctx context.Context, config map[string]string) (Loader, error) {
 			return nil, err
 		}
 		return csv.NewLoader(ctx, config, reader)
+	case "json":
+		reader, err := common.OpenReader(config)
+		if err != nil {
+			return nil, err
+		}
+		return json.NewLoader(ctx, config, reader)
 	default:
 		return nil, fmt.Errorf("don't know how to manage %s", config["type"])
 	}
@@ -59,6 +66,12 @@ func NewSaver(ctx context.Context, config map[string]string) (Saver, error) {
 			return nil, err
 		}
 		return csv.NewSaver(ctx, config, writer)
+	case "json":
+		writer, err := common.OpenWriter(config)
+		if err != nil {
+			return nil, err
+		}
+		return json.NewSaver(ctx, config, writer)
 	default:
 		return nil, fmt.Errorf("don't know how to manage %s", config["type"])
 	}

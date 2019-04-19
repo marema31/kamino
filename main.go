@@ -24,11 +24,18 @@ func main() {
 	}
 	//source, err := provider.NewLoader(ctx, dbConnection)
 
-	csvInput := map[string]string{
-		"type": "csv",
-		"file": "/tmp/kaminoin.csv",
+	/*	csvInput := map[string]string{
+			"type": "csv",
+			"file": "/tmp/kaminoIn.csv",
+		}
+		source, err := provider.NewLoader(ctx, csvInput)
+	*/
+	jsonInput := map[string]string{
+		"type": "json",
+		"file": "/tmp/kaminoIn.json",
 	}
-	source, err := provider.NewLoader(ctx, csvInput)
+
+	source, err := provider.NewLoader(ctx, jsonInput)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,10 +64,21 @@ func main() {
 	}
 	defer d.Close()
 
+	jsonOutput := map[string]string{
+		"type": "json",
+		"file": "/tmp/kaminoOut.json",
+	}
+
+	d, err = provider.NewSaver(ctx, jsonOutput)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer d.Close()
+
 	destinations = append(destinations, d)
 
 	stdOutput := map[string]string{
-		"type": "csv",
+		"type": "json",
 		"std":  "true",
 	}
 	d, err = provider.NewSaver(ctx, stdOutput)
