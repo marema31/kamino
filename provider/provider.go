@@ -8,6 +8,7 @@ import (
 	"github.com/marema31/kamino/provider/csv"
 	"github.com/marema31/kamino/provider/database"
 	"github.com/marema31/kamino/provider/json"
+	"github.com/marema31/kamino/provider/yaml"
 )
 
 //Saver provides way to save record by record
@@ -45,6 +46,12 @@ func NewLoader(ctx context.Context, config map[string]string) (Loader, error) {
 			return nil, err
 		}
 		return json.NewLoader(ctx, config, reader)
+	case "yaml":
+		reader, err := common.OpenReader(config)
+		if err != nil {
+			return nil, err
+		}
+		return yaml.NewLoader(ctx, config, reader)
 	default:
 		return nil, fmt.Errorf("don't know how to manage %s", config["type"])
 	}
@@ -72,6 +79,12 @@ func NewSaver(ctx context.Context, config map[string]string) (Saver, error) {
 			return nil, err
 		}
 		return json.NewSaver(ctx, config, writer)
+	case "yaml":
+		writer, err := common.OpenWriter(config)
+		if err != nil {
+			return nil, err
+		}
+		return yaml.NewSaver(ctx, config, writer)
 	default:
 		return nil, fmt.Errorf("don't know how to manage %s", config["type"])
 	}
