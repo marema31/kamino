@@ -22,23 +22,36 @@ func main() {
 		"password": "123soleil",
 		"table":    "table1",
 	}
-	//source, err := provider.NewLoader(ctx, dbConnection)
 
-	/*	csvInput := map[string]string{
-			"type": "csv",
-			"file": "/tmp/kaminoIn.csv",
-		}
-		source, err := provider.NewLoader(ctx, csvInput)
+	/*
+		source, err := provider.NewLoader(ctx, dbConnection)
+
+			csvInput := map[string]string{
+					"type": "csv",
+					"file": "/tmp/kaminoIn.csv",
+				}
+				source, err := provider.NewLoader(ctx, csvInput)
+
+			jsonInput := map[string]string{
+				"type": "json",
+				"file": "/tmp/kaminoIn.json",
+			}
+
+			source, err := provider.NewLoader(ctx, jsonInput)
+			if err != nil {
+				log.Fatal(err)
+			}
 	*/
-	jsonInput := map[string]string{
-		"type": "json",
-		"file": "/tmp/kaminoIn.json",
+	yamlInput := map[string]string{
+		"type": "yaml",
+		"file": "/tmp/kaminoIn.yaml",
 	}
 
-	source, err := provider.NewLoader(ctx, jsonInput)
+	source, err := provider.NewLoader(ctx, yamlInput)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	defer source.Close()
 
 	var destinations []provider.Saver
@@ -77,8 +90,21 @@ func main() {
 
 	destinations = append(destinations, d)
 
+	yamlOutput := map[string]string{
+		"type": "yaml",
+		"file": "/tmp/kaminoOut.yaml",
+	}
+
+	d, err = provider.NewSaver(ctx, yamlOutput)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer d.Close()
+
+	destinations = append(destinations, d)
+
 	stdOutput := map[string]string{
-		"type": "json",
+		"type": "yaml",
 		"std":  "true",
 	}
 	d, err = provider.NewSaver(ctx, stdOutput)
