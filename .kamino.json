@@ -1,0 +1,111 @@
+{
+    "sync1": {
+        "source":
+        {
+            "type":     "database",
+            "engine":   "mysql",
+            "database": "source1",
+            "host":     "192.168.9.122",
+            "port":     "3306",
+            "user":     "root",
+            "password": "123soleil",
+            "table":    "table1"
+        },
+        "cache": {
+            "type": "json",
+            "file": "testdata/cache.json",
+            "ttl": "3m"
+        },
+        "destinations":
+        [
+            {
+                "type":     "database",
+                "engine":   "mysql",
+                "database": "copy1",
+                "host":     "192.168.9.122",
+                "port":     "3306",
+                "user":     "root",
+                "password": "123soleil",
+                "table":    "table1"
+            },
+            {
+                "type":     "database",
+                "engine":   "mysql",
+                "database": "copy2",
+                "host":     "192.168.9.122",
+                "port":     "3306",
+                "user":     "root",
+                "password": "123soleil",
+                "table":    "table1"
+            },
+            {
+                "type": "json",
+                "file": "testdata/dest.json"
+            },
+            {
+                "type": "yaml",
+                "file": "testdata/dest.yaml"
+            },
+            {
+                "type": "csv",
+                "file": "testdata/dest.csv"
+            },
+            {
+                "type": "yaml",
+                "file": "-"
+            }
+        ]
+    },
+    "sync2":{
+        "source":
+        {
+            "type":     "database",
+            "engine":   "mysql",
+            "database": "source1",
+            "host":     "192.168.9.122",
+            "port":     "3306",
+            "user":     "root",
+            "password": "123soleil",
+            "table":    "table2"
+        },
+        "destinations":
+        [
+            {
+                "type":     "database",
+                "engine":   "mysql",
+                "database": "copy1",
+                "host":     "192.168.9.122",
+                "port":     "3306",
+                "user":     "root",
+                "password": "123soleil",
+                "table":    "table2"
+            },
+            {
+                "type":     "database",
+                "engine":   "mysql",
+                "database": "copy2",
+                "host":     "192.168.9.122",
+                "port":     "3306",
+                "user":     "root",
+                "password": "123soleil",
+                "table":    "table2"
+            },
+            {
+                "type": "json",
+                "file": "testdata/dest2.json"
+            },
+            {
+                "type": "yaml",
+                "file": "testdata/dest2.yaml"
+            },
+            {
+                "type": "csv",
+                "file": "testdata/dest2.csv"
+            },
+            {
+                "type": "csv",
+                "file": "-"
+            }
+        ]
+    }
+}

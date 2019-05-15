@@ -11,22 +11,44 @@ import (
 	"strings"
 )
 
+// StdinReaderCloser type for Stdin with a non closing Close operation to avoid multiple close
+type StdinReaderCloser struct {
+	io.Reader
+	io.Closer
+}
+
+// NewStdinReaderCloser return an new instance of StdinReaderCloser
+func NewStdinReaderCloser() *StdinReaderCloser {
+	var s StdinReaderCloser
+	return &s
+}
+
+// Read read from Stdin
+func (s *StdinReaderCloser) Read(p []byte) (n int, err error) {
+	r := os.Stdin
+	return r.Read(p)
+}
+
+// Close fake the stream close
+func (s *StdinReaderCloser) Close() error {
+	return nil
+}
+
 //OpenReader analyze the config block and return the corresponding io.ReadCloser to be used by other providers
 func OpenReader(config map[string]string) (io.ReadCloser, error) {
-	_, okstd := config["std"]
 	file, okfile := config["file"]
 	url, okurl := config["url"]
 	inline, okinline := config["inline"]
 
-	if !okfile && !okurl && !okinline && !okstd {
+	if !okfile && !okurl && !okinline {
 		return nil, fmt.Errorf("the configuration block does not provide the filename or url or inline text")
 	}
 
 	var reader io.ReadCloser
 	var err error
 
-	if okstd {
-		reader = os.Stdin
+	if okfile && file == "-" {
+		reader = NewStdinReaderCloser()
 	} else if okfile {
 		reader, err = os.Open(file)
 		if err != nil {
@@ -62,40 +84,4 @@ func OpenReader(config map[string]string) (io.ReadCloser, error) {
 	}
 
 	return reader, nil
-}
-
-//OpenWriter analyze the config block and return the corresponding io.WriteCloser to be used by other providers
-func OpenWriter(config map[string]string) (io.WriteCloser, error) {
-	_, okstd := config["std"]
-	file, okfile := config["file"]
-	if !okfile && !okstd {
-		return nil, fmt.Errorf("the configuration block does not provide the filename or url or inline text")
-	}
-
-	var writer io.WriteCloser
-	var err error
-
-	if okstd {
-		writer = os.Stdout
-	} else if okfile {
-		writer, err = os.Create(file)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	gs, ok := config["gzip"]
-	if ok {
-		gb, err := strconv.ParseBool(gs)
-		if err != nil {
-			return nil, fmt.Errorf("the gzip element of configuration block must be true/false")
-		}
-
-		if gb {
-			writer = gzip.NewWriter(writer)
-		}
-
-	}
-
-	return writer, nil
 }
