@@ -4,61 +4,37 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+	"strings"
 
+	"github.com/marema31/kamino/config"
 	"github.com/marema31/kamino/provider"
 )
 
-func main() {
+// Theses variables will be provided by goreleaser via ldflags
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
 
-	ctx := context.Background()
-
-	dbConnection := map[string]string{
-		"type":     "database",
-		"engine":   "mysql",
-		"database": "source1",
-		"host":     "192.168.9.122",
-		"port":     "3306",
-		"user":     "root",
-		"password": "123soleil",
-		"table":    "table1",
-	}
-
-	/*
-		source, err := provider.NewLoader(ctx, dbConnection)
-
-			csvInput := map[string]string{
-					"type": "csv",
-					"file": "/tmp/kaminoIn.csv",
-				}
-				source, err := provider.NewLoader(ctx, csvInput)
-
-			jsonInput := map[string]string{
-				"type": "json",
-				"file": "/tmp/kaminoIn.json",
-			}
-
-			source, err := provider.NewLoader(ctx, jsonInput)
-			if err != nil {
-				log.Fatal(err)
-			}
-	*/
-	yamlInput := map[string]string{
-		"type": "yaml",
-		"file": "/tmp/kaminoIn.yaml",
-	}
-
-	source, err := provider.NewLoader(ctx, yamlInput)
+func syncDo(ctx context.Context, config *config.Config, syncName string) {
+	c, err := config.Get(syncName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	source, err := provider.NewLoader(ctx, c.Source)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer source.Close()
 
 	var destinations []provider.Saver
 
-	for i := 1; 3 > i; i++ {
-		dbConnection["database"] = fmt.Sprintf("copy%d", i)
-		d, err := provider.NewSaver(ctx, dbConnection)
+	for _, dest := range c.Destinations {
+		d, err := provider.NewSaver(ctx, dest)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -67,61 +43,11 @@ func main() {
 		destinations = append(destinations, d)
 	}
 
-	csvOutput := map[string]string{
-		"type": "csv",
-		"file": "/tmp/kaminoOut.csv",
-	}
-	d, err := provider.NewSaver(ctx, csvOutput)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer d.Close()
-
-	jsonOutput := map[string]string{
-		"type": "json",
-		"file": "/tmp/kaminoOut.json",
-	}
-
-	d, err = provider.NewSaver(ctx, jsonOutput)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer d.Close()
-
-	destinations = append(destinations, d)
-
-	yamlOutput := map[string]string{
-		"type": "yaml",
-		"file": "/tmp/kaminoOut.yaml",
-	}
-
-	d, err = provider.NewSaver(ctx, yamlOutput)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer d.Close()
-
-	destinations = append(destinations, d)
-
-	stdOutput := map[string]string{
-		"type": "yaml",
-		"std":  "true",
-	}
-	d, err = provider.NewSaver(ctx, stdOutput)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer d.Close()
-
-	destinations = append(destinations, d)
-
 	for source.Next() {
 		record, err := source.Load()
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		//		fmt.Printf("%v\n", record["entier"])
 
 		for _, d := range destinations {
 			if err = d.Save(record); err != nil {
@@ -130,5 +56,38 @@ func main() {
 		}
 
 	}
+}
 
+func main() {
+
+	ctx := context.Background()
+
+	i := 1
+	configPath := "."
+	configFile := ".kamino"
+
+	if len(os.Args) > 2 && os.Args[1] == "-c" {
+		i = 3
+		configPath = filepath.Dir(os.Args[2])
+		configFile = filepath.Base(os.Args[2])
+	}
+
+	if (len(os.Args)-i) < 1 || os.Args[i] == "-h" {
+		fmt.Printf("kamino %v, commit %v, built at %v\n\n", version, commit, date)
+		fmt.Println("usage: kamino [-c configFile] syncName [syncName ... syncName]")
+		fmt.Println()
+		fmt.Println("The config file name must be provided without the file extension, kamino will try json, toml and yaml")
+		os.Exit(0)
+	}
+
+	config, err := config.New(configPath, configFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Will run the sync %s\n", strings.Join(os.Args[i:], ", "))
+
+	for _, syncName := range os.Args[i:] {
+		syncDo(ctx, config, syncName)
+	}
 }

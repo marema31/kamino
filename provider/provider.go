@@ -61,7 +61,7 @@ func NewLoader(ctx context.Context, config map[string]string) (Loader, error) {
 func NewSaver(ctx context.Context, config map[string]string) (Saver, error) {
 	_, ok := config["type"]
 	if !ok {
-		return nil, fmt.Errorf("the configuration block for this source does not provide the type")
+		return nil, fmt.Errorf("the configuration block for this destination does not provide the type")
 	}
 
 	switch config["type"] {
