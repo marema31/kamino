@@ -64,3 +64,8 @@ func (ds *DbSaver) Close() error {
 	ds.db.Close()
 	return nil
 }
+
+//Name give the name of the destination
+func (ds *DbSaver) Name() string {
+	return ds.database + "_" + ds.table
+}

@@ -12,13 +12,14 @@ import (
 type KaminoCsvLoader struct {
 	file         io.ReadCloser
 	reader       csv.Reader
+	name         string
 	colNames     []string
 	currentRow   []string
 	currentError error
 }
 
 //NewLoader open the encoding process on provider file, read the header from the first line and return a Loader compatible object
-func NewLoader(ctx context.Context, config map[string]string, file io.ReadCloser) (*KaminoCsvLoader, error) {
+func NewLoader(ctx context.Context, config map[string]string, name string, file io.ReadCloser) (*KaminoCsvLoader, error) {
 	reader := csv.NewReader(file)
 	//Read the header to dertermine the column order
 	row, err := reader.Read()
@@ -26,7 +27,7 @@ func NewLoader(ctx context.Context, config map[string]string, file io.ReadCloser
 		return nil, err
 	}
 
-	return &KaminoCsvLoader{file: file, reader: *reader, colNames: row, currentRow: nil, currentError: nil}, nil
+	return &KaminoCsvLoader{file: file, name: name, reader: *reader, colNames: row, currentRow: nil, currentError: nil}, nil
 }
 
 //Next moves to next record and return false if there is no more records
@@ -64,4 +65,9 @@ func (cl *KaminoCsvLoader) Load() (common.Record, error) {
 //Close closes the datasource
 func (cl *KaminoCsvLoader) Close() {
 	cl.file.Close()
+}
+
+//Name give the name of the destination
+func (cl *KaminoCsvLoader) Name() string {
+	return cl.name
 }

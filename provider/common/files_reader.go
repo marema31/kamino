@@ -35,13 +35,13 @@ func (s *StdinReaderCloser) Close() error {
 }
 
 //OpenReader analyze the config block and return the corresponding io.ReadCloser to be used by other providers
-func OpenReader(config map[string]string) (io.ReadCloser, error) {
+func OpenReader(config map[string]string) (io.ReadCloser, string, error) {
 	file, okfile := config["file"]
 	url, okurl := config["url"]
 	inline, okinline := config["inline"]
 
 	if !okfile && !okurl && !okinline {
-		return nil, fmt.Errorf("the configuration block does not provide the filename or url or inline text")
+		return nil, "", fmt.Errorf("the configuration block does not provide the filename or url or inline text")
 	}
 
 	var reader io.ReadCloser
@@ -52,12 +52,12 @@ func OpenReader(config map[string]string) (io.ReadCloser, error) {
 	} else if okfile {
 		reader, err = os.Open(file)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 	} else if okurl {
 		resp, err := http.Get(url)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 
 		reader = resp.Body
@@ -70,18 +70,18 @@ func OpenReader(config map[string]string) (io.ReadCloser, error) {
 	if ok {
 		gb, err := strconv.ParseBool(gs)
 		if err != nil {
-			return nil, fmt.Errorf("the gzip element of configuration block must be true/false")
+			return nil, "", fmt.Errorf("the gzip element of configuration block must be true/false")
 		}
 
 		if gb {
 			reader, err = gzip.NewReader(reader)
 			if err != nil {
-				return nil, err
+				return nil, "", err
 			}
 
 		}
 
 	}
 
-	return reader, nil
+	return reader, file, nil
 }

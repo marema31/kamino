@@ -4,8 +4,11 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 // StdoutWriterCloser type for Stdout with a non closing Close operation to avoid multiple close
@@ -32,10 +35,10 @@ func (s *StdoutWriterCloser) Close() error {
 }
 
 //OpenWriter analyze the config block and return the corresponding io.WriteCloser to be used by other providers
-func OpenWriter(config map[string]string) (io.WriteCloser, error) {
+func OpenWriter(config map[string]string) (io.WriteCloser, string, error) {
 	file, okfile := config["file"]
 	if !okfile {
-		return nil, fmt.Errorf("the configuration block does not provide the filename")
+		return nil, "", fmt.Errorf("the configuration block does not provide the filename")
 	}
 
 	var writer io.WriteCloser
@@ -43,10 +46,20 @@ func OpenWriter(config map[string]string) (io.WriteCloser, error) {
 
 	if okfile && file == "-" {
 		writer = NewStdoutWriterCloser()
+
+	} else if okfile && strings.Contains(file, "*") {
+		dir, pattern := filepath.Split(file)
+		cache, err := ioutil.TempFile(dir, pattern)
+		if err != nil {
+			return nil, "", err
+		}
+		writer = cache
+		file = cache.Name()
+
 	} else if okfile {
 		writer, err = os.Create(file)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 	}
 
@@ -54,7 +67,7 @@ func OpenWriter(config map[string]string) (io.WriteCloser, error) {
 	if ok {
 		gb, err := strconv.ParseBool(gs)
 		if err != nil {
-			return nil, fmt.Errorf("the gzip element of configuration block must be true/false")
+			return nil, "", fmt.Errorf("the gzip element of configuration block must be true/false")
 		}
 
 		if gb {
@@ -63,5 +76,5 @@ func OpenWriter(config map[string]string) (io.WriteCloser, error) {
 
 	}
 
-	return writer, nil
+	return writer, file, nil
 }

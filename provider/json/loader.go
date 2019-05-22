@@ -13,18 +13,19 @@ import (
 //KaminoJSONLoader specifc state for database Saver provider
 type KaminoJSONLoader struct {
 	file       io.ReadCloser
+	name       string
 	content    []map[string]string
 	currentRow int
 }
 
 //NewLoader open the encoding process on provider file, read the whole file, unMarshal it and return a Loader compatible object
-func NewLoader(ctx context.Context, config map[string]string, file io.ReadCloser) (*KaminoJSONLoader, error) {
+func NewLoader(ctx context.Context, config map[string]string, name string, file io.ReadCloser) (*KaminoJSONLoader, error) {
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
 
-	k := KaminoJSONLoader{file: file, content: nil, currentRow: 0}
+	k := KaminoJSONLoader{file: file, name: name, content: nil, currentRow: 0}
 	k.content = make([]map[string]string, 0)
 
 	err = json.Unmarshal([]byte(byteValue), &k.content)
@@ -56,4 +57,9 @@ func (jl *KaminoJSONLoader) Load() (common.Record, error) {
 //Close closes the datasource
 func (jl *KaminoJSONLoader) Close() {
 	jl.file.Close()
+}
+
+//Name give the name of the destination
+func (jl *KaminoJSONLoader) Name() string {
+	return jl.name
 }

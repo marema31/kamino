@@ -11,14 +11,15 @@ import (
 //KaminoCsvSaver specifc state for database Saver provider
 type KaminoCsvSaver struct {
 	file     io.WriteCloser
+	name     string
 	writer   csv.Writer
 	colNames []string
 }
 
 //NewSaver open the encoding process on provider file and return a Saver compatible object
-func NewSaver(ctx context.Context, config map[string]string, file io.WriteCloser) (*KaminoCsvSaver, error) {
+func NewSaver(ctx context.Context, config map[string]string, name string, file io.WriteCloser) (*KaminoCsvSaver, error) {
 	writer := csv.NewWriter(file)
-	return &KaminoCsvSaver{file: file, writer: *writer, colNames: nil}, nil
+	return &KaminoCsvSaver{file: file, name: name, writer: *writer, colNames: nil}, nil
 }
 
 //Save writes the record to the destination
@@ -49,4 +50,9 @@ func (cs *KaminoCsvSaver) Close() error {
 	cs.writer.Flush()
 	cs.file.Close()
 	return nil
+}
+
+//Name give the name of the destination
+func (cs *KaminoCsvSaver) Name() string {
+	return cs.name
 }
