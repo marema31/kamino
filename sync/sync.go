@@ -55,7 +55,7 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 		defer source.Close()
 	} else {
 		cacheStat, errFile := os.Stat(c.Cache.File)
-		ttlExpired := time.Now().Sub(cacheStat.ModTime()) > c.Cache.TTL
+		ttlExpired := time.Since(cacheStat.ModTime()) > c.Cache.TTL
 		if os.IsNotExist(errFile) || ttlExpired {
 			// The cache file does not exists or older than precised TTL we will (re)create it
 			d, err := provider.NewSaver(ctx, map[string]string{"type": c.Cache.Type, "file": c.Cache.File + ".*"})
