@@ -14,18 +14,19 @@ import (
 //KaminoYAMLLoader specifc state for database Saver provider
 type KaminoYAMLLoader struct {
 	file       io.ReadCloser
+	name       string
 	content    []map[string]string
 	currentRow int
 }
 
 //NewLoader open the encoding process on provider file, read the whole file, unMarshal it and return a Loader compatible object
-func NewLoader(ctx context.Context, config map[string]string, file io.ReadCloser) (*KaminoYAMLLoader, error) {
+func NewLoader(ctx context.Context, config map[string]string, name string, file io.ReadCloser) (*KaminoYAMLLoader, error) {
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
 
-	k := KaminoYAMLLoader{file: file, content: nil, currentRow: 0}
+	k := KaminoYAMLLoader{file: file, name: name, content: nil, currentRow: 0}
 	k.content = make([]map[string]string, 0)
 
 	err = yaml.Unmarshal([]byte(byteValue), &k.content)
@@ -37,24 +38,29 @@ func NewLoader(ctx context.Context, config map[string]string, file io.ReadCloser
 }
 
 //Next moves to next record and return false if there is no more records
-func (jl *KaminoYAMLLoader) Next() bool {
+func (yl *KaminoYAMLLoader) Next() bool {
 
-	return len(jl.content) > jl.currentRow
+	return len(yl.content) > yl.currentRow
 }
 
 //Load reads the next record and return it
-func (jl *KaminoYAMLLoader) Load() (common.Record, error) {
-	if jl.currentRow > len(jl.content) {
+func (yl *KaminoYAMLLoader) Load() (common.Record, error) {
+	if yl.currentRow > len(yl.content) {
 		return nil, fmt.Errorf("no more data to read")
 	}
 
-	record := jl.content[jl.currentRow]
-	jl.currentRow++
+	record := yl.content[yl.currentRow]
+	yl.currentRow++
 	return record, nil
 
 }
 
 //Close closes the datasource
-func (jl *KaminoYAMLLoader) Close() {
-	jl.file.Close()
+func (yl *KaminoYAMLLoader) Close() {
+	yl.file.Close()
+}
+
+//Name give the name of the destination
+func (yl *KaminoYAMLLoader) Name() string {
+	return yl.name
 }

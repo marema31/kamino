@@ -77,3 +77,8 @@ func (dl *DbLoader) Close() {
 	dl.rows.Close()
 	dl.db.Close()
 }
+
+//Name give the name of the destination
+func (dl *DbLoader) Name() string {
+	return dl.database + "_" + dl.table
+}

@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/marema31/kamino/config"
-	"github.com/marema31/kamino/provider"
+	kaminoSync "github.com/marema31/kamino/sync"
 )
 
 // Theses variables will be provided by goreleaser via ldflags
@@ -18,45 +18,6 @@ var (
 	commit  = "none"
 	date    = "unknown"
 )
-
-func syncDo(ctx context.Context, config *config.Config, syncName string) {
-	c, err := config.Get(syncName)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	source, err := provider.NewLoader(ctx, c.Source)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer source.Close()
-
-	var destinations []provider.Saver
-
-	for _, dest := range c.Destinations {
-		d, err := provider.NewSaver(ctx, dest)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer d.Close()
-
-		destinations = append(destinations, d)
-	}
-
-	for source.Next() {
-		record, err := source.Load()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		for _, d := range destinations {
-			if err = d.Save(record); err != nil {
-				log.Fatal(err)
-			}
-		}
-
-	}
-}
 
 func main() {
 
@@ -88,6 +49,9 @@ func main() {
 	fmt.Printf("Will run the sync %s\n", strings.Join(os.Args[i:], ", "))
 
 	for _, syncName := range os.Args[i:] {
-		syncDo(ctx, config, syncName)
+		err := kaminoSync.Do(ctx, config, syncName)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
