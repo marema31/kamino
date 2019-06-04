@@ -40,7 +40,7 @@ func newKaminoDb(config map[string]string) (*kaminoDb, error) {
 	if !ok {
 		host = "127.0.0.1"
 	}
-	where, ok := config["where"]
+	where := config["where"]
 
 	switch engine {
 	case "mysql", "maria", "mariadb":
