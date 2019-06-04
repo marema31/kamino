@@ -13,6 +13,7 @@ type kaminoDb struct {
 	driver   string
 	database string
 	table    string
+	where    string
 }
 
 func newKaminoDb(config map[string]string) (*kaminoDb, error) {
@@ -39,6 +40,7 @@ func newKaminoDb(config map[string]string) (*kaminoDb, error) {
 	if !ok {
 		host = "127.0.0.1"
 	}
+	where := config["where"]
 
 	switch engine {
 	case "mysql", "maria", "mariadb":
@@ -84,5 +86,6 @@ func newKaminoDb(config map[string]string) (*kaminoDb, error) {
 		driver:   driver,
 		database: database,
 		table:    table,
+		where:    where,
 	}, nil
 }

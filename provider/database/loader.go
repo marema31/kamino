@@ -23,7 +23,12 @@ func NewLoader(ctx context.Context, config map[string]string) (*DbLoader, error)
 	if err != nil {
 		return nil, err
 	}
-	rows, err := k.db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s", k.table))
+
+	where := k.where
+	if k.where != "" {
+		where = fmt.Sprintf("WHERE %s", k.where)
+	}
+	rows, err := k.db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s %s", k.table, where))
 	if err != nil {
 		return nil, err
 	}
