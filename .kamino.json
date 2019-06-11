@@ -36,7 +36,8 @@
                 "port":     "3306",
                 "user":     "root",
                 "password": "123soleil",
-                "table":    "table1"
+                "table":    "table1",
+                "mode":     "OnlyIfEmpty"
             },
             {
                 "type": "json",
