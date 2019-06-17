@@ -16,6 +16,23 @@
             "file": "testdata/cache.json",
             "ttl": "3m"
         },
+        "filters": [
+            {                
+                "type": "only",
+                "parameters": [
+                    "id",
+                    "chaine",
+                    "entier"
+                ]
+            },
+            {
+                "type": "replace",
+                "parameters": {
+                    "date": "2018-01-01",
+                    "boleen":"0"                    
+                }
+            }
+        ],
         "destinations":
         [
             {

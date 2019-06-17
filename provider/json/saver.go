@@ -44,3 +44,8 @@ func (js *KaminoJSONSaver) Close() error {
 func (js *KaminoJSONSaver) Name() string {
 	return js.name
 }
+
+//Reset reinitialize the destination (if possible)
+func (js *KaminoJSONSaver) Reset() error {
+	return nil
+}

@@ -7,18 +7,25 @@ import (
 	"time"
 
 	"github.com/marema31/kamino/config"
+	"github.com/marema31/kamino/filter"
 	"github.com/marema31/kamino/provider"
 )
 
-func copyData(ctx context.Context, source provider.Loader, destinations []provider.Saver) error {
+func copyData(ctx context.Context, source provider.Loader, filters []filter.Filter, destinations []provider.Saver) error {
 	for source.Next() {
 		record, err := source.Load()
 		if err != nil {
 			return err
 		}
 
+		for _, f := range filters {
+			if record, err = f.Filter(record); err != nil {
+				return err
+			}
+		}
 		for _, d := range destinations {
 			if err = d.Save(record); err != nil {
+				d.Reset()
 				return err
 			}
 		}
@@ -35,7 +42,16 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 	}
 
 	var source provider.Loader
+	var filters []filter.Filter
 	var destinations []provider.Saver
+
+	for _, fil := range c.Filters {
+		f, err := filter.NewFilter(ctx, fil)
+		if err != nil {
+			return err
+		}
+		filters = append(filters, f)
+	}
 
 	for _, dest := range c.Destinations {
 		d, err := provider.NewSaver(ctx, dest)
@@ -75,7 +91,7 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 				defer source.Close()
 
 				destinations = append(destinations, d)
-				err = copyData(ctx, source, destinations)
+				err = copyData(ctx, source, filters, destinations)
 				if err == nil {
 					//everything was OK, I just rename the tempfile for cache to its real name
 					if _, err := os.Stat(c.Cache.File); !os.IsNotExist(err) {
@@ -108,5 +124,5 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 		}
 		defer source.Close()
 	}
-	return copyData(ctx, source, destinations)
+	return copyData(ctx, source, filters, destinations)
 }

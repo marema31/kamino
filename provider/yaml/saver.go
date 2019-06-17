@@ -43,3 +43,8 @@ func (ys *KaminoYAMLSaver) Close() error {
 func (ys *KaminoYAMLSaver) Name() string {
 	return ys.name
 }
+
+//Reset reinitialize the destination (if possible)
+func (ys *KaminoYAMLSaver) Reset() error {
+	return nil
+}
