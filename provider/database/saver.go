@@ -25,13 +25,16 @@ const (
 //DbSaver specifc state for database Saver provider
 type DbSaver struct {
 	kaminoDb
-	insertStmt *sql.Stmt
-	updateStmt *sql.Stmt
-	colNames   []string
-	mode       dbSaverMode
-	wasEmpty   bool
-	key        string
-	ids        map[string]bool
+	insertString string
+	insertStmt   *sql.Stmt
+	updateString string
+	updateStmt   *sql.Stmt
+	colNames     []string
+	mode         dbSaverMode
+	wasEmpty     bool
+	key          string
+	ids          map[string]bool
+	ctx          context.Context
 }
 
 //parseConfig parse the config to extract the mode and the primary key and save them in the dbSaver instance
@@ -79,19 +82,18 @@ func NewSaver(ctx context.Context, config map[string]string) (*DbSaver, error) {
 	ds.table = k.table
 	ds.where = k.where
 	ds.ids = make(map[string]bool)
+	ds.ctx = ctx
 
 	err = ds.parseConfig(config)
 	if err != nil {
 		return nil, err
 	}
 
-	err = ds.createStatement(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	if ds.mode == replace || ds.mode == exactCopy {
-		err = ds.createIdsList(ctx)
+		if ds.key == "" {
+			return nil, fmt.Errorf("modes replace and exactCopy need a primary key for %s.%s", ds.database, ds.table)
+		}
+		err = ds.createIdsList()
 		if err != nil {
 			return nil, err
 		}
@@ -101,68 +103,10 @@ func NewSaver(ctx context.Context, config map[string]string) (*DbSaver, error) {
 }
 
 // createStatement Query the destination table to determine the available colums, create the corresponding insert/update statement and save them in the dbSaver instance
-func (ds *DbSaver) createStatement(ctx context.Context) error {
-	rows, err := ds.db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s LIMIT 1", ds.table)) // We don't need data, we only needs the column names
+func (ds *DbSaver) createIdsList() error {
+	rows, err := ds.db.QueryContext(ds.ctx, fmt.Sprintf("SELECT %s from %s", ds.key, ds.table)) // We don't need data, we only needs the column names
 	if err != nil {
-		return err
-	}
-
-	columns, err := rows.ColumnTypes()
-	if err != nil {
-		return err
-	}
-
-	var updateSet []string
-	var questionmark []string
-
-	for _, col := range columns {
-		if !strings.EqualFold(col.Name(), ds.key) {
-			questionmark = append(questionmark, "?")
-			ds.colNames = append(ds.colNames, col.Name())
-			updateSet = append(updateSet, fmt.Sprintf("%s=?", col.Name()))
-		}
-		//		fmt.Println(col.Name(), col.DatabaseTypeName(), col.ScanType())
-	}
-	// By doing like this we ensure the primary key will be the last of column names and this array can be use for insert and update
-
-	if ds.key != "" {
-		questionmark = append(questionmark, "?")
-		ds.colNames = append(ds.colNames, ds.key)
-	}
-
-	if len(columns) != len(ds.colNames) {
-		return fmt.Errorf("provided key %s is not a column of %s.%s ", ds.key, ds.database, ds.table)
-	}
-
-	ds.wasEmpty = !rows.Next()
-	if ds.mode == onlyIfEmpty && !ds.wasEmpty {
-		log.Printf("Warning: the table %s of database %s is not empty, I will do nothing on it", ds.table, ds.database)
-	}
-
-	if ds.mode == truncate {
-		// The truncate will be done at the first record save to avoid truncate a table if there is an error on config file
-		ds.wasEmpty = false
-	}
-
-	ds.insertStmt, err = ds.db.Prepare(fmt.Sprintf("INSERT INTO %s ( %s) VALUES ( %s )", ds.table, strings.Join(ds.colNames[:], ","), strings.Join(questionmark[:], ",")))
-	if err != nil {
-		return err
-	}
-
-	if ds.mode == replace || ds.mode == update || ds.mode == exactCopy {
-		ds.updateStmt, err = ds.db.Prepare(fmt.Sprintf("UPDATE %s SET  %s WHERE %s = ?", ds.table, strings.Join(updateSet[:], ","), ds.key))
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// createStatement Query the destination table to determine the available colums, create the corresponding insert/update statement and save them in the dbSaver instance
-func (ds *DbSaver) createIdsList(ctx context.Context) error {
-	rows, err := ds.db.QueryContext(ctx, fmt.Sprintf("SELECT %s from %s", ds.key, ds.table)) // We don't need data, we only needs the column names
-	if err != nil {
+		log.Println(fmt.Sprintf("SELECT %s from %s ", ds.key, ds.table))
 		return err
 	}
 	defer rows.Close()
@@ -177,18 +121,119 @@ func (ds *DbSaver) createIdsList(ctx context.Context) error {
 	return nil
 }
 
-//Save writes the record to the destination
-func (ds *DbSaver) Save(record common.Record) error {
-	if ds.mode == onlyIfEmpty && !ds.wasEmpty {
-		return nil
+func (ds *DbSaver) tableParam(record common.Record) error {
+
+	rows, err := ds.db.QueryContext(ds.ctx, fmt.Sprintf("SELECT * from %s LIMIT 1", ds.table)) // We don't need data, we only needs the column names
+	if err != nil {
+		log.Println(fmt.Sprintf("SELECT * from %s LIMIT 1", ds.table))
+		return err
 	}
 
-	if ds.mode == truncate && !ds.wasEmpty {
-		_, err := ds.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", ds.table))
+	columns, err := rows.ColumnTypes()
+	if err != nil {
+		return err
+	}
+
+	ds.wasEmpty = !rows.Next()
+	if ds.mode == onlyIfEmpty && !ds.wasEmpty {
+		log.Printf("Warning: the table %s of database %s is not empty, I will do nothing on it", ds.table, ds.database)
+	}
+
+	var updateSet []string
+	var questionmark []string
+
+	keyseen := false
+	for _, col := range columns {
+		_, ok := record[col.Name()]
+		if !ok {
+			log.Printf("Warning: the colum %s does not exist in source, for table %s of %s using table default value", col.Name(), ds.table, ds.database)
+			continue
+		}
+		if strings.EqualFold(col.Name(), ds.key) {
+			keyseen = true
+			continue
+		}
+		questionmark = append(questionmark, "?")
+		ds.colNames = append(ds.colNames, col.Name())
+		updateSet = append(updateSet, fmt.Sprintf("%s=?", col.Name()))
+	}
+
+	// By doing like this we ensure the primary key will be the last of column names and this array can be use for insert and update
+	if ds.key != "" {
+		questionmark = append(questionmark, "?")
+		ds.colNames = append(ds.colNames, ds.key)
+		if !keyseen {
+			return fmt.Errorf("provided key %s is not a column of %s.%s ", ds.key, ds.database, ds.table)
+		}
+	}
+
+	keyseen = false
+	for colr := range record {
+		if ds.key != "" && ds.key == colr {
+			keyseen = true
+		}
+		seen := false
+		for _, col := range columns {
+			if col.Name() == colr {
+				seen = true
+			}
+		}
+		if !seen {
+			log.Printf("Warning: the colum %s does not exist in destination table %s of %s", colr, ds.table, ds.database)
+		}
+	}
+
+	if ds.key != "" && !keyseen {
+		return fmt.Errorf("provided key %s is not available from filtered source for %s.%s ", ds.key, ds.database, ds.table)
+
+	}
+
+	ds.insertString = fmt.Sprintf("INSERT INTO %s ( %s) VALUES ( %s )", ds.table, strings.Join(ds.colNames[:], ","), strings.Join(questionmark[:], ","))
+	ds.updateString = fmt.Sprintf("UPDATE %s SET  %s WHERE %s = ?", ds.table, strings.Join(updateSet[:], ","), ds.key)
+	return nil
+}
+
+// createStatement Query the destination table to determine the available colums, create the corresponding insert/update statement and save them in the dbSaver instance
+func (ds *DbSaver) createStatement(record common.Record) error {
+	err := ds.tableParam(record)
+	if err != nil {
+		return err
+	}
+
+	ds.insertStmt, err = ds.db.Prepare(ds.insertString)
+	if err != nil {
+		return err
+	}
+	if ds.mode == replace || ds.mode == update || ds.mode == exactCopy {
+		ds.updateStmt, err = ds.db.Prepare(ds.updateString)
 		if err != nil {
 			return err
 		}
-		ds.wasEmpty = true // Avoid truncate after inserting the first record
+	}
+
+	return nil
+}
+
+//Save writes the record to the destination
+func (ds *DbSaver) Save(record common.Record) error {
+	// Is this method is called for the first time
+	//If yes fix the column order in csv file
+	if ds.colNames == nil {
+		err := ds.createStatement(record)
+		if err != nil {
+			return err
+		}
+		// The truncate will be done at the first record save to avoid truncate a table if there is an error on config file
+		if ds.mode == truncate {
+			_, err := ds.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", ds.table))
+			if err != nil {
+				return err
+			}
+			ds.wasEmpty = true // Avoid truncate after inserting the first record
+		}
+	}
+	if ds.mode == onlyIfEmpty && !ds.wasEmpty {
+		return nil
 	}
 
 	row := make([]interface{}, len(ds.colNames))
@@ -244,6 +289,7 @@ func (ds *DbSaver) Close() error {
 			if !modified {
 				_, err := ds.db.Exec(fmt.Sprintf("DELETE from %s WHERE %s=%s", ds.table, ds.key, id))
 				if err != nil {
+					log.Println(fmt.Sprintf("DELETE from %s WHERE %s=%s", ds.table, ds.key, id))
 					log.Println(err)
 					return err
 				}
@@ -252,6 +298,12 @@ func (ds *DbSaver) Close() error {
 	}
 
 	ds.db.Close()
+	return nil
+}
+
+//Reset reinitialize the destination (if possible)
+func (ds *DbSaver) Reset() error {
+	ds.colNames = nil
 	return nil
 }
 

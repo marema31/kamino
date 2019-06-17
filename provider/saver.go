@@ -15,6 +15,7 @@ import (
 type Saver interface {
 	Save(common.Record) error
 	Close() error
+	Reset() error
 	Name() string
 }
 

@@ -56,3 +56,8 @@ func (cs *KaminoCsvSaver) Close() error {
 func (cs *KaminoCsvSaver) Name() string {
 	return cs.name
 }
+
+//Reset reinitialize the destination (if possible)
+func (cs *KaminoCsvSaver) Reset() error {
+	return nil
+}
