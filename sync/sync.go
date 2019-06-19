@@ -78,7 +78,7 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 		}
 		if os.IsNotExist(errFile) || ttlExpired {
 			// The cache file does not exists or older than precised TTL we will (re)create it
-			d, err := provider.NewSaver(ctx, map[string]string{"type": c.Cache.Type, "file": c.Cache.File + ".*"})
+			d, err := provider.NewSaver(ctx, map[string]string{"type": c.Cache.Type, "file": c.Cache.File})
 			if err != nil {
 				return err
 			}
@@ -93,18 +93,6 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 				destinations = append(destinations, d)
 				err = copyData(ctx, source, filters, destinations)
 				if err == nil {
-					//everything was OK, I just rename the tempfile for cache to its real name
-					if _, err := os.Stat(c.Cache.File); !os.IsNotExist(err) {
-						err = os.Remove(c.Cache.File)
-						if err != nil {
-							return err
-						}
-
-					}
-					err = os.Rename(d.Name(), c.Cache.File)
-					if err != nil {
-						return err
-					}
 					// For the moment nothing more to do
 					return nil
 				}
