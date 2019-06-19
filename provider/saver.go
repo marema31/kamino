@@ -30,23 +30,23 @@ func NewSaver(ctx context.Context, config map[string]string) (Saver, error) {
 	case "database":
 		return database.NewSaver(ctx, config)
 	case "csv":
-		writer, name, err := common.OpenWriter(config)
+		writer, name, tmpName, err := common.OpenWriter(config)
 		if err != nil {
 			return nil, err
 		}
-		return csv.NewSaver(ctx, config, name, writer)
+		return csv.NewSaver(ctx, config, name, tmpName, writer)
 	case "json":
-		writer, name, err := common.OpenWriter(config)
+		writer, name, tmpName, err := common.OpenWriter(config)
 		if err != nil {
 			return nil, err
 		}
-		return json.NewSaver(ctx, config, name, writer)
+		return json.NewSaver(ctx, config, name, tmpName, writer)
 	case "yaml":
-		writer, name, err := common.OpenWriter(config)
+		writer, name, tmpName, err := common.OpenWriter(config)
 		if err != nil {
 			return nil, err
 		}
-		return yaml.NewSaver(ctx, config, name, writer)
+		return yaml.NewSaver(ctx, config, name, tmpName, writer)
 	default:
 		return nil, fmt.Errorf("don't know how to manage %s", config["type"])
 	}

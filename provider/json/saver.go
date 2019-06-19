@@ -13,14 +13,15 @@ import (
 type KaminoJSONSaver struct {
 	file    io.WriteCloser
 	name    string
+	tmpName string
 	content []map[string]string
 }
 
 //NewSaver open the encoding process on provider file and return a Saver compatible object
-func NewSaver(ctx context.Context, config map[string]string, name string, file io.WriteCloser) (*KaminoJSONSaver, error) {
+func NewSaver(ctx context.Context, config map[string]string, name string, tmpName string, file io.WriteCloser) (*KaminoJSONSaver, error) {
 	content := make([]map[string]string, 0)
 	fmt.Println(name)
-	return &KaminoJSONSaver{file: file, name: name, content: content}, nil
+	return &KaminoJSONSaver{file: file, name: name, tmpName: tmpName, content: content}, nil
 }
 
 //Save writes the record to the destination
@@ -35,9 +36,11 @@ func (js *KaminoJSONSaver) Close() error {
 	if err != nil {
 		return err
 	}
-	js.file.Write(jsonStr)
-	js.file.Close()
-	return nil
+	_, err = js.file.Write(jsonStr)
+	if err != nil {
+		return err
+	}
+	return common.CloseWriter(js.file, js.tmpName, js.name)
 }
 
 //Name give the name of the destination
@@ -47,5 +50,5 @@ func (js *KaminoJSONSaver) Name() string {
 
 //Reset reinitialize the destination (if possible)
 func (js *KaminoJSONSaver) Reset() error {
-	return nil
+	return common.ResetWriter(js.file, js.tmpName, js.name)
 }
