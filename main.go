@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/marema31/kamino/config"
 	kaminoSync "github.com/marema31/kamino/sync"
@@ -22,6 +24,26 @@ var (
 func main() {
 
 	ctx := context.Background()
+	// trap Ctrl+C
+	ctx, cancel := context.WithCancel(ctx)
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt)
+	// At end of function we remove signal trapping
+	defer signal.Stop(sigChan)
+
+	//Waiting for signal on the channel and call cancel on the context
+	//This function will stop itself at context cancellation or at end of main goroutine
+	go func() {
+		select {
+		case <-sigChan:
+			cancel() // Cancellation of context, that will propagate to all function that listen cts.Done
+			log.Println("Aborting ....")
+		case <-ctx.Done(): // the context has been cancelled
+		}
+		log.Println("Waiting for all sub task abortion...")
+		time.Sleep(5 * time.Second) //TODO: Wait on waitgroup ??
+		os.Exit(1)
+	}()
 
 	i := 1
 	configPath := "."
@@ -51,7 +73,11 @@ func main() {
 	for _, syncName := range os.Args[i:] {
 		err := kaminoSync.Do(ctx, config, syncName)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			cancel()                    // Cancellation of context, that will propagate to all function that listen cts.Done
+			time.Sleep(5 * time.Second) // TODO:Wait on waitgroup ??
+			os.Exit(1)
 		}
 	}
+	time.Sleep(1 * time.Second) // TODO:Wait on waitgroup ??
 }
