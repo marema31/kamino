@@ -48,7 +48,7 @@ func OpenWriter(config map[string]string) (io.WriteCloser, string, string, error
 
 	} else if okfile {
 		dir, pattern := filepath.Split(file)
-		cache, err := ioutil.TempFile(dir, pattern)
+		cache, err := ioutil.TempFile(dir, pattern+".")
 		if err != nil {
 			return nil, "", "", err
 		}

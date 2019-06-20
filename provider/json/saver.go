@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/marema31/kamino/provider/common"
 )
@@ -27,6 +28,7 @@ func NewSaver(ctx context.Context, config map[string]string, name string, tmpNam
 //Save writes the record to the destination
 func (js *KaminoJSONSaver) Save(record common.Record) error {
 	js.content = append(js.content, record)
+	time.Sleep(20 * time.Second) // For testing
 	return nil
 }
 
