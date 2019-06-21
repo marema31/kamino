@@ -2,9 +2,11 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
+	"github.com/marema31/kamino/kaminodb"
 	"github.com/spf13/viper"
 )
 
@@ -32,7 +34,8 @@ type Sync struct {
 
 // Config implements the config store of kamino
 type Config struct {
-	v map[string]*viper.Viper
+	v         map[string]*viper.Viper
+	databases map[string]*kaminodb.KaminoDb
 }
 
 // New initialize the config store
@@ -44,6 +47,9 @@ func New(path string, filename string) (*Config, error) {
 	v.SetEnvPrefix("kamino")
 	v.AutomaticEnv()
 	err := v.ReadInConfig()
+	if err != nil {
+		return nil, err
+	}
 
 	subs := make(map[string]*viper.Viper)
 
@@ -59,102 +65,15 @@ func New(path string, filename string) (*Config, error) {
 		}
 	}
 
-	config := &Config{v: subs}
+	databases, err := getDatabases(path)
+	if err != nil {
+		log.Fatal(err)
+
+		return nil, err
+	}
+
+	config := &Config{v: subs, databases: databases}
 	return config, err
-}
-
-func (c *Config) getSource(v *viper.Viper, sync string) (map[string]string, error) {
-	source := v.GetStringMapString("source")
-	_, ok := source["type"]
-	if !ok {
-		return nil, fmt.Errorf("source defined for %s sync is invalid", sync)
-	}
-	return source, nil
-}
-
-func (c *Config) getFilters(v *viper.Viper, sync string) ([]FilterConfig, error) {
-	var filters []FilterConfig
-	var ok bool
-	fs := v.Get("filters")
-	if fs != nil { // There is a filter section
-
-		// filters section is an json array of map
-		switch casted := fs.(type) { // Avoid panic if the type is not compatible with the one we want
-		case []interface{}:
-
-			// for every element of the filters array that must be a map
-			for _, f := range casted {
-				var currentfilter FilterConfig
-				switch fcasted := f.(type) { // Avoid panic if the type is not compatible with the one we want
-				case map[string]interface{}:
-					currentfilter.Type, ok = fcasted["type"].(string)
-					if !ok {
-						return nil, fmt.Errorf("missing type for a filter of %s sync", sync)
-					}
-
-					var parameters interface{}
-					parameters, ok := fcasted["parameters"]
-					if !ok {
-						return nil, fmt.Errorf("missing parameters for a filter of %s sync", sync)
-					}
-
-					switch pcasted := parameters.(type) { // Avoid panic if the type is not compatible with the one we want
-					case []interface{}:
-						currentpvalue := make([]string, 0)
-						for _, pv := range pcasted {
-							currentpvalue = append(currentpvalue, pv.(string))
-						}
-						currentfilter.AParam = currentpvalue
-
-					case map[string]interface{}:
-						ps := make(map[string]string)
-						for pk, pv := range pcasted {
-							ps[pk] = pv.(string)
-						}
-						currentfilter.MParam = ps
-					}
-					filters = append(filters, currentfilter)
-				default:
-					return nil, fmt.Errorf("one filter defined for %s sync is invalid", sync)
-				}
-			}
-		default:
-			return nil, fmt.Errorf("filters defined for %s sync is invalid", sync)
-		}
-	}
-	return filters, nil
-}
-
-func (c *Config) getDestinations(v *viper.Viper, sync string) ([]map[string]string, error) {
-	var dests []map[string]string
-	ds := v.Get("destinations")
-
-	switch casted := ds.(type) { // Avoid panic if the type is not compatible with the one we want
-	case []interface{}:
-		for _, d := range casted {
-			switch dcasted := d.(type) { // Avoid panic if the type is not compatible with the one we want
-			case map[string]interface{}:
-				currentdest := make(map[string]string)
-				for dk, dv := range dcasted {
-					currentdest[dk] = dv.(string)
-				}
-				dests = append(dests, currentdest)
-			default:
-				return nil, fmt.Errorf("one destination defined for %s sync is invalid", sync)
-			}
-		}
-	default:
-		return nil, fmt.Errorf("destinations defined for %s sync is invalid", sync)
-	}
-	return dests, nil
-}
-
-func (c *Config) getCache(v *viper.Viper, sync string) (CacheConfig, error) {
-	var cache CacheConfig
-	cache.Type = v.GetString("cache.type")
-	cache.TTL = v.GetDuration("cache.ttl")
-	cache.File = v.GetString("cache.file")
-	return cache, nil
 }
 
 // Get return the configuration block for a synchronization
@@ -192,4 +111,14 @@ func (c *Config) Get(sync string) (*Sync, error) {
 		Cache:        cache,
 	}
 	return s, nil
+}
+
+//GetDb return the kaminodb object from a database name
+func (c *Config) GetDb(name string) (*kaminodb.KaminoDb, error) {
+	kdb, ok := c.databases[name]
+	if !ok {
+		return nil, fmt.Errorf("databse %s does not have configuration file", name)
+	}
+
+	return kdb, nil
 }

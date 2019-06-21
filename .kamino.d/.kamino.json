@@ -3,12 +3,7 @@
         "source":
         {
             "type":     "database",
-            "engine":   "mysql",
             "database": "source1",
-            "host":     "192.168.9.121",
-            "port":     "3306",
-            "user":     "root",
-            "password": "123soleil",
             "table":    "table1"
         },
         "cache": {
@@ -37,24 +32,14 @@
         [
             {
                 "type":     "database",
-                "engine":   "mysql",
                 "database": "copy1",
-                "host":     "192.168.9.121",
-                "port":     "3306",
-                "user":     "root",
-                "password": "123soleil",
                 "table":    "table1",
                 "key":      "entier",
                 "mode":     "update"
             },
             {
                 "type":     "database",
-                "engine":   "mysql",
                 "database": "copy2",
-                "host":     "192.168.9.121",
-                "port":     "3306",
-                "user":     "root",
-                "password": "123soleil",
                 "table":    "table1",
                 "mode":     "OnlyIfEmpty"
             },
@@ -80,12 +65,7 @@
         "source":
         {
             "type":     "database",
-            "engine":   "mysql",
             "database": "source1",
-            "host":     "192.168.9.121",
-            "port":     "3306",
-            "user":     "root",
-            "password": "123soleil",
             "table":    "table2",
             "where":    "chaine LIKE '%fish%'"
         },
@@ -93,22 +73,12 @@
         [
             {
                 "type":     "database",
-                "engine":   "mysql",
                 "database": "copy1",
-                "host":     "192.168.9.121",
-                "port":     "3306",
-                "user":     "root",
-                "password": "123soleil",
                 "table":    "table2"
             },
             {
                 "type":     "database",
-                "engine":   "mysql",
                 "database": "copy2",
-                "host":     "192.168.9.121",
-                "port":     "3306",
-                "user":     "root",
-                "password": "123soleil",
                 "table":    "table2"
             },
             {

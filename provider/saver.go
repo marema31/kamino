@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/marema31/kamino/config"
 	"github.com/marema31/kamino/provider/common"
 	"github.com/marema31/kamino/provider/csv"
 	"github.com/marema31/kamino/provider/database"
@@ -20,34 +21,34 @@ type Saver interface {
 }
 
 //NewSaver analyze the config map and return object implemnting Saver of the asked type
-func NewSaver(ctx context.Context, config map[string]string) (Saver, error) {
-	_, ok := config["type"]
+func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string]string) (Saver, error) {
+	_, ok := saverConfig["type"]
 	if !ok {
 		return nil, fmt.Errorf("the configuration block for this destination does not provide the type")
 	}
 
-	switch config["type"] {
+	switch saverConfig["type"] {
 	case "database":
-		return database.NewSaver(ctx, config)
+		return database.NewSaver(ctx, config, saverConfig)
 	case "csv":
-		writer, name, tmpName, err := common.OpenWriter(config)
+		writer, name, tmpName, err := common.OpenWriter(saverConfig)
 		if err != nil {
 			return nil, err
 		}
-		return csv.NewSaver(ctx, config, name, tmpName, writer)
+		return csv.NewSaver(ctx, saverConfig, name, tmpName, writer)
 	case "json":
-		writer, name, tmpName, err := common.OpenWriter(config)
+		writer, name, tmpName, err := common.OpenWriter(saverConfig)
 		if err != nil {
 			return nil, err
 		}
-		return json.NewSaver(ctx, config, name, tmpName, writer)
+		return json.NewSaver(ctx, saverConfig, name, tmpName, writer)
 	case "yaml":
-		writer, name, tmpName, err := common.OpenWriter(config)
+		writer, name, tmpName, err := common.OpenWriter(saverConfig)
 		if err != nil {
 			return nil, err
 		}
-		return yaml.NewSaver(ctx, config, name, tmpName, writer)
+		return yaml.NewSaver(ctx, saverConfig, name, tmpName, writer)
 	default:
-		return nil, fmt.Errorf("don't know how to manage %s", config["type"])
+		return nil, fmt.Errorf("don't know how to manage %s", saverConfig["type"])
 	}
 }
