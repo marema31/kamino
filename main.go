@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -45,14 +44,15 @@ func main() {
 		os.Exit(1)
 	}()
 
+	//TODO: review CLI (use cobra ?)
 	i := 1
-	configPath := "."
+	configPath := ".kamino.d"
 	configFile := ".kamino"
 
-	if len(os.Args) > 2 && os.Args[1] == "-c" {
+	if len(os.Args) > 2 && os.Args[1] == "-d" {
 		i = 3
-		configPath = filepath.Dir(os.Args[2])
-		configFile = filepath.Base(os.Args[2])
+		configPath = os.Args[2]
+		//	configFile = filepath.Base(os.Args[2])
 	}
 
 	if (len(os.Args)-i) < 1 || os.Args[i] == "-h" {

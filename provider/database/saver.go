@@ -7,6 +7,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/marema31/kamino/config"
+	"github.com/marema31/kamino/kaminodb"
 	"github.com/marema31/kamino/provider/common"
 )
 
@@ -24,7 +26,9 @@ const (
 
 //DbSaver specifc state for database Saver provider
 type DbSaver struct {
-	kaminoDb
+	kdb          *kaminodb.KaminoDb
+	database     string
+	table        string
 	insertString string
 	insertStmt   *sql.Stmt
 	updateString string
@@ -67,24 +71,32 @@ func (ds *DbSaver) parseConfig(config map[string]string) error {
 }
 
 //NewSaver open the database connection, prepare the insert statement and return a Saver compatible object
-func NewSaver(ctx context.Context, config map[string]string) (*DbSaver, error) {
+func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string]string) (*DbSaver, error) {
 	var ds DbSaver
 	var err error
 
-	k, err := newKaminoDb(config)
+	database := saverConfig["database"]
+	if database == "" {
+		return nil, fmt.Errorf("source of sync does not provided a database")
+	}
+
+	kdb, err := config.GetDb(database)
 	if err != nil {
 		return nil, err
 	}
 
-	ds.db = k.db
-	ds.driver = k.driver
-	ds.database = k.database
-	ds.table = k.table
-	ds.where = k.where
+	table := saverConfig["table"]
+	if table == "" {
+		return nil, fmt.Errorf("source of sync does not provided a table name")
+	}
+
+	ds.kdb = kdb
+	ds.database = database
+	ds.table = table
 	ds.ids = make(map[string]bool)
 	ds.ctx = ctx
 
-	err = ds.parseConfig(config)
+	err = ds.parseConfig(saverConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +116,7 @@ func NewSaver(ctx context.Context, config map[string]string) (*DbSaver, error) {
 
 // createStatement Query the destination table to determine the available colums, create the corresponding insert/update statement and save them in the dbSaver instance
 func (ds *DbSaver) createIdsList() error {
-	rows, err := ds.db.QueryContext(ds.ctx, fmt.Sprintf("SELECT %s from %s", ds.key, ds.table)) // We don't need data, we only needs the column names
+	rows, err := ds.kdb.Db.QueryContext(ds.ctx, fmt.Sprintf("SELECT %s from %s", ds.key, ds.table)) // We don't need data, we only needs the column names
 	if err != nil {
 		log.Println(fmt.Sprintf("SELECT %s from %s ", ds.key, ds.table))
 		return err
@@ -123,7 +135,7 @@ func (ds *DbSaver) createIdsList() error {
 
 func (ds *DbSaver) tableParam(record common.Record) error {
 
-	rows, err := ds.db.QueryContext(ds.ctx, fmt.Sprintf("SELECT * from %s LIMIT 1", ds.table)) // We don't need data, we only needs the column names
+	rows, err := ds.kdb.Db.QueryContext(ds.ctx, fmt.Sprintf("SELECT * from %s LIMIT 1", ds.table)) // We don't need data, we only needs the column names
 	if err != nil {
 		log.Println(fmt.Sprintf("SELECT * from %s LIMIT 1", ds.table))
 		return err
@@ -200,12 +212,12 @@ func (ds *DbSaver) createStatement(record common.Record) error {
 		return err
 	}
 
-	ds.insertStmt, err = ds.db.Prepare(ds.insertString)
+	ds.insertStmt, err = ds.kdb.Db.Prepare(ds.insertString)
 	if err != nil {
 		return err
 	}
 	if ds.mode == replace || ds.mode == update || ds.mode == exactCopy {
-		ds.updateStmt, err = ds.db.Prepare(ds.updateString)
+		ds.updateStmt, err = ds.kdb.Db.Prepare(ds.updateString)
 		if err != nil {
 			return err
 		}
@@ -225,7 +237,7 @@ func (ds *DbSaver) Save(record common.Record) error {
 		}
 		// The truncate will be done at the first record save to avoid truncate a table if there is an error on config file
 		if ds.mode == truncate {
-			_, err := ds.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", ds.table))
+			_, err := ds.kdb.Db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", ds.table))
 			if err != nil {
 				return err
 			}
@@ -287,7 +299,7 @@ func (ds *DbSaver) Close() error {
 	if ds.mode == exactCopy {
 		for id, modified := range ds.ids {
 			if !modified {
-				_, err := ds.db.Exec(fmt.Sprintf("DELETE from %s WHERE %s=%s", ds.table, ds.key, id))
+				_, err := ds.kdb.Db.Exec(fmt.Sprintf("DELETE from %s WHERE %s=%s", ds.table, ds.key, id))
 				if err != nil {
 					log.Println(fmt.Sprintf("DELETE from %s WHERE %s=%s", ds.table, ds.key, id))
 					log.Println(err)
@@ -297,7 +309,7 @@ func (ds *DbSaver) Close() error {
 		}
 	}
 
-	ds.db.Close()
+	ds.kdb.Db.Close()
 	return nil
 }
 

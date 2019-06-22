@@ -2,6 +2,7 @@ package sync
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -65,7 +66,7 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 
 	c, err := config.Get(syncName)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("sync %s does not defined", syncName)
 	}
 
 	for _, fil := range c.Filters {
@@ -77,7 +78,7 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 	}
 
 	for _, dest := range c.Destinations {
-		d, err := provider.NewSaver(ctx, dest)
+		d, err := provider.NewSaver(ctx, config, dest)
 		if err != nil {
 			return err
 		}
@@ -86,7 +87,7 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 	}
 
 	if c.Cache.File == "" {
-		ks.source, err = provider.NewLoader(ctx, c.Source)
+		ks.source, err = provider.NewLoader(ctx, config, c.Source)
 		if err != nil {
 			return err
 		}
@@ -99,13 +100,13 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 		}
 		if os.IsNotExist(errFile) || ttlExpired {
 			// The cache file does not exists or older than precised TTL we will (re)create it
-			cache, err := provider.NewSaver(ctx, map[string]string{"type": c.Cache.Type, "file": c.Cache.File})
+			cache, err := provider.NewSaver(ctx, config, map[string]string{"type": c.Cache.Type, "file": c.Cache.File})
 			if err != nil {
 				return err
 			}
 
 			// We will use the source provided
-			ks.source, err = provider.NewLoader(ctx, c.Source)
+			ks.source, err = provider.NewLoader(ctx, config, c.Source)
 			if err == nil {
 				// No error on opening the correct source, we continue
 
@@ -128,7 +129,7 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 		}
 
 		// It exists, we will use the cache file as source
-		ks.source, err = provider.NewLoader(ctx, map[string]string{"type": c.Cache.Type, "file": c.Cache.File})
+		ks.source, err = provider.NewLoader(ctx, config, map[string]string{"type": c.Cache.Type, "file": c.Cache.File})
 		if err != nil {
 			return err
 		}

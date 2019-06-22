@@ -5,12 +5,16 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/marema31/kamino/config"
+	"github.com/marema31/kamino/kaminodb"
 	"github.com/marema31/kamino/provider/common"
 )
 
 //DbLoader specifc state for database Loader provider
 type DbLoader struct {
-	kaminoDb
+	kdb      *kaminodb.KaminoDb
+	database string
+	table    string
 	rows     *sql.Rows
 	scanned  []interface{}
 	rawBytes []sql.RawBytes
@@ -18,17 +22,29 @@ type DbLoader struct {
 }
 
 //NewLoader open the database connection, make the data query and return a Loader compatible object
-func NewLoader(ctx context.Context, config map[string]string) (*DbLoader, error) {
-	k, err := newKaminoDb(config)
+func NewLoader(ctx context.Context, config *config.Config, loaderConfig map[string]string) (*DbLoader, error) {
+
+	database := loaderConfig["database"]
+	if database == "" {
+		return nil, fmt.Errorf("source of sync does not provided a database")
+	}
+
+	kdb, err := config.GetDb(database)
 	if err != nil {
 		return nil, err
 	}
 
-	where := k.where
-	if k.where != "" {
-		where = fmt.Sprintf("WHERE %s", k.where)
+	table := loaderConfig["table"]
+	if table == "" {
+		return nil, fmt.Errorf("source of sync does not provided a table name")
 	}
-	rows, err := k.db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s %s", k.table, where))
+
+	where := loaderConfig["where"]
+	if where != "" {
+		where = fmt.Sprintf("WHERE %s", where)
+	}
+
+	rows, err := kdb.Db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s %s", table, where))
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +64,14 @@ func NewLoader(ctx context.Context, config map[string]string) (*DbLoader, error)
 		scanned[i] = &rawBytes[i]
 	}
 
-	return &DbLoader{*k, rows, scanned, rawBytes, columnsname}, nil
+	return &DbLoader{
+		kdb:      kdb,
+		database: database,
+		table:    table,
+		rows:     rows,
+		scanned:  scanned,
+		rawBytes: rawBytes,
+		colNames: columnsname}, nil
 }
 
 //Next moves to next record and return false if there is no more records
@@ -80,7 +103,7 @@ func (dl *DbLoader) Load() (common.Record, error) {
 //Close closes the datasource
 func (dl *DbLoader) Close() {
 	dl.rows.Close()
-	dl.db.Close()
+	dl.kdb.Db.Close()
 }
 
 //Name give the name of the destination
