@@ -27,6 +27,8 @@ const (
 //DbSaver specifc state for database Saver provider
 type DbSaver struct {
 	kdb          *kaminodb.KaminoDb
+	db           *sql.DB
+	tx           *sql.Tx
 	database     string
 	table        string
 	insertString string
@@ -90,7 +92,13 @@ func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string
 		return nil, fmt.Errorf("source of sync does not provided a table name")
 	}
 
+	db, err := kdb.Open()
+	if err != nil {
+		return nil, fmt.Errorf("can't open %s database", database)
+	}
+
 	ds.kdb = kdb
+	ds.db = db
 	ds.database = database
 	ds.table = table
 	ds.ids = make(map[string]bool)
@@ -116,7 +124,7 @@ func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string
 
 // createStatement Query the destination table to determine the available colums, create the corresponding insert/update statement and save them in the dbSaver instance
 func (ds *DbSaver) createIdsList() error {
-	rows, err := ds.kdb.Db.QueryContext(ds.ctx, fmt.Sprintf("SELECT %s from %s", ds.key, ds.table)) // We don't need data, we only needs the column names
+	rows, err := ds.db.QueryContext(ds.ctx, fmt.Sprintf("SELECT %s from %s", ds.key, ds.table)) // We don't need data, we only needs the column names
 	if err != nil {
 		log.Println(fmt.Sprintf("SELECT %s from %s ", ds.key, ds.table))
 		return err
@@ -135,9 +143,8 @@ func (ds *DbSaver) createIdsList() error {
 
 func (ds *DbSaver) tableParam(record common.Record) error {
 
-	rows, err := ds.kdb.Db.QueryContext(ds.ctx, fmt.Sprintf("SELECT * from %s LIMIT 1", ds.table)) // We don't need data, we only needs the column names
+	rows, err := ds.db.QueryContext(ds.ctx, fmt.Sprintf("SELECT * from %s LIMIT 1", ds.table)) // We don't need data, we only needs the column names
 	if err != nil {
-		log.Println(fmt.Sprintf("SELECT * from %s LIMIT 1", ds.table))
 		return err
 	}
 
@@ -212,12 +219,20 @@ func (ds *DbSaver) createStatement(record common.Record) error {
 		return err
 	}
 
-	ds.insertStmt, err = ds.kdb.Db.Prepare(ds.insertString)
+	if ds.kdb.Transaction {
+		ds.insertStmt, err = ds.tx.Prepare(ds.insertString)
+	} else {
+		ds.insertStmt, err = ds.db.Prepare(ds.insertString)
+	}
 	if err != nil {
 		return err
 	}
 	if ds.mode == replace || ds.mode == update || ds.mode == exactCopy {
-		ds.updateStmt, err = ds.kdb.Db.Prepare(ds.updateString)
+		if ds.kdb.Transaction {
+			ds.updateStmt, err = ds.tx.Prepare(ds.updateString)
+		} else {
+			ds.updateStmt, err = ds.db.Prepare(ds.updateString)
+		}
 		if err != nil {
 			return err
 		}
@@ -228,16 +243,29 @@ func (ds *DbSaver) createStatement(record common.Record) error {
 
 //Save writes the record to the destination
 func (ds *DbSaver) Save(record common.Record) error {
+	var err error
+
 	// Is this method is called for the first time
 	//If yes fix the column order in csv file
 	if ds.colNames == nil {
+		if ds.kdb.Transaction {
+			ds.tx, err = ds.db.Begin()
+			if err != nil {
+				return err
+			}
+		}
+
 		err := ds.createStatement(record)
 		if err != nil {
 			return err
 		}
 		// The truncate will be done at the first record save to avoid truncate a table if there is an error on config file
 		if ds.mode == truncate {
-			_, err := ds.kdb.Db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", ds.table))
+			if ds.kdb.Transaction {
+				_, err = ds.tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", ds.table))
+			} else {
+				_, err = ds.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", ds.table))
+			}
 			if err != nil {
 				return err
 			}
@@ -299,23 +327,33 @@ func (ds *DbSaver) Close() error {
 	if ds.mode == exactCopy {
 		for id, modified := range ds.ids {
 			if !modified {
-				_, err := ds.kdb.Db.Exec(fmt.Sprintf("DELETE from %s WHERE %s=%s", ds.table, ds.key, id))
+				var err error
+				if ds.kdb.Transaction {
+					_, err = ds.tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", ds.table))
+				} else {
+					_, err = ds.db.Exec(fmt.Sprintf("DELETE from %s WHERE %s=%s", ds.table, ds.key, id))
+				}
 				if err != nil {
-					log.Println(fmt.Sprintf("DELETE from %s WHERE %s=%s", ds.table, ds.key, id))
-					log.Println(err)
 					return err
 				}
 			}
 		}
 	}
+	if ds.kdb.Transaction {
+		ds.tx.Commit()
+	}
 
-	ds.kdb.Db.Close()
+	ds.db.Close()
 	return nil
 }
 
 //Reset reinitialize the destination (if possible)
 func (ds *DbSaver) Reset() error {
 	ds.colNames = nil
+
+	if ds.kdb.Transaction {
+		ds.tx.Rollback()
+	}
 	return nil
 }
 

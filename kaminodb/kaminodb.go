@@ -21,11 +21,11 @@ const (
 
 //KaminoDb struct provide
 type KaminoDb struct {
-	Db       *sql.DB
-	Driver   string //TODO: useful ?
-	Database string
-	Engine   DbEngine
-	URL      string // TODO: useful ?
+	Driver      string //TODO: useful ?
+	Database    string
+	Engine      DbEngine
+	URL         string // TODO: useful ?
+	Transaction bool
 }
 
 // New initialize a KaminoDb from a config file
@@ -48,6 +48,8 @@ func New(path string, filename string) (*KaminoDb, error) {
 	}
 
 	password := v.GetString("password")
+
+	kd.Transaction = v.GetBool("transaction")
 
 	host := v.GetString("host")
 	if host == "" {
@@ -89,17 +91,20 @@ func New(path string, filename string) (*KaminoDb, error) {
 	default:
 		return nil, fmt.Errorf("does not how to manage %s database engine", engine)
 	}
+	return &kd, nil
+}
 
-	kd.Db, err = sql.Open(kd.Driver, kd.URL)
+//Open open connection to the corresponding database
+func (kd *KaminoDb) Open() (*sql.DB, error) {
+	db, err := sql.Open(kd.Driver, kd.URL)
 	if err != nil {
 		return nil, err
 	}
 
 	// Open does not really open the connection and therefore does not test for url is correct, ping will do
-	err = kd.Db.Ping()
+	err = db.Ping()
 	if err != nil {
 		return nil, err
 	}
-
-	return &kd, nil
+	return db, nil
 }
