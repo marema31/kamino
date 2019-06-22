@@ -13,6 +13,7 @@ import (
 //DbLoader specifc state for database Loader provider
 type DbLoader struct {
 	kdb      *kaminodb.KaminoDb
+	db       *sql.DB
 	database string
 	table    string
 	rows     *sql.Rows
@@ -44,7 +45,12 @@ func NewLoader(ctx context.Context, config *config.Config, loaderConfig map[stri
 		where = fmt.Sprintf("WHERE %s", where)
 	}
 
-	rows, err := kdb.Db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s %s", table, where))
+	db, err := kdb.Open()
+	if err != nil {
+		return nil, fmt.Errorf("can't open %s database", database)
+	}
+
+	rows, err := db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s %s", table, where))
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +72,7 @@ func NewLoader(ctx context.Context, config *config.Config, loaderConfig map[stri
 
 	return &DbLoader{
 		kdb:      kdb,
+		db:       db,
 		database: database,
 		table:    table,
 		rows:     rows,
@@ -103,7 +110,7 @@ func (dl *DbLoader) Load() (common.Record, error) {
 //Close closes the datasource
 func (dl *DbLoader) Close() {
 	dl.rows.Close()
-	dl.kdb.Db.Close()
+	dl.db.Close()
 }
 
 //Name give the name of the destination
