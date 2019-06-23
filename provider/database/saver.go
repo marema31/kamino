@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
-	"strings"
 
 	"github.com/marema31/kamino/config"
 	"github.com/marema31/kamino/kaminodb"
@@ -43,35 +41,6 @@ type DbSaver struct {
 	ctx          context.Context
 }
 
-//parseConfig parse the config to extract the mode and the primary key and save them in the dbSaver instance
-func (ds *DbSaver) parseConfig(config map[string]string) error {
-	ds.key = config["key"]
-
-	ds.mode = exactCopy
-	modestr, ok := config["mode"]
-	if ok {
-		switch {
-		case strings.EqualFold(modestr, "onlyifempty"):
-			ds.mode = onlyIfEmpty
-		case strings.EqualFold(modestr, "insert"):
-			ds.mode = insert
-		case strings.EqualFold(modestr, "update"):
-			ds.mode = update
-		case strings.EqualFold(modestr, "replace"):
-			ds.mode = replace
-		case strings.EqualFold(modestr, "copy"):
-			ds.mode = exactCopy
-		case strings.EqualFold(modestr, "truncate"):
-			ds.mode = truncate
-		}
-	}
-
-	if ds.key == "" && (ds.mode == update || ds.mode == replace) {
-		return fmt.Errorf("mode for %s.%s is %s and no key is provided", ds.database, ds.table, modestr)
-	}
-	return nil
-}
-
 //NewSaver open the database connection, prepare the insert statement and return a Saver compatible object
 func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string]string) (*DbSaver, error) {
 	var ds DbSaver
@@ -94,7 +63,7 @@ func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string
 
 	db, err := kdb.Open()
 	if err != nil {
-		return nil, fmt.Errorf("can't open %s database", database)
+		return nil, fmt.Errorf("can't open %s database : %v", database, err)
 	}
 
 	ds.kdb = kdb
@@ -120,125 +89,6 @@ func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string
 	}
 
 	return &ds, nil
-}
-
-// createStatement Query the destination table to determine the available colums, create the corresponding insert/update statement and save them in the dbSaver instance
-func (ds *DbSaver) createIdsList() error {
-	rows, err := ds.db.QueryContext(ds.ctx, fmt.Sprintf("SELECT %s from %s", ds.key, ds.table)) // We don't need data, we only needs the column names
-	if err != nil {
-		log.Println(fmt.Sprintf("SELECT %s from %s ", ds.key, ds.table))
-		return err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var id string
-		if err := rows.Scan(&id); err != nil {
-			return err
-		}
-		ds.ids[id] = false
-	}
-	return nil
-}
-
-func (ds *DbSaver) tableParam(record common.Record) error {
-
-	rows, err := ds.db.QueryContext(ds.ctx, fmt.Sprintf("SELECT * from %s LIMIT 1", ds.table)) // We don't need data, we only needs the column names
-	if err != nil {
-		return err
-	}
-
-	columns, err := rows.ColumnTypes()
-	if err != nil {
-		return err
-	}
-
-	ds.wasEmpty = !rows.Next()
-	if ds.mode == onlyIfEmpty && !ds.wasEmpty {
-		log.Printf("Warning: the table %s of database %s is not empty, I will do nothing on it", ds.table, ds.database)
-	}
-
-	var updateSet []string
-	var questionmark []string
-
-	keyseen := false
-	for _, col := range columns {
-		_, ok := record[col.Name()]
-		if !ok {
-			log.Printf("Warning: the colum %s does not exist in source, for table %s of %s using table default value", col.Name(), ds.table, ds.database)
-			continue
-		}
-		if strings.EqualFold(col.Name(), ds.key) {
-			keyseen = true
-			continue
-		}
-		questionmark = append(questionmark, "?")
-		ds.colNames = append(ds.colNames, col.Name())
-		updateSet = append(updateSet, fmt.Sprintf("%s=?", col.Name()))
-	}
-
-	// By doing like this we ensure the primary key will be the last of column names and this array can be use for insert and update
-	if ds.key != "" {
-		questionmark = append(questionmark, "?")
-		ds.colNames = append(ds.colNames, ds.key)
-		if !keyseen {
-			return fmt.Errorf("provided key %s is not a column of %s.%s ", ds.key, ds.database, ds.table)
-		}
-	}
-
-	keyseen = false
-	for colr := range record {
-		if ds.key != "" && ds.key == colr {
-			keyseen = true
-		}
-		seen := false
-		for _, col := range columns {
-			if col.Name() == colr {
-				seen = true
-			}
-		}
-		if !seen {
-			log.Printf("Warning: the colum %s does not exist in destination table %s of %s", colr, ds.table, ds.database)
-		}
-	}
-
-	if ds.key != "" && !keyseen {
-		return fmt.Errorf("provided key %s is not available from filtered source for %s.%s ", ds.key, ds.database, ds.table)
-
-	}
-
-	ds.insertString = fmt.Sprintf("INSERT INTO %s ( %s) VALUES ( %s )", ds.table, strings.Join(ds.colNames[:], ","), strings.Join(questionmark[:], ","))
-	ds.updateString = fmt.Sprintf("UPDATE %s SET  %s WHERE %s = ?", ds.table, strings.Join(updateSet[:], ","), ds.key)
-	return nil
-}
-
-// createStatement Query the destination table to determine the available colums, create the corresponding insert/update statement and save them in the dbSaver instance
-func (ds *DbSaver) createStatement(record common.Record) error {
-	err := ds.tableParam(record)
-	if err != nil {
-		return err
-	}
-
-	if ds.kdb.Transaction {
-		ds.insertStmt, err = ds.tx.Prepare(ds.insertString)
-	} else {
-		ds.insertStmt, err = ds.db.Prepare(ds.insertString)
-	}
-	if err != nil {
-		return err
-	}
-	if ds.mode == replace || ds.mode == update || ds.mode == exactCopy {
-		if ds.kdb.Transaction {
-			ds.updateStmt, err = ds.tx.Prepare(ds.updateString)
-		} else {
-			ds.updateStmt, err = ds.db.Prepare(ds.updateString)
-		}
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 //Save writes the record to the destination
@@ -351,7 +201,7 @@ func (ds *DbSaver) Close() error {
 func (ds *DbSaver) Reset() error {
 	ds.colNames = nil
 
-	if ds.kdb.Transaction {
+	if ds.kdb.Transaction && ds.tx != nil {
 		ds.tx.Rollback()
 	}
 	return nil
