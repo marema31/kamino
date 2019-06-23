@@ -47,7 +47,7 @@ func NewLoader(ctx context.Context, config *config.Config, loaderConfig map[stri
 
 	db, err := kdb.Open()
 	if err != nil {
-		return nil, fmt.Errorf("can't open %s database", database)
+		return nil, fmt.Errorf("can't open %s database : %v", database, err)
 	}
 
 	rows, err := db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s %s", table, where))

@@ -87,7 +87,7 @@ func New(path string, filename string) (*KaminoDb, error) {
 			port = "5432"
 		}
 		kd.URL = fmt.Sprintf("host=%s port=%s user=%s "+"password=%s dbname=%s sslmode=disable", host, port, user, password, kd.Database)
-		kd.Driver = "pq"
+		kd.Driver = "postgres"
 	default:
 		return nil, fmt.Errorf("does not how to manage %s database engine", engine)
 	}
