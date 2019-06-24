@@ -26,6 +26,7 @@ type KaminoDb struct {
 	Engine      DbEngine
 	URL         string // TODO: useful ?
 	Transaction bool
+	Schema      string
 }
 
 // New initialize a KaminoDb from a config file
@@ -48,6 +49,8 @@ func New(path string, filename string) (*KaminoDb, error) {
 	}
 
 	password := v.GetString("password")
+
+	kd.Schema = v.GetString("schema")
 
 	kd.Transaction = v.GetBool("transaction")
 

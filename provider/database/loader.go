@@ -39,6 +39,9 @@ func NewLoader(ctx context.Context, config *config.Config, loaderConfig map[stri
 	if table == "" {
 		return nil, fmt.Errorf("source of sync does not provided a table name")
 	}
+	if kdb.Schema != "" {
+		table = fmt.Sprintf("%s.%s", kdb.Schema, table)
+	}
 
 	where := loaderConfig["where"]
 	if where != "" {
