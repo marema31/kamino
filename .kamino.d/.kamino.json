@@ -51,6 +51,20 @@
                 "mode":     "replace"
             },
             {
+                "type":     "database",
+                "database": "copypg",
+                "table":    "schema2.table1",
+                "key":      "entier",
+                "mode":     "replace"
+            },
+            {
+                "type":     "database",
+                "database": "copysch1",
+                "table":    "table1",
+                "key":      "entier",
+                "mode":     "replace"
+            },
+            {
                 "type": "json",
                 "file": "testdata/dest.json"
             },

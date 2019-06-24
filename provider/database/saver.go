@@ -48,7 +48,7 @@ func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string
 
 	database := saverConfig["database"]
 	if database == "" {
-		return nil, fmt.Errorf("source of sync does not provided a database")
+		return nil, fmt.Errorf("destination of sync does not provided a database")
 	}
 
 	kdb, err := config.GetDb(database)
@@ -58,7 +58,10 @@ func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string
 
 	table := saverConfig["table"]
 	if table == "" {
-		return nil, fmt.Errorf("source of sync does not provided a table name")
+		return nil, fmt.Errorf("destination of sync does not provided a table name")
+	}
+	if kdb.Schema != "" {
+		table = fmt.Sprintf("%s.%s", kdb.Schema, table)
 	}
 
 	db, err := kdb.Open()
