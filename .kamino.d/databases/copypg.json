@@ -5,5 +5,7 @@
     "port":     "5432",
     "user":     "mcarmier",
     "password": "123soleil",
-    "transaction": true
+    "transaction": true,
+    "name": "copy",
+    "instance": "pg"
 }

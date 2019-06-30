@@ -27,6 +27,9 @@ type KaminoDb struct {
 	URL         string // TODO: useful ?
 	Transaction bool
 	Schema      string
+	Name        string
+	Instance    string
+	Environment string
 }
 
 // New initialize a KaminoDb from a config file
@@ -42,6 +45,15 @@ func New(path string, filename string) (*KaminoDb, error) {
 	}
 
 	var kd KaminoDb
+
+	kd.Name = v.GetString("name")
+	if kd.Name == "" {
+		kd.Name = filename
+	}
+
+	kd.Instance = v.GetString("instance")
+
+	kd.Environment = v.GetString("environment")
 
 	kd.Database = v.GetString("database")
 	if kd.Database == "" {
@@ -99,6 +111,7 @@ func New(path string, filename string) (*KaminoDb, error) {
 
 //Open open connection to the corresponding database
 func (kd *KaminoDb) Open() (*sql.DB, error) {
+
 	db, err := sql.Open(kd.Driver, kd.URL)
 	if err != nil {
 		return nil, err

@@ -21,7 +21,7 @@ type Loader interface {
 }
 
 //NewLoader analyze the config map and return object implemnting Loader of the asked type
-func NewLoader(ctx context.Context, config *config.Config, loaderConfig map[string]string) (Loader, error) {
+func NewLoader(ctx context.Context, config *config.Config, loaderConfig map[string]string, environment string, instances []string) (Loader, error) {
 	_, ok := loaderConfig["type"]
 	if !ok {
 		return nil, fmt.Errorf("the configuration block for this source does not provide the type")
@@ -29,7 +29,7 @@ func NewLoader(ctx context.Context, config *config.Config, loaderConfig map[stri
 
 	switch loaderConfig["type"] {
 	case "database":
-		return database.NewLoader(ctx, config, loaderConfig)
+		return database.NewLoader(ctx, config, loaderConfig, environment, instances)
 	case "csv":
 		reader, name, err := common.OpenReader(loaderConfig)
 		if err != nil {

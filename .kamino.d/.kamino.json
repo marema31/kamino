@@ -24,7 +24,7 @@
                 "type": "replace",
                 "parameters": {
                     "date": "2018-01-01",
-                    "boleen":"0"                    
+                    "booleen":"0"                    
                 }
             }
         ],
@@ -32,37 +32,16 @@
         [
             {
                 "type":     "database",
-                "database": "copy1",
+                "database": "copy",
                 "table":    "table1",
                 "key":      "entier",
-                "mode":     "update"
+                "mode":     "replace"
             },
             {
                 "type":     "database",
                 "database": "copy2",
                 "table":    "table1",
                 "mode":     "OnlyIfEmpty"
-            },
-            {
-                "type":     "database",
-                "database": "copypg",
-                "table":    "table1",
-                "key":      "entier",
-                "mode":     "replace"
-            },
-            {
-                "type":     "database",
-                "database": "copypg",
-                "table":    "schema2.table1",
-                "key":      "entier",
-                "mode":     "replace"
-            },
-            {
-                "type":     "database",
-                "database": "copysch1",
-                "table":    "table1",
-                "key":      "entier",
-                "mode":     "replace"
             },
             {
                 "type": "json",
