@@ -35,7 +35,7 @@ type Sync struct {
 // Config implements the config store of kamino
 type Config struct {
 	v         map[string]*viper.Viper
-	databases map[string]*kaminodb.KaminoDb
+	databases map[string]map[string]map[string]*kaminodb.KaminoDb
 }
 
 // New initialize the config store
@@ -71,7 +71,6 @@ func New(path string, filename string) (*Config, error) {
 
 		return nil, err
 	}
-
 	config := &Config{v: subs, databases: databases}
 	return config, err
 }
@@ -113,12 +112,38 @@ func (c *Config) Get(sync string) (*Sync, error) {
 	return s, nil
 }
 
-//GetDb return the kaminodb object from a database name
-func (c *Config) GetDb(name string) (*kaminodb.KaminoDb, error) {
-	kdb, ok := c.databases[name]
+//GetDbs return array of the kaminodb object from a database name, environment and instances
+func (c *Config) GetDbs(name string, environment string, instances []string) ([]*kaminodb.KaminoDb, error) {
+	var kdbs []*kaminodb.KaminoDb
+
+	_, ok := c.databases[name]
 	if !ok {
-		return nil, fmt.Errorf("databse %s does not have configuration file", name)
+		return nil, fmt.Errorf("database %s does not have configuration file", name)
 	}
 
-	return kdb, nil
+	if environment == "" {
+		if len(c.databases[name]) > 1 {
+			return nil, fmt.Errorf("database %s have more than one environment, you must provided the one you want to use", name)
+		}
+		for e := range c.databases[name] {
+			environment = e
+		}
+	}
+
+	if instances == nil {
+		for _, kdb := range c.databases[name][environment] {
+			kdbs = append(kdbs, kdb)
+		}
+
+		return kdbs, nil
+	}
+
+	for _, instance := range instances {
+		kdb, ok := c.databases[name][environment][instance]
+		if !ok {
+			return nil, fmt.Errorf("database %s does not have %s instance", name, instance)
+		}
+		kdbs = append(kdbs, kdb)
+	}
+	return kdbs, nil
 }

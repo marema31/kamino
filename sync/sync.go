@@ -21,6 +21,11 @@ type kaminoSync struct {
 
 func copyData(ctx context.Context, ks *kaminoSync) error {
 
+	log.Printf("Will synchronize %s to", ks.source.Name())
+	for _, d := range ks.destinations {
+		log.Printf("   - %s", d.Name())
+	}
+
 	for ks.source.Next() {
 		record, err := ks.source.Load()
 		if err != nil {
@@ -43,7 +48,7 @@ func copyData(ctx context.Context, ks *kaminoSync) error {
 }
 
 // Do will manage a single sync configuration and do tha actual copy
-func Do(ctx context.Context, config *config.Config, syncName string) error {
+func Do(ctx context.Context, config *config.Config, syncName string, environment string, instances []string) error {
 
 	ks := &kaminoSync{
 		syncName:     syncName,
@@ -78,16 +83,16 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 	}
 
 	for _, dest := range c.Destinations {
-		d, err := provider.NewSaver(ctx, config, dest)
+		ds, err := provider.NewSaver(ctx, config, dest, environment, instances)
 		if err != nil {
 			return err
 		}
 
-		ks.destinations = append(ks.destinations, d)
+		ks.destinations = append(ks.destinations, ds...)
 	}
 
 	if c.Cache.File == "" {
-		ks.source, err = provider.NewLoader(ctx, config, c.Source)
+		ks.source, err = provider.NewLoader(ctx, config, c.Source, environment, nil)
 		if err != nil {
 			return err
 		}
@@ -99,18 +104,22 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 			ttlExpired = time.Since(cacheStat.ModTime()) > c.Cache.TTL
 		}
 		if os.IsNotExist(errFile) || ttlExpired {
-			// The cache file does not exists or older than precised TTL we will (re)create it
-			cache, err := provider.NewSaver(ctx, config, map[string]string{"type": c.Cache.Type, "file": c.Cache.File})
+			// The cache file does not exists or older than precised TTL we will (re)create it, Since it is a cache file, the instance is not useful
+			cache, err := provider.NewSaver(ctx, config, map[string]string{"type": c.Cache.Type, "file": c.Cache.File}, environment, nil)
 			if err != nil {
 				return err
 			}
 
-			// We will use the source provided
-			ks.source, err = provider.NewLoader(ctx, config, c.Source)
+			//TODO: How to manage sync Prod -> Staging -> dev (the source environment may be also different from destination  may be an option map  destenvironment => sourceenvironment) // Create a database config for each environment
+
+			//TODO: sourceInstance should be in the sync block (not configurable)  in a map environment => instance with a default  // Not necessary the source must have only one instance
+			// We will use the source provided, it must have only one source possible
+			source, err := provider.NewLoader(ctx, config, c.Source, environment, nil)
 			if err == nil {
+				ks.source = source
 				// No error on opening the correct source, we continue
 
-				ks.destinations = append(ks.destinations, cache)
+				ks.destinations = append(ks.destinations, cache[0])
 				err = copyData(ctx, ks)
 				if err == nil {
 					closeAll(ks)
@@ -119,7 +128,7 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 			}
 			//Something goes wrong, we remove the cache from destination since we will want to use it
 			ks.destinations = ks.destinations[:len(ks.destinations)-1]
-			cache.Reset()
+			cache[0].Reset()
 			ks.source.Close()
 			ks.source = nil
 		}
@@ -128,8 +137,8 @@ func Do(ctx context.Context, config *config.Config, syncName string) error {
 			return err
 		}
 
-		// It exists, we will use the cache file as source
-		ks.source, err = provider.NewLoader(ctx, config, map[string]string{"type": c.Cache.Type, "file": c.Cache.File})
+		// It exists, we will use the cache file as source, Since it is a cache file, the instance is not useful
+		ks.source, err = provider.NewLoader(ctx, config, map[string]string{"type": c.Cache.Type, "file": c.Cache.File}, environment, nil)
 		if err != nil {
 			return err
 		}

@@ -49,6 +49,13 @@ func main() {
 	configPath := ".kamino.d"
 	configFile := ".kamino"
 
+	//TODO: During CLI review add options for environment and instances
+	environment := ""
+	var instances []string
+
+	/*	instances = append(instances, "sch1")
+		instances = append(instances, "1")
+	*/
 	if len(os.Args) > 2 && os.Args[1] == "-d" {
 		i = 3
 		configPath = os.Args[2]
@@ -71,7 +78,7 @@ func main() {
 	fmt.Printf("Will run the sync %s\n", strings.Join(os.Args[i:], ", "))
 
 	for _, syncName := range os.Args[i:] {
-		err := kaminoSync.Do(ctx, config, syncName)
+		err := kaminoSync.Do(ctx, config, syncName, environment, instances)
 		if err != nil {
 			log.Println(err)
 			cancel()                    // Cancellation of context, that will propagate to all function that listen cts.Done

@@ -5,5 +5,7 @@
     "port":     "3306",
     "user":     "root",
     "password": "123soleil",
-    "transaction": true
+    "transaction": false,
+    "name": "copy",
+    "instance": "1"
 }

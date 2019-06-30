@@ -42,56 +42,60 @@ type DbSaver struct {
 }
 
 //NewSaver open the database connection, prepare the insert statement and return a Saver compatible object
-func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string]string) (*DbSaver, error) {
-	var ds DbSaver
+func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string]string, environment string, instances []string) ([]*DbSaver, error) {
+	var dss []*DbSaver
 	var err error
 
-	database := saverConfig["database"]
-	if database == "" {
+	name := saverConfig["database"]
+	if name == "" {
 		return nil, fmt.Errorf("destination of sync does not provided a database")
 	}
 
-	kdb, err := config.GetDb(database)
+	kdbs, err := config.GetDbs(name, environment, instances)
 	if err != nil {
 		return nil, err
 	}
+	for _, kdb := range kdbs {
+		var ds DbSaver
 
-	table := saverConfig["table"]
-	if table == "" {
-		return nil, fmt.Errorf("destination of sync does not provided a table name")
-	}
-	if kdb.Schema != "" {
-		table = fmt.Sprintf("%s.%s", kdb.Schema, table)
-	}
-
-	db, err := kdb.Open()
-	if err != nil {
-		return nil, fmt.Errorf("can't open %s database : %v", database, err)
-	}
-
-	ds.kdb = kdb
-	ds.db = db
-	ds.database = database
-	ds.table = table
-	ds.ids = make(map[string]bool)
-	ds.ctx = ctx
-
-	err = ds.parseConfig(saverConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	if ds.mode == replace || ds.mode == exactCopy {
-		if ds.key == "" {
-			return nil, fmt.Errorf("modes replace and exactCopy need a primary key for %s.%s", ds.database, ds.table)
+		table := saverConfig["table"]
+		if table == "" {
+			return nil, fmt.Errorf("destination of sync does not provided a table name")
 		}
-		err = ds.createIdsList()
+
+		if kdb.Schema != "" {
+			table = fmt.Sprintf("%s.%s", kdb.Schema, table)
+		}
+
+		ds.db, err = kdb.Open()
+		if err != nil {
+			return nil, fmt.Errorf("can't open %s database : %v", kdb.Database, err)
+		}
+
+		ds.kdb = kdb
+		ds.database = kdb.Database
+		ds.table = table
+		ds.ids = make(map[string]bool)
+		ds.ctx = ctx
+
+		err = ds.parseConfig(saverConfig)
 		if err != nil {
 			return nil, err
 		}
+
+		if ds.mode == replace || ds.mode == exactCopy {
+			if ds.key == "" {
+				return nil, fmt.Errorf("modes replace and exactCopy need a primary key for %s.%s", ds.database, ds.table)
+			}
+			err = ds.createIdsList()
+			if err != nil {
+				return nil, err
+			}
+		}
+		dss = append(dss, &ds)
 	}
 
-	return &ds, nil
+	return dss, nil
 }
 
 //Save writes the record to the destination
@@ -133,7 +137,6 @@ func (ds *DbSaver) Save(record common.Record) error {
 	for i, col := range ds.colNames {
 		row[i] = record[col]
 	}
-
 	switch ds.mode {
 	case onlyIfEmpty:
 		_, err := ds.insertStmt.Exec(row...)
