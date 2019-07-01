@@ -21,15 +21,14 @@ type Saver interface {
 }
 
 //NewSaver analyze the config map and return object implemnting Saver of the asked type
-func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string]string, environment string, instances []string) ([]Saver, error) {
-	_, ok := saverConfig["type"]
-	if !ok {
+func NewSaver(ctx context.Context, config *config.Config, saverConfig config.DestinationConfig, environment string, instances []string) ([]Saver, error) {
+	if saverConfig.Type == "" {
 		return nil, fmt.Errorf("the configuration block for this destination does not provide the type")
 	}
 
 	var ss []Saver
 
-	switch saverConfig["type"] {
+	switch saverConfig.Type {
 	case "database":
 		ds, err := database.NewSaver(ctx, config, saverConfig, environment, instances)
 		for _, d := range ds {
@@ -37,27 +36,27 @@ func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string
 		}
 		return ss, err
 	case "csv":
-		writer, name, tmpName, err := common.OpenWriter(saverConfig)
+		writer, tmpName, err := common.OpenWriter(saverConfig)
 		if err != nil {
 			return nil, err
 		}
-		s, err := csv.NewSaver(ctx, saverConfig, name, tmpName, writer)
+		s, err := csv.NewSaver(ctx, saverConfig, tmpName, writer)
 		return append(ss, s), err
 	case "json":
-		writer, name, tmpName, err := common.OpenWriter(saverConfig)
+		writer, tmpName, err := common.OpenWriter(saverConfig)
 		if err != nil {
 			return nil, err
 		}
-		s, err := json.NewSaver(ctx, saverConfig, name, tmpName, writer)
+		s, err := json.NewSaver(ctx, saverConfig, tmpName, writer)
 		return append(ss, s), err
 	case "yaml":
-		writer, name, tmpName, err := common.OpenWriter(saverConfig)
+		writer, tmpName, err := common.OpenWriter(saverConfig)
 		if err != nil {
 			return nil, err
 		}
-		s, err := yaml.NewSaver(ctx, saverConfig, name, tmpName, writer)
+		s, err := yaml.NewSaver(ctx, saverConfig, tmpName, writer)
 		return append(ss, s), err
 	default:
-		return nil, fmt.Errorf("don't know how to manage %s", saverConfig["type"])
+		return nil, fmt.Errorf("don't know how to manage %s", saverConfig.Type)
 	}
 }

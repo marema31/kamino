@@ -42,29 +42,28 @@ type DbSaver struct {
 }
 
 //NewSaver open the database connection, prepare the insert statement and return a Saver compatible object
-func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string]string, environment string, instances []string) ([]*DbSaver, error) {
+func NewSaver(ctx context.Context, config *config.Config, saverConfig config.DestinationConfig, environment string, instances []string) ([]*DbSaver, error) {
 	var dss []*DbSaver
 	var err error
 
-	name := saverConfig["database"]
-	if name == "" {
+	if saverConfig.Database == "" {
 		return nil, fmt.Errorf("destination of sync does not provided a database")
 	}
 
-	kdbs, err := config.GetDbs(name, environment, instances)
+	kdbs, err := config.GetDbs(saverConfig.Database, environment, instances)
 	if err != nil {
 		return nil, err
 	}
 	for _, kdb := range kdbs {
 		var ds DbSaver
 
-		table := saverConfig["table"]
-		if table == "" {
+		if saverConfig.Table == "" {
 			return nil, fmt.Errorf("destination of sync does not provided a table name")
 		}
 
+		ds.table = saverConfig.Table
 		if kdb.Schema != "" {
-			table = fmt.Sprintf("%s.%s", kdb.Schema, table)
+			ds.table = fmt.Sprintf("%s.%s", kdb.Schema, saverConfig.Table)
 		}
 
 		ds.db, err = kdb.Open()
@@ -74,7 +73,6 @@ func NewSaver(ctx context.Context, config *config.Config, saverConfig map[string
 
 		ds.kdb = kdb
 		ds.database = kdb.Database
-		ds.table = table
 		ds.ids = make(map[string]bool)
 		ds.ctx = ctx
 

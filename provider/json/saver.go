@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 
+	"github.com/marema31/kamino/config"
 	"github.com/marema31/kamino/provider/common"
 )
 
@@ -17,9 +18,9 @@ type KaminoJSONSaver struct {
 }
 
 //NewSaver open the encoding process on provider file and return a Saver compatible object
-func NewSaver(ctx context.Context, config map[string]string, name string, tmpName string, file io.WriteCloser) (*KaminoJSONSaver, error) {
+func NewSaver(ctx context.Context, saverConfig config.DestinationConfig, tmpName string, file io.WriteCloser) (*KaminoJSONSaver, error) {
 	content := make([]map[string]string, 0)
-	return &KaminoJSONSaver{file: file, name: name, tmpName: tmpName, content: content}, nil
+	return &KaminoJSONSaver{file: file, name: saverConfig.File, tmpName: tmpName, content: content}, nil
 }
 
 //Save writes the record to the destination

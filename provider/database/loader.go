@@ -23,31 +23,30 @@ type DbLoader struct {
 }
 
 //NewLoader open the database connection, make the data query and return a Loader compatible object
-func NewLoader(ctx context.Context, config *config.Config, loaderConfig map[string]string, environment string, instances []string) (*DbLoader, error) {
-
-	database := loaderConfig["database"]
+func NewLoader(ctx context.Context, config *config.Config, loaderConfig config.SourceConfig, environment string, instance string) (*DbLoader, error) {
+	database := loaderConfig.Database
 	if database == "" {
 		return nil, fmt.Errorf("source of sync does not provided a database")
 	}
-
-	kdbs, err := config.GetDbs(database, environment, instances)
+	kdbs, err := config.GetDbs(database, environment, []string{instance})
 	if err != nil {
 		return nil, err
 	}
 	if len(kdbs) != 1 {
-		return nil, fmt.Errorf("source of this syunc must be a single database with no 'instance' attribute")
+		return nil, fmt.Errorf("source of this sync must be a single database with no 'instance' attribute")
 	}
 	kdb := kdbs[0]
 
-	table := loaderConfig["table"]
+	table := loaderConfig.Table
 	if table == "" {
 		return nil, fmt.Errorf("source of sync does not provided a table name")
 	}
+
 	if kdb.Schema != "" {
 		table = fmt.Sprintf("%s.%s", kdb.Schema, table)
 	}
 
-	where := loaderConfig["where"]
+	where := loaderConfig.Where
 	if where != "" {
 		where = fmt.Sprintf("WHERE %s", where)
 	}
