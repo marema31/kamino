@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"io"
 
+	"github.com/marema31/kamino/config"
 	"github.com/marema31/kamino/provider/common"
 )
 
@@ -18,9 +19,9 @@ type KaminoCsvSaver struct {
 }
 
 //NewSaver open the encoding process on provider file and return a Saver compatible object
-func NewSaver(ctx context.Context, config map[string]string, name string, tmpName string, file io.WriteCloser) (*KaminoCsvSaver, error) {
+func NewSaver(ctx context.Context, saverConfig config.DestinationConfig, tmpName string, file io.WriteCloser) (*KaminoCsvSaver, error) {
 	writer := csv.NewWriter(file)
-	return &KaminoCsvSaver{file: file, name: name, tmpName: tmpName, writer: *writer, colNames: nil}, nil
+	return &KaminoCsvSaver{file: file, name: saverConfig.File, tmpName: tmpName, writer: *writer, colNames: nil}, nil
 }
 
 //Save writes the record to the destination

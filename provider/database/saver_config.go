@@ -3,29 +3,29 @@ package database
 import (
 	"fmt"
 	"strings"
+
+	"github.com/marema31/kamino/config"
 )
 
 //parseConfig parse the config to extract the mode and the primary key and save them in the dbSaver instance
-func (ds *DbSaver) parseConfig(config map[string]string) error {
-	ds.key = config["key"]
+func (ds *DbSaver) parseConfig(saverConfig config.DestinationConfig) error {
+	ds.key = saverConfig.Key
 
 	ds.mode = exactCopy
-	modestr, ok := config["mode"]
-	if ok {
-		switch {
-		case strings.EqualFold(modestr, "onlyifempty"):
-			ds.mode = onlyIfEmpty
-		case strings.EqualFold(modestr, "insert"):
-			ds.mode = insert
-		case strings.EqualFold(modestr, "update"):
-			ds.mode = update
-		case strings.EqualFold(modestr, "replace"):
-			ds.mode = replace
-		case strings.EqualFold(modestr, "copy"):
-			ds.mode = exactCopy
-		case strings.EqualFold(modestr, "truncate"):
-			ds.mode = truncate
-		}
+	modestr := saverConfig.Mode
+	switch {
+	case strings.EqualFold(modestr, "onlyifempty"):
+		ds.mode = onlyIfEmpty
+	case strings.EqualFold(modestr, "insert"):
+		ds.mode = insert
+	case strings.EqualFold(modestr, "update"):
+		ds.mode = update
+	case strings.EqualFold(modestr, "replace"):
+		ds.mode = replace
+	case strings.EqualFold(modestr, "copy"):
+		ds.mode = exactCopy
+	case strings.EqualFold(modestr, "truncate"):
+		ds.mode = truncate
 	}
 
 	if ds.key == "" && (ds.mode == update || ds.mode == replace) {

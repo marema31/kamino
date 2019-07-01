@@ -7,7 +7,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
+
+	"github.com/marema31/kamino/config"
 )
 
 // StdoutWriterCloser type for Stdout with a non closing Close operation to avoid multiple close
@@ -34,42 +35,33 @@ func (s *StdoutWriterCloser) Close() error {
 }
 
 //OpenWriter analyze the config block and return the corresponding io.WriteCloser to be used by other providers
-func OpenWriter(config map[string]string) (io.WriteCloser, string, string, error) {
-	file, okfile := config["file"]
-	if !okfile {
-		return nil, "", "", fmt.Errorf("the configuration block does not provide the filename")
+func OpenWriter(saverConfig config.DestinationConfig) (io.WriteCloser, string, error) {
+	if saverConfig.File == "" {
+		return nil, "", fmt.Errorf("the configuration block does not provide the filename")
 	}
 
 	var writer io.WriteCloser
-	var tmpFile = file
+	var tmpFile = saverConfig.File
 
-	if okfile && file == "-" {
+	if saverConfig.File == "-" {
 		writer = NewStdoutWriterCloser()
 
-	} else if okfile {
-		dir, pattern := filepath.Split(file)
+	} else {
+		dir, pattern := filepath.Split(saverConfig.File)
 		cache, err := ioutil.TempFile(dir, pattern+".")
 		if err != nil {
-			return nil, "", "", err
+			return nil, "", err
 		}
 		writer = cache
 		tmpFile = cache.Name()
 	}
 
-	gs, ok := config["gzip"]
-	if ok {
-		gb, err := strconv.ParseBool(gs)
-		if err != nil {
-			return nil, "", "", fmt.Errorf("the gzip element of configuration block must be true/false")
-		}
-
-		if gb {
-			writer = gzip.NewWriter(writer)
-		}
+	if saverConfig.Gzip {
+		writer = gzip.NewWriter(writer)
 
 	}
 
-	return writer, file, tmpFile, nil
+	return writer, tmpFile, nil
 }
 
 //ResetWriter close the writer and remove the temporary file since the synchronization was not OK

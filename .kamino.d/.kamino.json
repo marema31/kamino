@@ -65,20 +65,27 @@
         "source":
         {
             "type":     "database",
-            "database": "source1",
-            "table":    "table2",
+            "database": "copy",
+            "instance": "1",
+            "table":    "table1",
             "where":    "chaine LIKE '%fish%'"
         },
         "destinations":
         [
             {
                 "type":     "database",
-                "database": "copy1",
+                "database": "copy",
+                "instances": [
+                    "sch1",
+                    "pg" 
+                ], 
+                "key":      "entier",
                 "table":    "table2"
             },
             {
                 "type":     "database",
                 "database": "copy2",
+                "key":      "entier",
                 "table":    "table2"
             },
             {

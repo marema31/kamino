@@ -21,34 +21,33 @@ type Loader interface {
 }
 
 //NewLoader analyze the config map and return object implemnting Loader of the asked type
-func NewLoader(ctx context.Context, config *config.Config, loaderConfig map[string]string, environment string, instances []string) (Loader, error) {
-	_, ok := loaderConfig["type"]
-	if !ok {
+func NewLoader(ctx context.Context, config *config.Config, loaderConfig config.SourceConfig, environment string, instance string) (Loader, error) {
+	if loaderConfig.Type == "" {
 		return nil, fmt.Errorf("the configuration block for this source does not provide the type")
 	}
 
-	switch loaderConfig["type"] {
+	switch loaderConfig.Type {
 	case "database":
-		return database.NewLoader(ctx, config, loaderConfig, environment, instances)
+		return database.NewLoader(ctx, config, loaderConfig, environment, instance)
 	case "csv":
-		reader, name, err := common.OpenReader(loaderConfig)
+		reader, err := common.OpenReader(loaderConfig)
 		if err != nil {
 			return nil, err
 		}
-		return csv.NewLoader(ctx, loaderConfig, name, reader)
+		return csv.NewLoader(ctx, loaderConfig, reader)
 	case "json":
-		reader, name, err := common.OpenReader(loaderConfig)
+		reader, err := common.OpenReader(loaderConfig)
 		if err != nil {
 			return nil, err
 		}
-		return json.NewLoader(ctx, loaderConfig, name, reader)
+		return json.NewLoader(ctx, loaderConfig, reader)
 	case "yaml":
-		reader, name, err := common.OpenReader(loaderConfig)
+		reader, err := common.OpenReader(loaderConfig)
 		if err != nil {
 			return nil, err
 		}
-		return yaml.NewLoader(ctx, loaderConfig, name, reader)
+		return yaml.NewLoader(ctx, loaderConfig, reader)
 	default:
-		return nil, fmt.Errorf("don't know how to manage %s", loaderConfig["type"])
+		return nil, fmt.Errorf("don't know how to manage %s", loaderConfig.Type)
 	}
 }

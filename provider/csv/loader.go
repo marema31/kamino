@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"io"
 
+	"github.com/marema31/kamino/config"
 	"github.com/marema31/kamino/provider/common"
 )
 
@@ -19,7 +20,7 @@ type KaminoCsvLoader struct {
 }
 
 //NewLoader open the encoding process on provider file, read the header from the first line and return a Loader compatible object
-func NewLoader(ctx context.Context, config map[string]string, name string, file io.ReadCloser) (*KaminoCsvLoader, error) {
+func NewLoader(ctx context.Context, loaderConfig config.SourceConfig, file io.ReadCloser) (*KaminoCsvLoader, error) {
 	reader := csv.NewReader(file)
 	//Read the header to dertermine the column order
 	row, err := reader.Read()
@@ -27,7 +28,7 @@ func NewLoader(ctx context.Context, config map[string]string, name string, file 
 		return nil, err
 	}
 
-	return &KaminoCsvLoader{file: file, name: name, reader: *reader, colNames: row, currentRow: nil, currentError: nil}, nil
+	return &KaminoCsvLoader{file: file, name: loaderConfig.File, reader: *reader, colNames: row, currentRow: nil, currentError: nil}, nil
 }
 
 //Next moves to next record and return false if there is no more records

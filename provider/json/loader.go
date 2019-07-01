@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/marema31/kamino/config"
 	"github.com/marema31/kamino/provider/common"
 )
 
@@ -19,15 +20,14 @@ type KaminoJSONLoader struct {
 }
 
 //NewLoader open the encoding process on provider file, read the whole file, unMarshal it and return a Loader compatible object
-func NewLoader(ctx context.Context, config map[string]string, name string, file io.ReadCloser) (*KaminoJSONLoader, error) {
+func NewLoader(ctx context.Context, loaderConfig config.SourceConfig, file io.ReadCloser) (*KaminoJSONLoader, error) {
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
 
-	k := KaminoJSONLoader{file: file, name: name, content: nil, currentRow: 0}
+	k := KaminoJSONLoader{file: file, name: loaderConfig.File, content: nil, currentRow: 0}
 	k.content = make([]map[string]string, 0)
-
 	err = json.Unmarshal([]byte(byteValue), &k.content)
 	if err != nil {
 		return nil, err
