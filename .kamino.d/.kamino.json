@@ -45,15 +45,15 @@
             },
             {
                 "type": "json",
-                "file": "testdata/dest.json"
+                "file": "testdata/tmp/dest.json"
             },
             {
                 "type": "yaml",
-                "file": "testdata/dest.yaml"
+                "file": "testdata/tmp/dest.yaml"
             },
             {
                 "type": "csv",
-                "file": "testdata/dest.csv"
+                "file": "testdata/tmp/dest.csv"
             },
             {
                 "type": "yaml",
@@ -90,19 +90,108 @@
             },
             {
                 "type": "json",
-                "file": "testdata/dest2.json"
+                "file": "testdata/tmp/dest2.json"
             },
             {
                 "type": "yaml",
-                "file": "testdata/dest2.yaml"
+                "file": "testdata/tmp/dest2.yaml"
             },
             {
                 "type": "csv",
-                "file": "testdata/dest2.csv"
+                "file": "testdata/tmp/dest2.csv"
             },
             {
                 "type": "csv",
                 "file": "-"
+            }
+        ]
+    },
+    "pokemon_init": {
+        "source":
+        {
+            "type":     "csv",
+            "file": "testdata/pokemon.zip",
+            "zip":    true
+        },
+        "destinations":
+        [
+            {
+                "type":     "database",
+                "database": "source1",
+                "table":    "pokemon",
+                "mode":     "OnlyIfEmpty"
+            },
+            {
+                "type": "yaml",
+                "file": "-"
+            }
+        ]
+    },
+    "pokemon": {
+        "source":
+        {
+            "type":     "database",
+            "database": "source1",
+            "table":    "pokemon"
+        },
+        "cache": {
+            "type": "json",
+            "file": "testdata/tmp/pokemon_cache.json",
+            "ttl": "3m"
+        },
+        "filters": [
+            {                
+                "type": "only",
+                "parameters": [
+                    "id",
+                    "pokedex_id",
+                    "name",
+                    "hp",
+                    "type1",
+                    "type2",
+                    "attack",
+                    "defense",
+                    "speed",
+                    "generation",
+                    "legendary"
+                ]
+            },
+            {
+                "type": "replace",
+                "parameters": {
+                    "type2": "2018-01-01",
+                    "hp":"100"                    
+                }
+            }
+        ],
+        "destinations":
+        [
+            {
+                "type":     "database",
+                "database": "copy",
+                "table":    "pokemon",
+                "key":      "id",
+                "mode":     "replace"
+            },
+            {
+                "type":     "database",
+                "database": "copy2",
+                "table":    "pokemon",
+                "mode":     "OnlyIfEmpty"
+            },
+            {
+                "type": "json",
+                "file": "testdata/tmp/dest.json",
+                "gzip": true
+            },
+            {
+                "type": "yaml",
+                "file": "testdata/tmp/dest.yaml"
+            },
+            {
+                "type": "csv",
+                "file": "testdata/tmp/dest.zip",
+                "zip": true
             }
         ]
     }

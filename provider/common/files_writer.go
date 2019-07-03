@@ -1,12 +1,14 @@
 package common
 
 import (
+	"archive/zip"
 	"compress/gzip"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/marema31/kamino/config"
 )
@@ -76,7 +78,7 @@ func ResetWriter(writer io.Closer, tmpFile string, file string) error {
 }
 
 //CloseWriter close the writer and rename the temporary file to real name since synchronization was OK
-func CloseWriter(writer io.Closer, tmpFile string, file string) error {
+func CloseWriter(writer io.Closer, tmpFile string, file string, fileType string) error {
 
 	writer.Close()
 
@@ -91,6 +93,39 @@ func CloseWriter(writer io.Closer, tmpFile string, file string) error {
 		}
 
 	}
+
+	if filepath.Ext(file) == ".zip" {
+		archivew, err := os.Create(file)
+		if err != nil {
+			return err
+		}
+
+		archive := zip.NewWriter(archivew)
+
+		reader, err := os.Open(tmpFile)
+		if err != nil {
+			return err
+		}
+
+		name := filepath.Base(strings.TrimSuffix(file, "zip"))
+		writer, err := archive.Create(name + fileType)
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(writer, reader)
+		if err != nil {
+			return err
+		}
+
+		err = archive.Close()
+		if err != nil {
+			return err
+		}
+
+		return os.Remove(tmpFile)
+	}
+
 	err := os.Rename(tmpFile, file)
 	if err != nil {
 		return err
