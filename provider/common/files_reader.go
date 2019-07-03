@@ -1,6 +1,7 @@
 package common
 
 import (
+	"archive/zip"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -47,6 +48,13 @@ func OpenReader(config config.SourceConfig) (io.ReadCloser, error) {
 	if config.File == "-" {
 		reader = NewStdinReaderCloser()
 	} else if config.File != "" {
+		if config.Zip {
+			archive, err := zip.OpenReader(config.File)
+			if err != nil {
+				return nil, err
+			}
+			return archive.File[0].Open()
+		}
 		reader, err = os.Open(config.File)
 		if err != nil {
 			return nil, err

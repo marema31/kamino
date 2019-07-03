@@ -40,7 +40,7 @@ func (ys *KaminoYAMLSaver) Close() error {
 	if err != nil {
 		return err
 	}
-	return common.CloseWriter(ys.file, ys.tmpName, ys.name)
+	return common.CloseWriter(ys.file, ys.tmpName, ys.name, "yaml")
 }
 
 //Name give the name of the destination

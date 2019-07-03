@@ -30,6 +30,7 @@ type SourceConfig struct {
 	URL      string
 	Inline   string
 	Gzip     bool
+	Zip      bool
 	Database string
 	Instance string
 	Table    string
@@ -41,6 +42,7 @@ type DestinationConfig struct {
 	Type      string
 	File      string
 	Gzip      bool
+	Zip       bool
 	Database  string
 	Instances []string
 	Table     string

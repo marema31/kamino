@@ -39,7 +39,7 @@ func (js *KaminoJSONSaver) Close() error {
 	if err != nil {
 		return err
 	}
-	return common.CloseWriter(js.file, js.tmpName, js.name)
+	return common.CloseWriter(js.file, js.tmpName, js.name, "json")
 }
 
 //Name give the name of the destination
