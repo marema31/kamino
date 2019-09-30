@@ -8,10 +8,12 @@ import (
 
 func newMigrateUpCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "up [--admin|--user] <recipe> ... <recipe>",
+		Use:   "up <recipe> ... <recipe>",
 		Short: "Apply up migration",
-		Long:  `Apply the up block of schema migration.`,
-		Args:  cobra.NoArgs,
+		Long: `Apply the up block of schema migration.
+		
+		All non-applied Admin's migrations will be done first, then user's ones`,
+		DisableFlagsInUseLine: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return Up(args)
 		},

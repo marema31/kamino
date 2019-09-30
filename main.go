@@ -1,28 +1,18 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"log"
-	"os"
-	"os/signal"
-	"strings"
-	"time"
-
-	"github.com/marema31/kamino/config"
-	kaminoSync "github.com/marema31/kamino/sync"
-)
-
-// Theses variables will be provided by goreleaser via ldflags
-var (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
+	"github.com/marema31/kamino/cmd"
+	//	"github.com/marema31/kamino/config"
+	//	kaminoSync "github.com/marema31/kamino/sync"
 )
 
 func main() {
+	cmd.Execute()
+}
 
-	ctx := context.Background()
+/* func main() {
+
+/*	ctx := context.Background()
 	// trap Ctrl+C
 	ctx, cancel := context.WithCancel(ctx)
 	sigChan := make(chan os.Signal, 1)
@@ -53,9 +43,9 @@ func main() {
 	environment := ""
 	var instances []string
 
-	/*	instances = append(instances, "sch1")
-		instances = append(instances, "1")
-	*/
+	//	instances = append(instances, "sch1")
+	//	instances = append(instances, "1")
+
 	if len(os.Args) > 2 && os.Args[1] == "-d" {
 		i = 3
 		configPath = os.Args[2]
@@ -88,3 +78,4 @@ func main() {
 	}
 	time.Sleep(1 * time.Second) // TODO:Wait on waitgroup ??
 }
+*/
