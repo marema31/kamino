@@ -1,0 +1,10 @@
+---
+priority: 1
+name: "createdb"
+type: "sql"
+template: "testdata/templates/createdb_mysql.sql"
+tags: 
+  - "pokemon"
+admin: "true"
+engine: "mysql"
+query: "SELECT COUNT(schema_name) FROM information_schema.schemata WHERE schema_name='{{.Database}}';" 

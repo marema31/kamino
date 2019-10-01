@@ -1,0 +1,10 @@
+---
+priority: 2
+name: "createuser"
+type: "sql"
+template: "testdata/templates/createuser_mysql.sql"
+tags: 
+  - "pokemon"
+admin: "true"
+engine: "postgres"
+query: "SELECT 1 FROM pg_roles WHERE rolname='{{.User}}'" 

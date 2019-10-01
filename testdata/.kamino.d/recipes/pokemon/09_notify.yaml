@@ -1,0 +1,10 @@
+---
+priority: 8
+name: "notify"
+type: "shell"
+script: "testdata/bin/notify.sh"
+arguments: "-d {{.Database}} {{range .Tags}} -t {{.}} {{end}} -u {{.User}}"
+tags: 
+  - "pokemon"
+  - "!source"
+  

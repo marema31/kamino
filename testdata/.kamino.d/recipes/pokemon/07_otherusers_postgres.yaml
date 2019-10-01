@@ -1,0 +1,10 @@
+---
+priority: 7
+name: "otherusers"
+type: "sql"
+template: "testdata/templates/otherusers_postgres.sql"
+tags: 
+  - "pokemon"
+admin: "true"
+engine: "postgres"
+query: "SELECT 1 FROM pg_roles WHERE rolname='sacha'" 

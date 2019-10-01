@@ -194,5 +194,24 @@
                 "zip": true
             }
         ]
+    },
+    "pokemon_bgrass": {
+        "source":
+        {
+            "type":     "database",
+            "database": "source1",
+            "table":    "pokemon",
+            "where": "type1 ='Grass' AND name LIKE 'B%'"
+        },
+        "destinations":
+        [
+            {
+                "type":     "database",
+                "database": "copy2",
+                "table":    "pokemon",
+                "key":      "id",
+                "mode":     "exactCopy"
+            }
+        ]
     }
 }

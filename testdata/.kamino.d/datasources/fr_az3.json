@@ -1,0 +1,12 @@
+{
+    "engine":        "postgres",
+    "database":      "pokemon_fr",
+    "host":          "localhost",
+    "port":          "12343",
+    "admin":         "postgres",
+    "adminpassword": "adminpw",
+    "user":          "bob",
+    "password":      "123soleil",
+    "transaction":   true,
+    "tags":          [ "pokemon", "copy", "fr", "az3"]
+}

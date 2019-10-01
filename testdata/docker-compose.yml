@@ -1,0 +1,35 @@
+version: "3.7"
+
+services:
+  mysql_source:
+    image: mariadb:10
+    environment: 
+      MYSQL_ROOT_PASSWORD: "adminpw"
+    ports:
+      - 12340:3306
+  mysql_fr:
+    image: mariadb:10
+    environment: 
+      MYSQL_ROOT_PASSWORD: "adminpw"
+    ports:
+      - 12341:3306
+  mysql_us:
+    image: mariadb:10
+    environment: 
+      MYSQL_ROOT_PASSWORD: "adminpw"
+    ports:
+      - 12342:3306
+  postgres:
+    image: postgres:11
+    environment: 
+      POSTGRES_PASSWORD: "adminpw"
+    ports:
+      - 12343:5432
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - 12348:80
+  phppgadmin:
+    image: dockage/phppgadmin:latest
+    ports:
+      - 12349:80

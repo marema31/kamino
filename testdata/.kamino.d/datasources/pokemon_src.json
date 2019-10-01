@@ -1,0 +1,11 @@
+{
+    "engine":        "mysql",
+    "database":      "pokemon_src",
+    "host":          "localhost",
+    "port":          "12340",
+    "admin":         "postgres",
+    "adminpassword": "adminpw",
+    "user":          "bob",
+    "password":      "123soleil",
+    "tags":          [ "pokemon", "source", "fr", "az1"]
+}

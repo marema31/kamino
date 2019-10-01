@@ -1,0 +1,12 @@
+{
+    "engine":        "mysql",
+    "database":      "pokemon_az1",
+    "host":          "localhost",
+    "port":          "12341",
+    "admin":         "root",
+    "adminpassword": "adminpw",
+    "user":          "bob",
+    "password":      "123soleil",
+    "transaction":   true,
+    "tags":          [ "pokemon", "copy2", "fr", "az1"]
+}

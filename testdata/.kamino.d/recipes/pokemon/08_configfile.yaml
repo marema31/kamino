@@ -1,0 +1,10 @@
+---
+priority: 8
+name: "configfile"
+type: "template"
+template: "testdata/templates/config.tmpl"
+destination: "testdata/tmp/config_{{.Database}}.ini"
+tags: 
+  - "pokemon"
+  - "!source"
+  
