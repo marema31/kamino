@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/marema31/kamino/cmd/migrate"
 
@@ -57,9 +56,7 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "list action only do not do them")
 	RootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "do not print to screen")
 	RootCmd.PersistentFlags().StringVarP(&environment, "environment", "e", "", "database environment (by default the only existing environment)")
-	var sinstance string
-	RootCmd.PersistentFlags().StringVarP(&sinstance, "instances", "i", "", "comma separated list of instance (default is all the instances)")
-	instances = strings.Split(sinstance, ",")
+	RootCmd.PersistentFlags().StringSliceVarP(&instances, "instances", "i", []string{}, "comma separated list of instance (default is all the instances)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

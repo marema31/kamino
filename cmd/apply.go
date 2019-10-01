@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -17,19 +16,13 @@ var (
 			return Apply(args)
 		},
 	}
-	names []string
-	types []string
+	names = []string{}
+	types = []string{}
 )
 
 func init() {
-	var (
-		sname string
-		stype string
-	)
-	applyCmd.Flags().StringVarP(&sname, "name", "n", "", "comma separated list of recipe step names")
-	names = strings.Split(sname, ",")
-	applyCmd.Flags().StringVarP(&stype, "type", "t", "", "comma separated list of recipe step types")
-	types = strings.Split(stype, ",")
+	applyCmd.Flags().StringSliceVarP(&names, "name", "n", []string{}, "comma separated list of recipe step names")
+	applyCmd.Flags().StringSliceVarP(&types, "type", "t", []string{}, "comma separated list of recipe step types")
 	RootCmd.AddCommand(applyCmd)
 }
 
