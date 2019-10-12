@@ -1,0 +1,5 @@
+{
+    "engine":        "json",
+    "file":          "../tmp/dest_az1.json.gz",
+    "tags":          [ "pokemon", "copy", "az1"]
+}

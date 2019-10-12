@@ -1,18 +1,20 @@
 package main
 
 import (
+	"context"
+	"log"
+	"os"
+	"os/signal"
+	"time"
+
 	"github.com/marema31/kamino/cmd"
 	//	"github.com/marema31/kamino/config"
 	//	kaminoSync "github.com/marema31/kamino/sync"
 )
 
 func main() {
-	cmd.Execute()
-}
-
-/* func main() {
-
-/*	ctx := context.Background()
+	// Create the application context for correct sub-task abortion if CTRL+C
+	ctx := context.Background()
 	// trap Ctrl+C
 	ctx, cancel := context.WithCancel(ctx)
 	sigChan := make(chan os.Signal, 1)
@@ -33,12 +35,12 @@ func main() {
 		time.Sleep(5 * time.Second) //TODO: Wait on waitgroup ??
 		os.Exit(1)
 	}()
+	cmd.Execute(ctx)
+}
 
-	//TODO: review CLI (use cobra ?)
-	i := 1
-	configPath := ".kamino.d"
-	configFile := ".kamino"
+/* func main() {
 
+/*
 	//TODO: During CLI review add options for environment and instances
 	environment := ""
 	var instances []string
@@ -50,14 +52,6 @@ func main() {
 		i = 3
 		configPath = os.Args[2]
 		//	configFile = filepath.Base(os.Args[2])
-	}
-
-	if (len(os.Args)-i) < 1 || os.Args[i] == "-h" {
-		fmt.Printf("kamino %v, commit %v, built at %v\n\n", version, commit, date)
-		fmt.Println("usage: kamino [-c configFile] syncName [syncName ... syncName]")
-		fmt.Println()
-		fmt.Println("The config file name must be provided without the file extension, kamino will try json, toml and yaml")
-		os.Exit(0)
 	}
 
 	config, err := config.New(configPath, configFile)

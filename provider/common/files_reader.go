@@ -1,5 +1,6 @@
 package common
 
+//TODO: This file is replaced by Datasource.OpenReadFile
 import (
 	"archive/zip"
 	"compress/gzip"

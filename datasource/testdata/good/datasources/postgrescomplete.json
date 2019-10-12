@@ -1,0 +1,13 @@
+{
+    "engine":        "postgres",
+    "database":      "dbpc",
+    "host":          "hpc",
+    "port":          "1234",
+    "admin":         "super",
+    "adminpassword": "adminpw",
+    "user":          "bob",
+    "password":      "123soleil",
+    "transaction":   true,
+    "schema":        "shpc",
+    "tags":          [ "tagpc"]
+}

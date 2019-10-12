@@ -1,0 +1,5 @@
+{
+    "engine":        "csv",
+    "file":          "../tmp/dest_az3.csv",
+    "tags":          [ "pokemon", "copy", "az3"]
+}

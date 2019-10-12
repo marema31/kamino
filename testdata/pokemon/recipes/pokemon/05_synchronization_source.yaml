@@ -1,0 +1,14 @@
+---
+priority: 5
+name: "synchronization"
+type: "sync"
+source: 
+  tag: "pokemon.initial"
+destinations:
+  - tags:  
+    - "pokemon.source"
+    table: "pokemon"
+    mode: "onlyIfEmpty"
+  - tags: 
+      - "pokemon.yout"
+      

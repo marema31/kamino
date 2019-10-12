@@ -1,0 +1,5 @@
+{
+    "engine":        "yaml",
+    "file":          "tmp/file.yaml",
+    "tags":          [ "tagyaml"]
+}

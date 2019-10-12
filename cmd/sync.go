@@ -21,7 +21,7 @@ var (
 
 func init() {
 	syncCmd.Flags().BoolVarP(&cacheOnly, "cache-only", "C", false, "Use only cache as source")
-	RootCmd.AddCommand(syncCmd)
+	rootCmd.AddCommand(syncCmd)
 }
 
 //Sync will run only the recipes with sync type

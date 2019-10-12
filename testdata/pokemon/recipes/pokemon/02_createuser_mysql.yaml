@@ -1,0 +1,11 @@
+---
+priority: 2
+name: "createuser"
+type: "sql"
+template: "templates/createuser_mysql.sql.tmpl"
+tags: 
+  - "pokemon"
+admin: "true"
+nodb: "true"
+engine: "mysql"
+query: "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '{{.User}}')" 

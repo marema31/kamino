@@ -1,0 +1,10 @@
+---
+priority: 7
+name: "otherusers"
+type: "sql"
+template: "templates/otherusers_mysql.sql.tmpl"
+tags: 
+  - "pokemon"
+admin: "true"
+engine: "mysql"
+query: "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = 'sacha')" 

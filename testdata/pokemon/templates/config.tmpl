@@ -1,0 +1,5 @@
+#Necessitate the use of sprig libraries (github.com/Masterminds/sprig)
+# Like this : 
+# t := template.New("t").Funcs(sprig.FuncMap()).Parse(tpl)
+
+{{.Database}}:{{.User}}:{{.Password}}:{{.Host}}:{{.Port}}:{{.Tags | join ","}}

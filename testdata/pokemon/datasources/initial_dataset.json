@@ -1,0 +1,6 @@
+{
+    "engine":        "json",
+    "file":          "initial_dataset/pokemon.zip",
+    "zip":           true,
+    "tags":          [ "pokemon", "initial"]
+}

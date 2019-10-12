@@ -1,0 +1,6 @@
+{
+    "engine":        "mysql",
+    "database":      "dbmm",
+    "password":      "123soleil",
+    "tags":          [ "tagmm"]
+}

@@ -1,0 +1,6 @@
+engine = "csv"
+file   = "tmp/file.csv.gz"
+gzip   = true
+tags   = [ 
+    "taggzipcsv"
+]

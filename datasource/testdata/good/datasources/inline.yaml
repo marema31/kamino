@@ -1,0 +1,4 @@
+engine: "json"
+inline: '[{"id":1,"value":"test"}]'
+tags: 
+  - "tagjson"

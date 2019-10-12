@@ -1,0 +1,5 @@
+{
+    "engine":        "csv",
+    "file":          "tmp/file.csv",
+    "tags":          [ "tagcsv"]
+}

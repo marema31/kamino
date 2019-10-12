@@ -25,7 +25,7 @@ func NewLoader(ctx context.Context, config *config.Config, loaderConfig config.S
 	if loaderConfig.Type == "" {
 		return nil, fmt.Errorf("the configuration block for this source does not provide the type")
 	}
-
+	//TODO: replace the common.OpenReader by datasource.OpenReadFile
 	switch loaderConfig.Type {
 	case "database":
 		return database.NewLoader(ctx, config, loaderConfig, environment, instance)

@@ -1,0 +1,4 @@
+engine: "json"
+file: "tmp/file.json"
+tags: 
+  - "tagjson"

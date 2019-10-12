@@ -23,7 +23,7 @@ var (
 func init() {
 	applyCmd.Flags().StringSliceVarP(&names, "name", "n", []string{}, "comma separated list of recipe step names")
 	applyCmd.Flags().StringSliceVarP(&types, "type", "t", []string{}, "comma separated list of recipe step types")
-	RootCmd.AddCommand(applyCmd)
+	rootCmd.AddCommand(applyCmd)
 }
 
 //Apply will run only the recipes with Apply type

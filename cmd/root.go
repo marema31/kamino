@@ -1,6 +1,8 @@
+//Package cmd manage the first level of command of the CLI
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -10,6 +12,7 @@ import (
 )
 
 var (
+	ctx         context.Context
 	cfgFolder   string
 	dryRun      bool
 	quiet       bool
@@ -18,7 +21,7 @@ var (
 )
 
 // RootCmd represents the base command when called without any subcommands
-var RootCmd = &cobra.Command{
+var rootCmd = &cobra.Command{
 	Use:   "kamino [OPTIONS] COMMAND <recipe> ... <recipe>",
 	Short: "Development database manager",
 	Long: `
@@ -39,8 +42,9 @@ var RootCmd = &cobra.Command{
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := RootCmd.Execute(); err != nil {
+func Execute(c context.Context) {
+	ctx = c //Store the context for all sub-command definition
+	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -52,16 +56,16 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	RootCmd.PersistentFlags().StringVarP(&cfgFolder, "config", "c", "", "config folder (default is $HOME/.kamino.d)")
-	RootCmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "list action only do not do them")
-	RootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "do not print to screen")
-	RootCmd.PersistentFlags().StringVarP(&environment, "environment", "e", "", "database environment (by default the only existing environment)")
-	RootCmd.PersistentFlags().StringSliceVarP(&instances, "instances", "i", []string{}, "comma separated list of instance (default is all the instances)")
+	rootCmd.PersistentFlags().StringVarP(&cfgFolder, "config", "c", "", "config folder (default is $HOME/.kamino.d)")
+	rootCmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "list action only do not do them")
+	rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "do not print to screen")
+	rootCmd.PersistentFlags().StringVarP(&environment, "environment", "e", "", "database environment (by default the only existing environment)")
+	rootCmd.PersistentFlags().StringSliceVarP(&instances, "instances", "i", []string{}, "comma separated list of instance (default is all the instances)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	//RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	migrate.AddCommands(RootCmd)
+	migrate.AddCommands(ctx, rootCmd)
 }
 
 //TODO: called by init function

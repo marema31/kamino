@@ -36,6 +36,7 @@ func (s *StdoutWriterCloser) Close() error {
 	return nil
 }
 
+//TODO: This function and the previous ones should be moved as Datasource.OpenWriteFile
 //OpenWriter analyze the config block and return the corresponding io.WriteCloser to be used by other providers
 func OpenWriter(saverConfig config.DestinationConfig) (io.WriteCloser, string, error) {
 	if saverConfig.File == "" {

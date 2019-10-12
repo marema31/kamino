@@ -28,6 +28,7 @@ func NewSaver(ctx context.Context, config *config.Config, saverConfig config.Des
 
 	var ss []Saver
 
+	//TODO: replace common.OpenWriter by datasource.OpenWriteFile
 	switch saverConfig.Type {
 	case "database":
 		ds, err := database.NewSaver(ctx, config, saverConfig, environment, instances)
