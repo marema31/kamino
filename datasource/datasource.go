@@ -1,5 +1,5 @@
 //Package datasource manage the list of datasources and their
-// selction from tags
+// selection from tags
 package datasource
 
 import (
@@ -42,6 +42,12 @@ type Datasource struct {
 	Database    string
 	Engine      Engine
 	Inline      string
+	Host        string
+	Port        string
+	User        string
+	UserPw      string
+	Admin       string
+	AdminPw     string
 	URL         string //TODO: not exported ?
 	URLAdmin    string //TODO: not exported ?
 	URLNoDb     string //TODO: not exported ?
@@ -55,9 +61,6 @@ type Datasource struct {
 	filewriter  bool
 	Tags        []string
 }
-
-//Dictionnary of datasource indexed by name
-var datasources = make(map[string]*Datasource)
 
 //GetEngine return a string containing the engine name
 func (ds *Datasource) GetEngine() string {
@@ -79,8 +82,8 @@ func (ds *Datasource) GetEngine() string {
 //GetNamedTag return the value of the tag with the provided name or "" if not exists
 func (ds *Datasource) GetNamedTag(name string) string {
 	for _, tag := range ds.Tags {
-		if strings.Index(tag, name+":") != -1 {
-			return tag[len(name)+1 : len(tag)]
+		if strings.Contains(tag, name+":") {
+			return tag[len(name)+1:]
 		}
 	}
 	return ""

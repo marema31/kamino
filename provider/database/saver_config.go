@@ -1,12 +1,6 @@
 package database
 
-import (
-	"fmt"
-	"strings"
-
-	"github.com/marema31/kamino/config"
-)
-
+/*TODO: Uncomment
 //parseConfig parse the config to extract the mode and the primary key and save them in the dbSaver instance
 func (ds *DbSaver) parseConfig(saverConfig config.DestinationConfig) error {
 	ds.key = saverConfig.Key
@@ -51,3 +45,4 @@ func (ds *DbSaver) createIdsList() error {
 	}
 	return nil
 }
+*/

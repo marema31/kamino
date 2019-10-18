@@ -39,7 +39,8 @@ func (js *KaminoJSONSaver) Close() error {
 	if err != nil {
 		return err
 	}
-	return common.CloseWriter(js.file, js.tmpName, js.name, "json")
+	//TODO: replace the following by the datasource.CloseFile()
+	return nil
 }
 
 //Name give the name of the destination
@@ -49,5 +50,6 @@ func (js *KaminoJSONSaver) Name() string {
 
 //Reset reinitialize the destination (if possible)
 func (js *KaminoJSONSaver) Reset() error {
-	return common.ResetWriter(js.file, js.tmpName, js.name)
+	//TODO: replace the following by the datasource.ResetFile()
+	return nil
 }

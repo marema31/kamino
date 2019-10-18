@@ -2,6 +2,7 @@ package migrate
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -15,6 +16,8 @@ func AddCommands(c context.Context, cmd *cobra.Command) {
 	cmd.AddCommand(
 		NewMigrateCommand(),
 	)
+	//TODO: remove this line when ctx will be used elsewhere
+	fmt.Print(ctx)
 }
 
 //NewMigrateCommand declare the migration sub commands

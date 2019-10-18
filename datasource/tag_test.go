@@ -9,35 +9,38 @@ import (
 // We are providing the private datastore, we must be in same package
 
 // setup fonction
-func setupLookupDatastore() {
-	datasources = map[string]*Datasource{
-		"ds1":   &Datasource{Name: "ds1", Type: Database, Engine: Mysql},
-		"ds2":   &Datasource{Name: "ds2", Type: Database, Engine: Postgres},
-		"ds3":   &Datasource{Name: "ds3", Type: File, Engine: JSON},
-		"ds4":   &Datasource{Name: "ds4", Type: File, Engine: YAML},
-		"ds5":   &Datasource{Name: "ds5", Type: File, Engine: YAML},
-		"ds6":   &Datasource{Name: "ds6", Type: File, Engine: YAML},
-		"ds7":   &Datasource{Name: "ds7", Type: File, Engine: YAML},
-		"notag": &Datasource{Name: "notag", Type: File, Engine: YAML},
+func setupLookupDatastore() *Datasources {
+	dss := Datasources{}
+
+	dss.datasources = map[string]*Datasource{
+		"ds1":   {Name: "ds1", Type: Database, Engine: Mysql},
+		"ds2":   {Name: "ds2", Type: Database, Engine: Postgres},
+		"ds3":   {Name: "ds3", Type: File, Engine: JSON},
+		"ds4":   {Name: "ds4", Type: File, Engine: YAML},
+		"ds5":   {Name: "ds5", Type: File, Engine: YAML},
+		"ds6":   {Name: "ds6", Type: File, Engine: YAML},
+		"ds7":   {Name: "ds7", Type: File, Engine: YAML},
+		"notag": {Name: "notag", Type: File, Engine: YAML},
 	}
 
-	tagToDatasource = map[string][]string{
-		"tag1":           []string{"ds1", "ds2"},
-		"tag2":           []string{"ds1", "ds3", "ds4"},
-		"environment:us": []string{"ds5", "ds6"},
-		"environment:fr": []string{"ds7", "ds2", "ds4"},
-		"":               []string{"notag"},
+	dss.tagToDatasource = map[string][]string{
+		"tag1":           {"ds1", "ds2"},
+		"tag2":           {"ds1", "ds3", "ds4"},
+		"environment:us": {"ds5", "ds6"},
+		"environment:fr": {"ds7", "ds2", "ds4"},
+		"":               {"notag"},
 	}
+	return &dss
 }
 
 // teardown fonction
-func teardownLookupDatastore() {
-	datasources = nil
-	tagToDatasource = nil
+func teardownLookupDatastore(dss *Datasources) {
+	dss.datasources = nil
+	dss.tagToDatasource = nil
 }
 
-func helperTestlookupOneTag(t *testing.T, tag string, dsTypes []Type, engines []Engine, anames []string) {
-	rnames := lookupOneTag(tag, dsTypes, engines)
+func helperTestlookupOneTag(t *testing.T, dss *Datasources, tag string, dsTypes []Type, engines []Engine, anames []string) {
+	rnames := dss.lookupOneTag(tag, dsTypes, engines)
 
 	sort.Strings(anames)
 	aw := strings.Join(anames, " ")
@@ -52,11 +55,12 @@ func helperTestlookupOneTag(t *testing.T, tag string, dsTypes []Type, engines []
 }
 
 func TestLookupOneTag(t *testing.T) {
-	setupLookupDatastore()
-	defer teardownLookupDatastore()
+	dss := setupLookupDatastore()
+	defer teardownLookupDatastore(dss)
 
 	helperTestlookupOneTag(
 		t,
+		dss,
 		"tag1",
 		nil,
 		nil,
@@ -65,6 +69,7 @@ func TestLookupOneTag(t *testing.T) {
 
 	helperTestlookupOneTag(
 		t,
+		dss,
 		"environment:fr",
 		nil,
 		nil,
@@ -73,6 +78,7 @@ func TestLookupOneTag(t *testing.T) {
 
 	helperTestlookupOneTag(
 		t,
+		dss,
 		"",
 		nil,
 		nil,
@@ -81,6 +87,7 @@ func TestLookupOneTag(t *testing.T) {
 
 	helperTestlookupOneTag(
 		t,
+		dss,
 		"tag1",
 		[]Type{Database},
 		nil,
@@ -89,6 +96,7 @@ func TestLookupOneTag(t *testing.T) {
 
 	helperTestlookupOneTag(
 		t,
+		dss,
 		"",
 		[]Type{File},
 		nil,
@@ -96,8 +104,8 @@ func TestLookupOneTag(t *testing.T) {
 	)
 }
 
-func helperTestLookup(t *testing.T, tags []string, dsTypes []Type, engines []Engine, awaited []*Datasource) {
-	result := Lookup(tags, dsTypes, engines)
+func helperTestLookup(t *testing.T, dss *Datasources, tags []string, dsTypes []Type, engines []Engine, awaited []*Datasource) {
+	result := dss.Lookup(tags, dsTypes, engines)
 
 	anames := []string{}
 	for _, ds := range awaited {
@@ -120,42 +128,46 @@ func helperTestLookup(t *testing.T, tags []string, dsTypes []Type, engines []Eng
 }
 
 func TestLookup(t *testing.T) {
-	setupLookupDatastore()
-	defer teardownLookupDatastore()
+	dss := setupLookupDatastore()
+	defer teardownLookupDatastore(dss)
 
 	helperTestLookup(
 		t,
+		dss,
 		[]string{"tag1", "tag2"},
 		nil,
 		nil,
 		[]*Datasource{
-			datasources["ds1"],
-			datasources["ds2"],
-			datasources["ds3"],
-			datasources["ds4"],
+			dss.datasources["ds1"],
+			dss.datasources["ds2"],
+			dss.datasources["ds3"],
+			dss.datasources["ds4"],
 		},
 	)
 
 	helperTestLookup(
 		t,
+		dss,
 		[]string{"tag1.tag2"},
 		nil,
 		nil,
 		[]*Datasource{
-			datasources["ds1"],
+			dss.datasources["ds1"],
 		},
 	)
 
 	helperTestLookup(
 		t,
+		dss,
 		[]string{"tag1.environment:fr"},
 		nil,
 		nil,
-		[]*Datasource{datasources["ds2"]},
+		[]*Datasource{dss.datasources["ds2"]},
 	)
 
 	helperTestLookup(
 		t,
+		dss,
 		[]string{"tag2.environment:us"},
 		nil,
 		nil,
@@ -164,78 +176,85 @@ func TestLookup(t *testing.T) {
 
 	helperTestLookup(
 		t,
+		dss,
 		[]string{"tag1.tag2", "tag2.environment:fr"},
 		nil,
 		nil,
 		[]*Datasource{
-			datasources["ds1"],
-			datasources["ds4"],
+			dss.datasources["ds1"],
+			dss.datasources["ds4"],
 		},
 	)
 
 	helperTestLookup(
 		t,
+		dss,
 		[]string{"tag1.tag2", "tag2.environment:fr"},
 		[]Type{Database},
 		nil,
 		[]*Datasource{
-			datasources["ds1"],
+			dss.datasources["ds1"],
 		},
 	)
 
 	helperTestLookup(
 		t,
+		dss,
 		[]string{"tag1.tag2", "tag2.environment:fr"},
 		[]Type{Database},
 		[]Engine{Mysql},
 		[]*Datasource{
-			datasources["ds1"],
+			dss.datasources["ds1"],
 		},
 	)
 
 	helperTestLookup(
 		t,
+		dss,
 		[]string{"tag1.tag2", "tag2.environment:fr"},
 		nil,
 		[]Engine{JSON, YAML},
 		[]*Datasource{
-			datasources["ds4"],
+			dss.datasources["ds4"],
 		},
 	)
 
 	helperTestLookup(
 		t,
+		dss,
 		[]string{},
 		[]Type{Database},
 		nil,
 		[]*Datasource{
-			datasources["ds1"],
-			datasources["ds2"],
+			dss.datasources["ds1"],
+			dss.datasources["ds2"],
 		},
 	)
 
 	helperTestLookup(
 		t,
+		dss,
 		[]string{},
 		[]Type{Database},
 		[]Engine{Mysql},
 		[]*Datasource{
-			datasources["ds1"],
+			dss.datasources["ds1"],
 		},
 	)
 
 	helperTestLookup(
 		t,
+		dss,
 		[]string{},
 		nil,
 		[]Engine{JSON, YAML},
 		[]*Datasource{
-			datasources["ds3"],
-			datasources["ds4"],
-			datasources["ds5"],
-			datasources["ds6"],
-			datasources["ds7"],
-			datasources["notag"],
+			dss.datasources["ds3"],
+			dss.datasources["ds4"],
+			dss.datasources["ds5"],
+			dss.datasources["ds6"],
+			dss.datasources["ds7"],
+			dss.datasources["notag"],
 		},
 	)
 }

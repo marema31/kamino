@@ -40,7 +40,8 @@ func (ys *KaminoYAMLSaver) Close() error {
 	if err != nil {
 		return err
 	}
-	return common.CloseWriter(ys.file, ys.tmpName, ys.name, "yaml")
+	//TODO: replace the following by the datasource.CloseFile()
+	return nil
 }
 
 //Name give the name of the destination
@@ -50,5 +51,6 @@ func (ys *KaminoYAMLSaver) Name() string {
 
 //Reset reinitialize the destination (if possible)
 func (ys *KaminoYAMLSaver) Reset() error {
-	return common.ResetWriter(ys.file, ys.tmpName, ys.name)
+	//TODO: replace the following by the datasource.ResetFile()
+	return nil
 }

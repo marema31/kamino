@@ -50,7 +50,8 @@ func (cs *KaminoCsvSaver) Save(record common.Record) error {
 //Close closes the destination
 func (cs *KaminoCsvSaver) Close() error {
 	cs.writer.Flush()
-	return common.CloseWriter(cs.file, cs.tmpName, cs.name, "csv")
+	//TODO: replace the following by the datasource.CloseFile()
+	return nil
 }
 
 //Name give the name of the destination
@@ -60,5 +61,6 @@ func (cs *KaminoCsvSaver) Name() string {
 
 //Reset reinitialize the destination (if possible)
 func (cs *KaminoCsvSaver) Reset() error {
-	return common.ResetWriter(cs.file, cs.tmpName, cs.name)
+	//TODO: replace the following by the datasource.ResetFile()
+	return nil
 }

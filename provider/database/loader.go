@@ -3,16 +3,15 @@ package database
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/marema31/kamino/config"
-	"github.com/marema31/kamino/kaminodb"
 	"github.com/marema31/kamino/provider/common"
 )
 
 //DbLoader specifc state for database Loader provider
 type DbLoader struct {
-	kdb      *kaminodb.KaminoDb
+	//TODO: to be uncommented when use of datasources
+	//	kdb      *kaminodb.KaminoDb
 	db       *sql.DB
 	database string
 	table    string
@@ -24,11 +23,15 @@ type DbLoader struct {
 
 //NewLoader open the database connection, make the data query and return a Loader compatible object
 func NewLoader(ctx context.Context, config *config.Config, loaderConfig config.SourceConfig, environment string, instance string) (*DbLoader, error) {
+	/*TODO: Uncomment and adapt
 	database := loaderConfig.Database
 	if database == "" {
 		return nil, fmt.Errorf("source of sync does not provided a database")
 	}
-	kdbs, err := config.GetDbs(database, environment, []string{instance})
+	//TODO: Replace by datasource.Lookup
+	var kdbs []*interface{} = nil
+	var err error = nil
+	//	kdbs, err := config.GetDbs(database, environment, []string{instance})
 	if err != nil {
 		return nil, err
 	}
@@ -85,6 +88,8 @@ func NewLoader(ctx context.Context, config *config.Config, loaderConfig config.S
 		scanned:  scanned,
 		rawBytes: rawBytes,
 		colNames: columnsname}, nil
+	*/
+	return nil, nil
 }
 
 //Next moves to next record and return false if there is no more records

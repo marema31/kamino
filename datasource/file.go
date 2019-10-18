@@ -17,17 +17,26 @@ import (
 )
 
 // load a dile type datasource from the viper configuration
-func loadFileDatasource(filename string, v *viper.Viper, ds *Datasource) error {
+func loadFileDatasource(filename string, v *viper.Viper, engine Engine) (*Datasource, error) {
+	var ds Datasource
+	ds.Type = File
+	ds.Engine = engine
+	ds.Name = filename
 	ds.Inline = v.GetString("inline")
 	ds.FilePath = v.GetString("file")
 	ds.URL = v.GetString("URL")
 	if ds.FilePath == "" && ds.URL == "" && ds.Inline == "" {
-		return fmt.Errorf("the datasource %s does not provide the file path or URL", ds.Name)
+		return nil, fmt.Errorf("the datasource %s does not provide the file path or URL", ds.Name)
+	}
+
+	ds.Tags = v.GetStringSlice("tags")
+	if len(ds.Tags) == 0 {
+		ds.Tags = []string{""}
 	}
 
 	ds.Zip = v.GetBool("zip")
 	ds.Gzip = v.GetBool("gzip")
-	return nil
+	return &ds, nil
 }
 
 //OpenReadFile open and return a io.ReadCloser corresponding to the datasource to be used by providers

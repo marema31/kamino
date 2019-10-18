@@ -73,13 +73,13 @@ test-xml: fmt lint | $(GO2XUNIT) ; $(info $(M) running xUnit tests…) @ ## Run 
 	$(GO2XUNIT) -fail -input test/tests.output -output test/tests.xml
 
 COVERAGE_MODE    = atomic
-COVERAGE_PROFILE = $(COVERAGE_DIR)/profile.out
+COVERAGE_PROFILE = $(COVERAGE_DIR)/coverage.txt
 COVERAGE_XML     = $(COVERAGE_DIR)/coverage.xml
 COVERAGE_HTML    = $(COVERAGE_DIR)/index.html
-.PHONY: test-coverage test-coverage-tools
+.PHONY: test-coverage test-coverage-tools test-coverage-travis
 test-coverage-tools: | $(GOCOV) $(GOCOVXML)
 test-coverage: COVERAGE_DIR := $(CURDIR)/test/coverage.$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
-test-coverage: fmt lint test-coverage-tools ; $(info $(M) running coverage tests…) @ ## Run coverage tests
+test-coverage: test-coverage-tools ; $(info $(M) running coverage tests…) @ ## Run coverage tests
 	$Q mkdir -p $(COVERAGE_DIR)
 	$Q $(GO) test \
 		-coverpkg=$$($(GO) list -f '{{ join .Deps "\n" }}' $(TESTPKGS) | \
@@ -89,6 +89,16 @@ test-coverage: fmt lint test-coverage-tools ; $(info $(M) running coverage tests
 		-coverprofile="$(COVERAGE_PROFILE)" $(TESTPKGS)
 	$Q $(GO) tool cover -html=$(COVERAGE_PROFILE) -o $(COVERAGE_HTML)
 	$Q $(GOCOV) convert $(COVERAGE_PROFILE) | $(GOCOVXML) > $(COVERAGE_XML)
+
+test-coverage-travis: COVERAGE_DIR := $(CURDIR)
+test-coverage-travis: test-coverage-tools ; $(info $(M) running coverage tests…) @ ## Run coverage tests for travis usage
+	$Q $(GO) test \
+		-coverpkg=$$($(GO) list -f '{{ join .Deps "\n" }}' $(TESTPKGS) | \
+					grep '^$(MODULE)/' | \
+					tr '\n' ',' | sed 's/,$$//') \
+		-covermode=$(COVERAGE_MODE) \
+		-coverprofile="$(COVERAGE_PROFILE)" $(TESTPKGS)
+
 
 .PHONY: cyclo
 cyclo: | $(GOCYCLO) ; $(info $(M) running gocyclo…) @ ## Run gocyclo

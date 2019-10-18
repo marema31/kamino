@@ -11,7 +11,7 @@ import (
 )
 
 //LoadAll Lookup the provided folder for datasource configuration files
-func LoadAll(configPath string) error {
+func (dss *Datasources) LoadAll(configPath string) error {
 	dsfolder := filepath.Join(configPath, "datasources")
 
 	files, err := ioutil.ReadDir(dsfolder)
@@ -24,63 +24,58 @@ func LoadAll(configPath string) error {
 			ext := filepath.Ext(file.Name())
 			if ext == ".yml" || ext == ".yaml" || ext == ".json" || ext == ".toml" {
 				name := strings.TrimSuffix(file.Name(), ext)
-				err := load(dsfolder, name)
+				ds, err := dss.load(dsfolder, name)
 				if err != nil {
 					return err
 				}
+				dss.datasources[name] = ds
+
+			}
+		}
+	}
+	// Insert the datasource name in all entry of the dictionnary
+	// that correspond to one tag of the tag list
+	for _, ds := range dss.datasources {
+		for _, tag := range ds.Tags {
+			if _, ok := dss.tagToDatasource[tag]; ok {
+				dss.tagToDatasource[tag] = append(dss.tagToDatasource[tag], ds.Name)
+			} else {
+				dl := make([]string, 0, 1)
+				dl = append(dl, ds.Name)
+				dss.tagToDatasource[tag] = dl
 			}
 		}
 	}
 	return nil
 }
 
-func load(path string, filename string) error {
+func (dss *Datasources) load(path string, filename string) (*Datasource, error) {
 	v := viper.New()
 
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
 	v.AddConfigPath(path)
 	err := v.ReadInConfig()
-
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	var ds Datasource
-	ds.Name = filename
 	engine := strings.ToLower(v.GetString("engine"))
 	if engine == "" {
-		return fmt.Errorf("the datasource %s does not provide the engine name", ds.Name)
+		return nil, fmt.Errorf("the datasource %s does not provide the engine name", filename)
 	}
-
-	datasources[ds.Name] = &ds
-	ds.Tags = v.GetStringSlice("tags")
-	if len(ds.Tags) == 0 {
-		ds.Tags = []string{""}
-	}
-	insertTag(ds.Tags, ds.Name)
 
 	switch engine {
 	case "mysql", "maria", "mariadb":
-		ds.Type = Database
-		ds.Engine = Mysql
-		return loadDatabaseDatasource(filename, v, &ds)
+		return loadDatabaseDatasource(filename, v, Mysql)
 	case "pgsql", "postgres":
-		ds.Type = Database
-		ds.Engine = Postgres
-		return loadDatabaseDatasource(filename, v, &ds)
+		return loadDatabaseDatasource(filename, v, Postgres)
 	case "json":
-		ds.Type = File
-		ds.Engine = JSON
-		return loadFileDatasource(filename, v, &ds)
+		return loadFileDatasource(filename, v, JSON)
 	case "yaml":
-		ds.Type = File
-		ds.Engine = YAML
-		return loadFileDatasource(filename, v, &ds)
+		return loadFileDatasource(filename, v, YAML)
 	case "csv":
-		ds.Type = File
-		ds.Engine = CSV
-		return loadFileDatasource(filename, v, &ds)
+		return loadFileDatasource(filename, v, CSV)
 	default:
-		return fmt.Errorf("does not how to manage %s datasource engine", engine)
+		return nil, fmt.Errorf("does not how to manage %s datasource engine", engine)
 	}
 }

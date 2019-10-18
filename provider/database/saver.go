@@ -44,8 +44,8 @@ type DbSaver struct {
 //NewSaver open the database connection, prepare the insert statement and return a Saver compatible object
 func NewSaver(ctx context.Context, config *config.Config, saverConfig config.DestinationConfig, environment string, instances []string) ([]*DbSaver, error) {
 	var dss []*DbSaver
+	/*TODO: uncomment and adapt
 	var err error
-
 	if saverConfig.Database == "" {
 		return nil, fmt.Errorf("destination of sync does not provided a database")
 	}
@@ -92,7 +92,7 @@ func NewSaver(ctx context.Context, config *config.Config, saverConfig config.Des
 		}
 		dss = append(dss, &ds)
 	}
-
+	*/
 	return dss, nil
 }
 

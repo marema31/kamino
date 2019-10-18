@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/marema31/kamino/config"
 	"github.com/marema31/kamino/provider/common"
@@ -37,21 +38,33 @@ func NewSaver(ctx context.Context, config *config.Config, saverConfig config.Des
 		}
 		return ss, err
 	case "csv":
-		writer, tmpName, err := common.OpenWriter(saverConfig)
+		//TODO: replace by datasource.OpenWriter
+		writer := os.Stdout
+		tmpName := ""
+		var err error
+		//		writer, tmpName, err := common.OpenWriter(saverConfig)
 		if err != nil {
 			return nil, err
 		}
 		s, err := csv.NewSaver(ctx, saverConfig, tmpName, writer)
 		return append(ss, s), err
 	case "json":
-		writer, tmpName, err := common.OpenWriter(saverConfig)
+		//TODO: replace by datasource.OpenWriter
+		writer := os.Stdout
+		tmpName := ""
+		var err error
+		//		writer, tmpName, err := common.OpenWriter(saverConfig)
 		if err != nil {
 			return nil, err
 		}
 		s, err := json.NewSaver(ctx, saverConfig, tmpName, writer)
 		return append(ss, s), err
 	case "yaml":
-		writer, tmpName, err := common.OpenWriter(saverConfig)
+		//TODO: replace by datasource.OpenWriter
+		writer := os.Stdout
+		tmpName := ""
+		var err error
+		//		writer, tmpName, err := common.OpenWriter(saverConfig)
 		if err != nil {
 			return nil, err
 		}

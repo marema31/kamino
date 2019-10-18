@@ -5,13 +5,16 @@ import (
 )
 
 // We are using private function, we must be in same package
+func setupDatabaseTest() *Datasources {
+	return &Datasources{}
+}
 
 func TestLoadMysqlCompleteEngine(t *testing.T) {
-	if err := load("testdata/good/datasources", "mysqlcomplete"); err != nil {
+	dss := setupDatabaseTest()
+	ds, err := dss.load("testdata/good/datasources", "mysqlcomplete")
+	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
-
-	ds := datasources["mysqlcomplete"]
 
 	if ds == nil {
 		t.Fatalf("Should have been inserted in datasources with the name mysqlcomplete")
@@ -49,17 +52,17 @@ func TestLoadMysqlCompleteEngine(t *testing.T) {
 		t.Errorf("Should have transaction")
 	}
 
-	if tagToDatasource["tagmc"][0] != "mysqlcomplete" {
+	if len(ds.Tags) != 0 && ds.Tags[0] != "tagmc" {
 		t.Errorf("The tag should be found")
 	}
 }
 
 func TestLoadMysqlMinimalEngine(t *testing.T) {
-	if err := load("testdata/good/datasources", "mysqlminimal"); err != nil {
+	dss := setupDatabaseTest()
+	ds, err := dss.load("testdata/good/datasources", "mysqlminimal")
+	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
-
-	ds := datasources["mysqlminimal"]
 
 	if ds == nil {
 		t.Fatalf("Should have been inserted in datasources with the name mysqlminimal")
@@ -97,17 +100,17 @@ func TestLoadMysqlMinimalEngine(t *testing.T) {
 		t.Errorf("Should not have transaction")
 	}
 
-	if tagToDatasource["tagmm"][0] != "mysqlminimal" {
+	if len(ds.Tags) != 0 && ds.Tags[0] != "tagmm" {
 		t.Errorf("The tag should be found")
 	}
 }
 
 func TestLoadPostgresCompleteEngine(t *testing.T) {
-	if err := load("testdata/good/datasources", "postgrescomplete"); err != nil {
+	dss := setupDatabaseTest()
+	ds, err := dss.load("testdata/good/datasources", "postgrescomplete")
+	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
-
-	ds := datasources["postgrescomplete"]
 
 	if ds == nil {
 		t.Fatalf("Should have been inserted in datasources with the name postgrescomplete")
@@ -145,17 +148,17 @@ func TestLoadPostgresCompleteEngine(t *testing.T) {
 		t.Errorf("Should have transaction")
 	}
 
-	if tagToDatasource["tagpc"][0] != "postgrescomplete" {
+	if len(ds.Tags) != 0 && ds.Tags[0] != "tagpc" {
 		t.Errorf("The tag should be found")
 	}
 }
 
 func TestLoadPostgresMinimalEngine(t *testing.T) {
-	if err := load("testdata/good/datasources", "postgresminimal"); err != nil {
+	dss := setupDatabaseTest()
+	ds, err := dss.load("testdata/good/datasources", "postgresminimal")
+	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
-
-	ds := datasources["postgresminimal"]
 
 	if ds == nil {
 		t.Fatalf("Should have been inserted in datasources with the name postgresminimal")
@@ -193,13 +196,15 @@ func TestLoadPostgresMinimalEngine(t *testing.T) {
 		t.Errorf("Should not have transaction")
 	}
 
-	if tagToDatasource["tagpm"][0] != "postgresminimal" {
+	if len(ds.Tags) != 0 && ds.Tags[0] != "tagpm" {
 		t.Errorf("The tag should be found")
 	}
 }
 
 func TestLoadNoDatabase(t *testing.T) {
-	if err := load("testdata/fail/datasources", "nodatabase"); err == nil {
+	dss := setupDatabaseTest()
+	_, err := dss.load("testdata/fail/datasources", "nodatabase")
+	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 }

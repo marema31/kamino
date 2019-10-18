@@ -2,25 +2,8 @@ package datasource
 
 import "strings"
 
-// Datasource tag dictionnary for lookup
-var tagToDatasource = make(map[string][]string)
-
-// Insert the datasource name in all entry of the dictionnary
-// that correspond to one tag of the tag list
-func insertTag(tagList []string, name string) {
-	for _, tag := range tagList {
-		if _, ok := tagToDatasource[tag]; ok {
-			tagToDatasource[tag] = append(tagToDatasource[tag], name)
-		} else {
-			dl := make([]string, 0, 1)
-			dl = append(dl, name)
-			tagToDatasource[tag] = dl
-		}
-	}
-}
-
-func isSelectedEngine(ds *Datasource, engines []Engine) bool {
-	if engines == nil || len(engines) == 0 {
+func (ds *Datasource) isSelectedEngine(engines []Engine) bool {
+	if len(engines) == 0 {
 		return true
 	}
 
@@ -32,8 +15,8 @@ func isSelectedEngine(ds *Datasource, engines []Engine) bool {
 	return false
 }
 
-func isSelectedType(ds *Datasource, dsTypes []Type) bool {
-	if dsTypes == nil || len(dsTypes) == 0 {
+func (ds *Datasource) isSelectedType(dsTypes []Type) bool {
+	if len(dsTypes) == 0 {
 		return true
 	}
 
@@ -45,21 +28,21 @@ func isSelectedType(ds *Datasource, dsTypes []Type) bool {
 	return false
 }
 
-func lookupOneTag(tag string, dsTypes []Type, engines []Engine) (selected []string) {
-	for _, name := range tagToDatasource[tag] {
-		ds := datasources[name]
-		if isSelectedEngine(ds, engines) && isSelectedType(ds, dsTypes) {
+func (dss *Datasources) lookupOneTag(tag string, dsTypes []Type, engines []Engine) (selected []string) {
+	for _, name := range dss.tagToDatasource[tag] {
+		ds := dss.datasources[name]
+		if ds.isSelectedEngine(engines) && ds.isSelectedType(dsTypes) {
 			selected = append(selected, name)
 		}
 	}
 	return selected
 }
 
-func lookupWithoutTag(dsTypes []Type, engines []Engine) (selected []string) {
-	for _, names := range tagToDatasource {
+func (dss *Datasources) lookupWithoutTag(dsTypes []Type, engines []Engine) (selected []string) {
+	for _, names := range dss.tagToDatasource {
 		for _, name := range names {
-			ds := datasources[name]
-			if isSelectedEngine(ds, engines) && isSelectedType(ds, dsTypes) {
+			ds := dss.datasources[name]
+			if ds.isSelectedEngine(engines) && ds.isSelectedType(dsTypes) {
 				selected = append(selected, name)
 			}
 		}
@@ -69,27 +52,26 @@ func lookupWithoutTag(dsTypes []Type, engines []Engine) (selected []string) {
 
 //Lookup return a list of *Datasource that correspond to the
 // list of tag expression
-func Lookup(tagList []string, dsTypes []Type, engines []Engine) []*Datasource {
-	//TODO: implement tagList empty
+func (dss *Datasources) Lookup(tagList []string, dsTypes []Type, engines []Engine) []*Datasource {
 	selected := make(map[string]*Datasource) // Use map to emulate a "set" to avoid duplicates
 	if len(tagList) == 0 {
 		// The selection is not based on tag, lookup for all of them
-		for _, name := range lookupWithoutTag(dsTypes, engines) {
-			selected[name] = datasources[name]
+		for _, name := range dss.lookupWithoutTag(dsTypes, engines) {
+			selected[name] = dss.datasources[name]
 		}
 	} else {
 		for _, tagElement := range tagList {
-			if strings.Index(tagElement, ".") == -1 {
+			if !strings.Contains(tagElement, ".") {
 				// Simple tag, all corresponding datasource are selected
 
-				for _, name := range lookupOneTag(tagElement, dsTypes, engines) {
-					selected[name] = datasources[name]
+				for _, name := range dss.lookupOneTag(tagElement, dsTypes, engines) {
+					selected[name] = dss.datasources[name]
 				}
 			} else {
 				// Composite tag, only datasource corresponding to all tags are selected
 				candidates := make(map[string]bool)
 				for i, tag := range strings.Split(tagElement, ".") {
-					for _, name := range lookupOneTag(tag, dsTypes, engines) {
+					for _, name := range dss.lookupOneTag(tag, dsTypes, engines) {
 						if i == 0 {
 							candidates[name] = true
 						} else {
@@ -109,7 +91,7 @@ func Lookup(tagList []string, dsTypes []Type, engines []Engine) []*Datasource {
 					}
 				}
 				for name := range candidates {
-					selected[name] = datasources[name]
+					selected[name] = dss.datasources[name]
 				}
 			}
 		}

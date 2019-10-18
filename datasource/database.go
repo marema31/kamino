@@ -11,74 +11,83 @@ import (
 )
 
 // load a database type datasource from the viper configuration
-func loadDatabaseDatasource(filename string, v *viper.Viper, ds *Datasource) error {
+func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine) (*Datasource, error) {
+	var ds Datasource
+	ds.Type = Database
+	ds.Engine = engine
+	ds.Name = filename
 	ds.Database = v.GetString("database")
 	if ds.Database == "" {
-		return fmt.Errorf("the datasource %s does not provide the database name", ds.Name)
+		return nil, fmt.Errorf("the datasource %s does not provide the database name", ds.Name)
+	}
+
+	ds.Tags = v.GetStringSlice("tags")
+	if len(ds.Tags) == 0 {
+		ds.Tags = []string{""}
 	}
 
 	ds.Schema = v.GetString("schema")
 
 	ds.Transaction = v.GetBool("transaction")
 
-	host := v.GetString("host")
-	if host == "" {
-		host = "127.0.0.1"
+	ds.Host = v.GetString("host")
+	if ds.Host == "" {
+		ds.Host = "127.0.0.1"
 	}
-	port := v.GetString("port")
+	ds.Port = v.GetString("port")
 
-	user := v.GetString("user")
-	admin := v.GetString("admin")
-	userpw := v.GetString("password")
-	adminpw := v.GetString("adminpassword")
-	if adminpw == "" {
-		adminpw = userpw
+	ds.User = v.GetString("user")
+	ds.Admin = v.GetString("admin")
+	ds.UserPw = v.GetString("password")
+	ds.AdminPw = v.GetString("adminpassword")
+	if ds.AdminPw == "" {
+		ds.AdminPw = ds.UserPw
 	}
-	if userpw == "" {
-		userpw = adminpw
+	if ds.UserPw == "" {
+		ds.UserPw = ds.AdminPw
 	}
 
 	switch ds.Engine {
 	case Mysql:
-		if user == "" {
-			user = "root"
+		if ds.User == "" {
+			ds.User = "root"
 		}
-		if admin == "" {
-			admin = "root"
+		if ds.Admin == "" {
+			ds.Admin = "root"
 		}
-		if port == "" {
-			port = "3306"
+		if ds.Port == "" {
+			ds.Port = "3306"
 		}
 
-		ds.URL = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, userpw, host, port, ds.Database)
-		ds.URLAdmin = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", admin, adminpw, host, port, ds.Database)
-		ds.URLNoDb = fmt.Sprintf("%s:%s@tcp(%s:%s)", admin, adminpw, host, port)
+		ds.URL = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", ds.User, ds.UserPw, ds.Host, ds.Port, ds.Database)
+		ds.URLAdmin = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", ds.Admin, ds.AdminPw, ds.Host, ds.Port, ds.Database)
+		ds.URLNoDb = fmt.Sprintf("%s:%s@tcp(%s:%s)", ds.Admin, ds.AdminPw, ds.Host, ds.Port)
 
 	case Postgres:
-		user := v.GetString("user")
-		if user == "" {
-			user = "postgres"
+		ds.User = v.GetString("user")
+		if ds.User == "" {
+			ds.User = "postgres"
 		}
-		if admin == "" {
-			admin = "postgres"
+		if ds.Admin == "" {
+			ds.Admin = "postgres"
 		}
-		port := v.GetString("port")
-		if port == "" {
-			port = "5432"
+		ds.Port = v.GetString("port")
+		if ds.Port == "" {
+			ds.Port = "5432"
 		}
-		//TODO: try without ssldisable or make it a optione od datasource
+		//TODO: try without ssldisable or make it a option on datasource
 		//TODO: manage ds.Schema
-		ds.URL = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, userpw, ds.Database)
-		ds.URLAdmin = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, admin, adminpw, ds.Database)
-		ds.URLNoDb = fmt.Sprintf("host=%s port=%s user=%s password=%s sslmode=disable", host, port, admin, adminpw)
+		ds.URL = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", ds.Host, ds.Port, ds.User, ds.UserPw, ds.Database)
+		ds.URLAdmin = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", ds.Host, ds.Port, ds.Admin, ds.AdminPw, ds.Database)
+		ds.URLNoDb = fmt.Sprintf("host=%s port=%s user=%s password=%s sslmode=disable", ds.Host, ds.Port, ds.Admin, ds.AdminPw)
 	}
-	return nil
+	return &ds, nil
 }
 
 //OpenDatabase open connection to the corresponding database
 func (ds *Datasource) OpenDatabase(admin bool, nodb bool) (*sql.DB, error) {
 	if ds.Type != Database {
-		return nil, fmt.Errorf("The datasource %s is not a database cannot open it", ds.Name)
+		return nil, fmt.Errorf("the datasource %s is not a database cannot open it", ds.Name)
 	}
 	URL := ds.URL
 	if admin {

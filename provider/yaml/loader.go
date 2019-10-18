@@ -58,6 +58,7 @@ func (yl *KaminoYAMLLoader) Load() (common.Record, error) {
 
 //Close closes the datasource
 func (yl *KaminoYAMLLoader) Close() {
+	//TODO: replace the following by the datasource.CloseFile()
 	yl.file.Close()
 }
 

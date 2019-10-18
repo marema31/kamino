@@ -7,13 +7,15 @@ import (
 )
 
 // We are using private function, we must be in same package
-
+func setupFileTest() *Datasources {
+	return &Datasources{}
+}
 func TestLoadCsvEngine(t *testing.T) {
-	if err := load("testdata/good/datasources", "csv"); err != nil {
+	dss := setupFileTest()
+	ds, err := dss.load("testdata/good/datasources", "csv")
+	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
-
-	ds := datasources["csv"]
 
 	if ds == nil {
 		t.Fatalf("Should have been inserted in datasources with the name csv")
@@ -38,17 +40,18 @@ func TestLoadCsvEngine(t *testing.T) {
 		t.Errorf("Should not be gzipped")
 	}
 
-	if tagToDatasource["tagcsv"][0] != "csv" {
+	if len(ds.Tags) != 0 && ds.Tags[0] != "tagcsv" {
 		t.Errorf("The tag should be found")
 	}
 }
 
 func TestLoadZipCsvEngine(t *testing.T) {
-	if err := load("testdata/good/datasources", "zipcsv"); err != nil {
+	dss := setupFileTest()
+	ds, err := dss.load("testdata/good/datasources", "zipcsv")
+	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	ds := datasources["zipcsv"]
 	if ds == nil {
 		t.Fatalf("Should have been inserted in datasources with the name zipcsv")
 	}
@@ -72,17 +75,18 @@ func TestLoadZipCsvEngine(t *testing.T) {
 		t.Errorf("Should not be gzipped")
 	}
 
-	if tagToDatasource["tagzipcsv"][0] != "zipcsv" {
+	if len(ds.Tags) != 0 && ds.Tags[0] != "tagzipcsv" {
 		t.Errorf("The tag should be found")
 	}
 }
 
 func TestLoadGZipCsvEngine(t *testing.T) {
-	if err := load("testdata/good/datasources", "gzipcsv"); err != nil {
+	dss := setupFileTest()
+	ds, err := dss.load("testdata/good/datasources", "gzipcsv")
+	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	ds := datasources["gzipcsv"]
 	if ds == nil {
 		t.Fatalf("Should have been inserted in datasources with the name gzipcsv")
 	}
@@ -106,17 +110,18 @@ func TestLoadGZipCsvEngine(t *testing.T) {
 		t.Errorf("Should be gzipped")
 	}
 
-	if tagToDatasource["taggzipcsv"][0] != "gzipcsv" {
+	if len(ds.Tags) != 0 && ds.Tags[0] != "taggzipcsv" {
 		t.Errorf("The tag should be found")
 	}
 }
 
 func TestLoadYamlEngine(t *testing.T) {
-	if err := load("testdata/good/datasources", "yaml"); err != nil {
+	dss := setupFileTest()
+	ds, err := dss.load("testdata/good/datasources", "yaml")
+	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	ds := datasources["yaml"]
 	if ds == nil {
 		t.Fatalf("Should have been inserted in datasources with the name yaml")
 	}
@@ -140,17 +145,18 @@ func TestLoadYamlEngine(t *testing.T) {
 		t.Errorf("Should not be gzipped")
 	}
 
-	if tagToDatasource["tagyaml"][0] != "yaml" {
+	if len(ds.Tags) != 0 && ds.Tags[0] != "tagyaml" {
 		t.Errorf("The tag should be found")
 	}
 }
 
 func TestLoadJsonEngine(t *testing.T) {
-	if err := load("testdata/good/datasources", "json"); err != nil {
+	dss := setupFileTest()
+	ds, err := dss.load("testdata/good/datasources", "json")
+	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	ds := datasources["json"]
 	if ds == nil {
 		t.Fatalf("Should have been inserted in datasources with the name json")
 	}
@@ -174,17 +180,18 @@ func TestLoadJsonEngine(t *testing.T) {
 		t.Errorf("Should not be gzipped")
 	}
 
-	if tagToDatasource["tagjson"][0] != "json" {
+	if len(ds.Tags) != 0 && ds.Tags[0] != "tagjson" {
 		t.Errorf("The tag should be found")
 	}
 }
 
 func TestLoadStdio(t *testing.T) {
-	if err := load("testdata/good/datasources", "stdio"); err != nil {
+	dss := setupFileTest()
+	ds, err := dss.load("testdata/good/datasources", "stdio")
+	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	ds := datasources["stdio"]
 	if ds == nil {
 		t.Fatalf("Should have been inserted in datasources with the name stdio")
 	}
@@ -195,11 +202,12 @@ func TestLoadStdio(t *testing.T) {
 }
 
 func TestLoadURL(t *testing.T) {
-	if err := load("testdata/good/datasources", "url"); err != nil {
+	dss := setupFileTest()
+	ds, err := dss.load("testdata/good/datasources", "url")
+	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	ds := datasources["url"]
 	if ds == nil {
 		t.Fatalf("Should have been inserted in datasources with the name url")
 	}
@@ -210,11 +218,12 @@ func TestLoadURL(t *testing.T) {
 }
 
 func TestLoadInline(t *testing.T) {
-	if err := load("testdata/good/datasources", "inline"); err != nil {
+	dss := setupFileTest()
+	ds, err := dss.load("testdata/good/datasources", "inline")
+	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	ds := datasources["inline"]
 	if ds == nil {
 		t.Fatalf("Should have been inserted in datasources with the name inline")
 	}
@@ -225,7 +234,9 @@ func TestLoadInline(t *testing.T) {
 }
 
 func TestLoadNoPath(t *testing.T) {
-	if err := load("testdata/fail/datasources", "nopath"); err == nil {
+	dss := setupFileTest()
+	_, err := dss.load("testdata/fail/datasources", "nopath")
+	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 

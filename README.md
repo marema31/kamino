@@ -2,6 +2,8 @@
 
 Manage development databases lifecycle described in 'recipes'
 
+### WORK IN PROGRESS (release 0.1 is working)
+
 Kamino can be used to automatically:
   * create database instances
   * create the database schema (via sql-migrate migration)
