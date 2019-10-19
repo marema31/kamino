@@ -1,9 +1,0 @@
-{
-    "engine":   "mysql",
-    "database": "copy2",
-    "host":     "192.168.9.121",
-    "port":     "3306",
-    "user":     "root",
-    "password": "123soleil",
-    "name": "copy2"
-}

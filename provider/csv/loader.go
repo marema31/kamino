@@ -65,6 +65,7 @@ func (cl *KaminoCsvLoader) Load() (common.Record, error) {
 
 //Close closes the datasource
 func (cl *KaminoCsvLoader) Close() {
+	//TODO: replace the following by the datasource.CloseFile()
 	cl.file.Close()
 }
 

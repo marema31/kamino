@@ -1,7 +1,6 @@
 package config
 
 import (
-	"log"
 	"strings"
 	"time"
 
@@ -91,12 +90,6 @@ func New(path string, filename string) (*Config, error) {
 		}
 	}
 
-	databases, err := getDatabases(path)
-	if err != nil {
-		log.Fatal(err)
-
-		return nil, err
-	}
-	config := &Config{v: subs, databases: databases}
+	config := &Config{v: subs, databases: nil}
 	return config, err
 }

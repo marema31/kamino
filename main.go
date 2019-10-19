@@ -2,26 +2,18 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
-	"strings"
 	"time"
 
-	"github.com/marema31/kamino/config"
-	kaminoSync "github.com/marema31/kamino/sync"
-)
-
-// Theses variables will be provided by goreleaser via ldflags
-var (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
+	"github.com/marema31/kamino/cmd"
+	//	"github.com/marema31/kamino/config"
+	//	kaminoSync "github.com/marema31/kamino/sync"
 )
 
 func main() {
-
+	// Create the application context for correct sub-task abortion if CTRL+C
 	ctx := context.Background()
 	// trap Ctrl+C
 	ctx, cancel := context.WithCancel(ctx)
@@ -43,31 +35,23 @@ func main() {
 		time.Sleep(5 * time.Second) //TODO: Wait on waitgroup ??
 		os.Exit(1)
 	}()
+	cmd.Execute(ctx)
+}
 
-	//TODO: review CLI (use cobra ?)
-	i := 1
-	configPath := ".kamino.d"
-	configFile := ".kamino"
+/* func main() {
 
+/*
 	//TODO: During CLI review add options for environment and instances
 	environment := ""
 	var instances []string
 
-	/*	instances = append(instances, "sch1")
-		instances = append(instances, "1")
-	*/
+	//	instances = append(instances, "sch1")
+	//	instances = append(instances, "1")
+
 	if len(os.Args) > 2 && os.Args[1] == "-d" {
 		i = 3
 		configPath = os.Args[2]
 		//	configFile = filepath.Base(os.Args[2])
-	}
-
-	if (len(os.Args)-i) < 1 || os.Args[i] == "-h" {
-		fmt.Printf("kamino %v, commit %v, built at %v\n\n", version, commit, date)
-		fmt.Println("usage: kamino [-c configFile] syncName [syncName ... syncName]")
-		fmt.Println()
-		fmt.Println("The config file name must be provided without the file extension, kamino will try json, toml and yaml")
-		os.Exit(0)
 	}
 
 	config, err := config.New(configPath, configFile)
@@ -88,3 +72,4 @@ func main() {
 	}
 	time.Sleep(1 * time.Second) // TODO:Wait on waitgroup ??
 }
+*/

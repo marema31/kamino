@@ -1,0 +1,10 @@
+---
+priority: 3
+name: "createschema"
+type: "sql"
+template: "templates/createschema_postgres.sql.tmpl"
+tags: 
+  - "pokemon"
+admin: "true"
+engine: "postgres"
+query: "SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{{.Schema}}';" 

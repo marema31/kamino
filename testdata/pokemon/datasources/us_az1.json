@@ -1,0 +1,13 @@
+{
+    "engine":        "postgres",
+    "database":      "pokemon_us",
+    "schema":        "az1",
+    "host":          "localhost",
+    "port":          "12343",
+    "admin":         "postgres",
+    "adminpassword": "adminpw",
+    "user":          "bob",
+    "password":      "123soleil",
+    "transaction":   true,
+    "tags":          [ "pokemon","copy", "us", "az1","subschema"]
+ }

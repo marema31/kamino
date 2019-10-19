@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/marema31/kamino/config"
 	"github.com/marema31/kamino/provider/common"
@@ -25,24 +26,33 @@ func NewLoader(ctx context.Context, config *config.Config, loaderConfig config.S
 	if loaderConfig.Type == "" {
 		return nil, fmt.Errorf("the configuration block for this source does not provide the type")
 	}
-
+	//TODO: replace the common.OpenReader by datasource.OpenReadFile
 	switch loaderConfig.Type {
 	case "database":
 		return database.NewLoader(ctx, config, loaderConfig, environment, instance)
 	case "csv":
-		reader, err := common.OpenReader(loaderConfig)
+		//TODO: replace by datasource.OpenReader
+		reader := os.Stdin
+		var err error
+		//		reader, err := common.OpenReader(loaderConfig)
 		if err != nil {
 			return nil, err
 		}
 		return csv.NewLoader(ctx, loaderConfig, reader)
 	case "json":
-		reader, err := common.OpenReader(loaderConfig)
+		//TODO: replace by datasource.OpenReader
+		reader := os.Stdin
+		var err error
+		//		reader, err := common.OpenReader(loaderConfig)
 		if err != nil {
 			return nil, err
 		}
 		return json.NewLoader(ctx, loaderConfig, reader)
 	case "yaml":
-		reader, err := common.OpenReader(loaderConfig)
+		//TODO: replace by datasource.OpenReader
+		reader := os.Stdin
+		var err error
+		//		reader, err := common.OpenReader(loaderConfig)
 		if err != nil {
 			return nil, err
 		}

@@ -1,0 +1,5 @@
+{
+    "engine":        "yaml",
+    "file":          "../tmp/dest_az1.yaml.zip",
+    "tags":          [ "pokemon", "copy", "az1"]
+}

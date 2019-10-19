@@ -56,6 +56,7 @@ func (jl *KaminoJSONLoader) Load() (common.Record, error) {
 
 //Close closes the datasource
 func (jl *KaminoJSONLoader) Close() {
+	//TODO: replace the following by the datasource.CloseFile()
 	jl.file.Close()
 }
 

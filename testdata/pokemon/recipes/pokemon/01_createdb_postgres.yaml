@@ -1,0 +1,11 @@
+---
+priority: 1
+name: "createdb"
+type: "sql"
+template: "templates/createdb_postgres.sql.tmpl"
+tags: 
+  - "pokemon"
+admin: "true"
+nodb: "true"
+engine: "postgres"
+query: "SELECT COUNT(datname) FROM pg_database WHERE datname = '{{.Database}}';" 

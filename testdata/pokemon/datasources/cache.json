@@ -1,0 +1,6 @@
+{
+    "engine":        "json",
+    "file":          "../tmp/pokemon_cache.json",
+    "zip":           true,
+    "tags":          [ "pokemon", "cache"]
+}

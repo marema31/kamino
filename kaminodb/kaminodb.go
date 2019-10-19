@@ -117,7 +117,7 @@ func (kd *KaminoDb) Open() (*sql.DB, error) {
 		return nil, err
 	}
 
-	// Open does not really open the connection and therefore does not test for url is correct, ping will do
+	// Open does not really do a connection and therefore does not test for url is correct, ping will do
 	err = db.Ping()
 	if err != nil {
 		return nil, err

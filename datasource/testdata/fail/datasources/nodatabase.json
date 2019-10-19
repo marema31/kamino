@@ -1,0 +1,5 @@
+{
+    "engine":        "postgres",
+    "adminpassword": "adminpw",
+    "tags":          [ "tagpm"]
+}
