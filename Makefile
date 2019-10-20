@@ -12,6 +12,7 @@ GO_FILES = $(shell find $(CURDIR) -iname '*.go' -type f | grep -v /vendor/)
 BINNAME  = $(shell basename $(MODULE))
 
 GO      = go 
+GOFMT      = gofmt 
 TIMEOUT = 15
 V = 0
 Q = $(if $(filter 1,$V),,@)
@@ -118,7 +119,7 @@ lint: | $(GOLINT) ; $(info $(M) running golint…) @ ## Run golint
 
 .PHONY: fmt
 fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
-	$Q $(GO) fmt $(PKGS)
+	$Q $(GOFMT) -s -w $(GO_FILES)
 
 # Misc
 

@@ -11,7 +11,7 @@ import (
 )
 
 //LoadAll Lookup the provided folder for datasource configuration files
-func (dss *Datasources) LoadAll(configPath string) error {
+func (dss Datasources) LoadAll(configPath string) error {
 	dsfolder := filepath.Join(configPath, "datasources")
 
 	files, err := ioutil.ReadDir(dsfolder)
@@ -64,18 +64,16 @@ func (dss *Datasources) load(path string, filename string) (*Datasource, error) 
 		return nil, fmt.Errorf("the datasource %s does not provide the engine name", filename)
 	}
 
-	switch engine {
-	case "mysql", "maria", "mariadb":
-		return loadDatabaseDatasource(filename, v, Mysql)
-	case "pgsql", "postgres":
-		return loadDatabaseDatasource(filename, v, Postgres)
-	case "json":
-		return loadFileDatasource(filename, v, JSON)
-	case "yaml":
-		return loadFileDatasource(filename, v, YAML)
-	case "csv":
-		return loadFileDatasource(filename, v, CSV)
-	default:
-		return nil, fmt.Errorf("does not how to manage %s datasource engine", engine)
+	e, err := StringToEngine(engine)
+	if err != nil {
+		return nil, err
 	}
+
+	switch e {
+	case Mysql, Postgres:
+		return loadDatabaseDatasource(filename, v, e)
+	case JSON, YAML, CSV:
+		return loadFileDatasource(filename, v, e)
+	}
+	return nil, fmt.Errorf("does not how to manage %s datasource engine", engine)
 }

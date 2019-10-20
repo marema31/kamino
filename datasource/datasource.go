@@ -3,6 +3,7 @@
 package datasource
 
 import (
+	"fmt"
 	"io"
 	"strings"
 )
@@ -60,6 +61,36 @@ type Datasource struct {
 	fileHandle  io.Closer
 	filewriter  bool
 	Tags        []string
+}
+
+//StringToEngine convert string to corresponding Engine typed value
+func StringToEngine(engine string) (Engine, error) {
+	switch strings.ToLower(engine) {
+	case "mysql", "maria", "mariadb":
+		return Mysql, nil
+	case "pgsql", "postgres", "postgresql":
+		return Postgres, nil
+	case "json":
+		return JSON, nil
+	case "yaml":
+		return YAML, nil
+	case "csv":
+		return CSV, nil
+	}
+	return CSV, fmt.Errorf("does not how to manage %s datasource engine", engine)
+}
+
+//StringsToEngines convert string slice to an slice of corresponding Engine typed values
+func StringsToEngines(engines []string) ([]Engine, error) {
+	engineSlice := make([]Engine, 0)
+	for _, engine := range engines {
+		e, err := StringToEngine(engine)
+		if err != nil {
+			return nil, err
+		}
+		engineSlice = append(engineSlice, e)
+	}
+	return engineSlice, nil
 }
 
 //GetEngine return a string containing the engine name
