@@ -3,9 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
-	"os"
 
-	"github.com/marema31/kamino/config"
+	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/common"
 	"github.com/marema31/kamino/provider/csv"
 	"github.com/marema31/kamino/provider/database"
@@ -21,56 +20,18 @@ type Saver interface {
 	Name() string
 }
 
-//NewSaver analyze the config map and return object implemnting Saver of the asked type
-func NewSaver(ctx context.Context, config *config.Config, saverConfig config.DestinationConfig, environment string, instances []string) ([]Saver, error) {
-	if saverConfig.Type == "" {
-		return nil, fmt.Errorf("the configuration block for this destination does not provide the type")
-	}
-
-	var ss []Saver
-
-	//TODO: replace common.OpenWriter by datasource.OpenWriteFile
-	switch saverConfig.Type {
-	case "database":
-		ds, err := database.NewSaver(ctx, config, saverConfig, environment, instances)
-		for _, d := range ds {
-			ss = append(ss, d)
-		}
-		return ss, err
-	case "csv":
-		//TODO: replace by datasource.OpenWriter
-		writer := os.Stdout
-		tmpName := ""
-		var err error
-		//		writer, tmpName, err := common.OpenWriter(saverConfig)
-		if err != nil {
-			return nil, err
-		}
-		s, err := csv.NewSaver(ctx, saverConfig, tmpName, writer)
-		return append(ss, s), err
-	case "json":
-		//TODO: replace by datasource.OpenWriter
-		writer := os.Stdout
-		tmpName := ""
-		var err error
-		//		writer, tmpName, err := common.OpenWriter(saverConfig)
-		if err != nil {
-			return nil, err
-		}
-		s, err := json.NewSaver(ctx, saverConfig, tmpName, writer)
-		return append(ss, s), err
-	case "yaml":
-		//TODO: replace by datasource.OpenWriter
-		writer := os.Stdout
-		tmpName := ""
-		var err error
-		//		writer, tmpName, err := common.OpenWriter(saverConfig)
-		if err != nil {
-			return nil, err
-		}
-		s, err := yaml.NewSaver(ctx, saverConfig, tmpName, writer)
-		return append(ss, s), err
+//NewSaver analyze the datasource and return object implemnting Saver of the asked type
+func NewSaver(ctx context.Context, ds *datasource.Datasource, table string, key string, mode string) (Saver, error) {
+	switch ds.Engine {
+	case datasource.Mysql, datasource.Postgres:
+		return database.NewSaver(ctx, ds, table, key, mode)
+	case datasource.CSV:
+		return csv.NewSaver(ctx, ds)
+	case datasource.JSON:
+		return json.NewSaver(ctx, ds)
+	case datasource.YAML:
+		return yaml.NewSaver(ctx, ds)
 	default:
-		return nil, fmt.Errorf("don't know how to manage %s", saverConfig.Type)
+		return nil, fmt.Errorf("don't know how to manage this datasource engine")
 	}
 }

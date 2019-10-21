@@ -3,15 +3,15 @@ package database
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
-	"github.com/marema31/kamino/config"
+	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/common"
 )
 
 //DbLoader specifc state for database Loader provider
 type DbLoader struct {
-	//TODO: to be uncommented when use of datasources
-	//	kdb      *kaminodb.KaminoDb
+	ds       *datasource.Datasource
 	db       *sql.DB
 	database string
 	table    string
@@ -22,41 +22,22 @@ type DbLoader struct {
 }
 
 //NewLoader open the database connection, make the data query and return a Loader compatible object
-func NewLoader(ctx context.Context, config *config.Config, loaderConfig config.SourceConfig, environment string, instance string) (*DbLoader, error) {
-	/*TODO: Uncomment and adapt
-	database := loaderConfig.Database
-	if database == "" {
-		return nil, fmt.Errorf("source of sync does not provided a database")
-	}
-	//TODO: Replace by datasource.Lookup
-	var kdbs []*interface{} = nil
-	var err error = nil
-	//	kdbs, err := config.GetDbs(database, environment, []string{instance})
-	if err != nil {
-		return nil, err
-	}
-	if len(kdbs) != 1 {
-		return nil, fmt.Errorf("source of this sync must be a single database with no 'instance' attribute")
-	}
-	kdb := kdbs[0]
-
-	table := loaderConfig.Table
+func NewLoader(ctx context.Context, ds *datasource.Datasource, table string, where string) (*DbLoader, error) {
 	if table == "" {
 		return nil, fmt.Errorf("source of sync does not provided a table name")
 	}
 
-	if kdb.Schema != "" {
-		table = fmt.Sprintf("%s.%s", kdb.Schema, table)
+	if ds.Schema != "" {
+		table = fmt.Sprintf("%s.%s", ds.Schema, table)
 	}
 
-	where := loaderConfig.Where
 	if where != "" {
 		where = fmt.Sprintf("WHERE %s", where)
 	}
 
-	db, err := kdb.Open()
+	db, err := ds.OpenDatabase(false, false)
 	if err != nil {
-		return nil, fmt.Errorf("can't open %s database : %v", database, err)
+		return nil, fmt.Errorf("can't open %s database : %v", ds.Database, err)
 	}
 
 	rows, err := db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s %s", table, where))
@@ -80,16 +61,14 @@ func NewLoader(ctx context.Context, config *config.Config, loaderConfig config.S
 	}
 
 	return &DbLoader{
-		kdb:      kdb,
+		ds:       ds,
 		db:       db,
-		database: database,
+		database: ds.Database,
 		table:    table,
 		rows:     rows,
 		scanned:  scanned,
 		rawBytes: rawBytes,
 		colNames: columnsname}, nil
-	*/
-	return nil, nil
 }
 
 //Next moves to next record and return false if there is no more records

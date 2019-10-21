@@ -8,12 +8,13 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/marema31/kamino/config"
+	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/common"
 )
 
 //KaminoYAMLLoader specifc state for database Saver provider
 type KaminoYAMLLoader struct {
+	ds         *datasource.Datasource
 	file       io.ReadCloser
 	name       string
 	content    []map[string]string
@@ -21,13 +22,17 @@ type KaminoYAMLLoader struct {
 }
 
 //NewLoader open the encoding process on provider file, read the whole file, unMarshal it and return a Loader compatible object
-func NewLoader(ctx context.Context, loaderConfig config.SourceConfig, file io.ReadCloser) (*KaminoYAMLLoader, error) {
+func NewLoader(ctx context.Context, ds *datasource.Datasource) (*KaminoYAMLLoader, error) {
+	file, err := ds.OpenReadFile()
+	if err != nil {
+		return nil, err
+	}
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
 
-	k := KaminoYAMLLoader{file: file, name: loaderConfig.File, content: nil, currentRow: 0}
+	k := KaminoYAMLLoader{ds: ds, file: file, name: ds.FilePath, content: nil, currentRow: 0}
 	k.content = make([]map[string]string, 0)
 
 	err = yaml.Unmarshal([]byte(byteValue), &k.content)
@@ -58,8 +63,7 @@ func (yl *KaminoYAMLLoader) Load() (common.Record, error) {
 
 //Close closes the datasource
 func (yl *KaminoYAMLLoader) Close() {
-	//TODO: replace the following by the datasource.CloseFile()
-	yl.file.Close()
+	yl.ds.CloseFile()
 }
 
 //Name give the name of the destination

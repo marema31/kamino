@@ -7,12 +7,13 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/marema31/kamino/config"
+	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/common"
 )
 
 //KaminoJSONLoader specifc state for database Saver provider
 type KaminoJSONLoader struct {
+	ds         *datasource.Datasource
 	file       io.ReadCloser
 	name       string
 	content    []map[string]string
@@ -20,13 +21,17 @@ type KaminoJSONLoader struct {
 }
 
 //NewLoader open the encoding process on provider file, read the whole file, unMarshal it and return a Loader compatible object
-func NewLoader(ctx context.Context, loaderConfig config.SourceConfig, file io.ReadCloser) (*KaminoJSONLoader, error) {
+func NewLoader(ctx context.Context, ds *datasource.Datasource) (*KaminoJSONLoader, error) {
+	file, err := ds.OpenReadFile()
+	if err != nil {
+		return nil, err
+	}
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
 
-	k := KaminoJSONLoader{file: file, name: loaderConfig.File, content: nil, currentRow: 0}
+	k := KaminoJSONLoader{ds: ds, file: file, name: ds.FilePath, content: nil, currentRow: 0}
 	k.content = make([]map[string]string, 0)
 	err = json.Unmarshal([]byte(byteValue), &k.content)
 	if err != nil {
@@ -57,7 +62,7 @@ func (jl *KaminoJSONLoader) Load() (common.Record, error) {
 //Close closes the datasource
 func (jl *KaminoJSONLoader) Close() {
 	//TODO: replace the following by the datasource.CloseFile()
-	jl.file.Close()
+	jl.ds.CloseFile()
 }
 
 //Name give the name of the destination

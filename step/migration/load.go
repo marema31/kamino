@@ -2,6 +2,7 @@ package migration
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 
@@ -13,7 +14,7 @@ import (
 )
 
 //Load data from step file using its viper representation a return priority and list of steps
-func Load(filename string, v *viper.Viper, dss datasource.Datasourcers) (priority uint, steps []common.Steper, err error) {
+func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.Datasourcers) (priority uint, steps []common.Steper, err error) {
 	steps = make([]common.Steper, 0, 1)
 
 	priority = v.GetUint("priority")

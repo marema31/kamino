@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/marema31/kamino/config"
 	"github.com/marema31/kamino/provider/common"
 )
 
@@ -14,13 +13,13 @@ type Filter interface {
 }
 
 //NewFilter analyze the config map and return object implemnting Filter of the asked type
-func NewFilter(ctx context.Context, config config.FilterConfig) (Filter, error) {
-	switch config.Type {
+func NewFilter(ctx context.Context, filterType string, AParam []string, MParam map[string]string) (Filter, error) {
+	switch filterType {
 	case "replace":
-		return newReplaceFilter(ctx, config)
+		return newReplaceFilter(ctx, MParam)
 	case "only":
-		return newOnlyFilter(ctx, config)
+		return newOnlyFilter(ctx, AParam)
 	default:
-		return nil, fmt.Errorf("don't know how to filter %s", config.Type)
+		return nil, fmt.Errorf("don't know how to filter %s", filterType)
 	}
 }

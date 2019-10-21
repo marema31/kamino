@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/marema31/kamino/config"
 	"github.com/marema31/kamino/provider/common"
 )
 
@@ -13,11 +12,11 @@ type ReplaceFilter struct {
 	columns map[string]string
 }
 
-func newReplaceFilter(ctx context.Context, config config.FilterConfig) (Filter, error) {
-	if config.MParam == nil {
+func newReplaceFilter(ctx context.Context, MParam map[string]string) (Filter, error) {
+	if MParam == nil {
 		return nil, fmt.Errorf("no parameter to filter replace")
 	}
-	return &ReplaceFilter{columns: config.MParam}, nil
+	return &ReplaceFilter{columns: MParam}, nil
 }
 
 // Filter : replace the content of column by provided values (insert the column if not present)

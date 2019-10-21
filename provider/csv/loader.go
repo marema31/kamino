@@ -5,12 +5,13 @@ import (
 	"encoding/csv"
 	"io"
 
-	"github.com/marema31/kamino/config"
+	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/common"
 )
 
 //KaminoCsvLoader specifc state for database Saver provider
 type KaminoCsvLoader struct {
+	ds           *datasource.Datasource
 	file         io.ReadCloser
 	reader       csv.Reader
 	name         string
@@ -20,7 +21,11 @@ type KaminoCsvLoader struct {
 }
 
 //NewLoader open the encoding process on provider file, read the header from the first line and return a Loader compatible object
-func NewLoader(ctx context.Context, loaderConfig config.SourceConfig, file io.ReadCloser) (*KaminoCsvLoader, error) {
+func NewLoader(ctx context.Context, ds *datasource.Datasource) (*KaminoCsvLoader, error) {
+	file, err := ds.OpenReadFile()
+	if err != nil {
+		return nil, err
+	}
 	reader := csv.NewReader(file)
 	//Read the header to dertermine the column order
 	row, err := reader.Read()
@@ -28,7 +33,7 @@ func NewLoader(ctx context.Context, loaderConfig config.SourceConfig, file io.Re
 		return nil, err
 	}
 
-	return &KaminoCsvLoader{file: file, name: loaderConfig.File, reader: *reader, colNames: row, currentRow: nil, currentError: nil}, nil
+	return &KaminoCsvLoader{ds: ds, file: file, name: ds.FilePath, reader: *reader, colNames: row, currentRow: nil, currentError: nil}, nil
 }
 
 //Next moves to next record and return false if there is no more records
@@ -65,8 +70,7 @@ func (cl *KaminoCsvLoader) Load() (common.Record, error) {
 
 //Close closes the datasource
 func (cl *KaminoCsvLoader) Close() {
-	//TODO: replace the following by the datasource.CloseFile()
-	cl.file.Close()
+	cl.ds.CloseFile()
 }
 
 //Name give the name of the destination

@@ -2,6 +2,7 @@
 package step
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -17,7 +18,7 @@ import (
 )
 
 // Load the step file and returns the priority and a list of steper for this file
-func Load(path string, filename string, dss datasource.Datasourcers) (priority uint, stepList []common.Steper, err error) {
+func Load(ctx context.Context, path string, filename string, dss datasource.Datasourcers) (priority uint, stepList []common.Steper, err error) {
 	v := viper.New()
 
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
@@ -35,15 +36,15 @@ func Load(path string, filename string, dss datasource.Datasourcers) (priority u
 
 	switch stepType {
 	case "sql":
-		return shell.Load(filename, v, dss)
+		return shell.Load(ctx, filename, v, dss)
 	case "migration":
-		return migration.Load(filename, v, dss)
+		return migration.Load(ctx, filename, v, dss)
 	case "sync", "synchro", "synchronization":
-		return sync.Load(filename, v, dss)
+		return sync.Load(ctx, filename, v, dss)
 	case "template":
-		return tmpl.Load(filename, v, dss)
+		return tmpl.Load(ctx, filename, v, dss)
 	case "shell":
-		return sqlscript.Load(filename, v, dss)
+		return sqlscript.Load(ctx, filename, v, dss)
 	default:
 		return 0, nil, fmt.Errorf("does not how to manage %s step type", stepType)
 	}

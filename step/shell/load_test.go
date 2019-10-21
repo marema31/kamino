@@ -1,6 +1,7 @@
 package shell_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/marema31/kamino/datasource"
@@ -30,22 +31,23 @@ func (dss datasourcesMock) Lookup(tags []string, dsType []datasource.Type, engin
 	}
 }
 
-func setupLoad(path string, filename string) (datasource.Datasourcers, *viper.Viper, error) {
+func setupLoad(path string, filename string) (context.Context, datasource.Datasourcers, *viper.Viper, error) {
 	var dss datasourcesMock
 	v := viper.New()
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
 	v.AddConfigPath(path)
 	err := v.ReadInConfig()
-	return dss, v, err
+	ctx := context.Background()
+	return ctx, dss, v, err
 }
 
 func TestShellLoadOk(t *testing.T) {
-	dss, v, err := setupLoad("testdata/good/steps/", "shellok")
+	ctx, dss, v, err := setupLoad("testdata/good/steps/", "shellok")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := shell.Load("shellok", v, dss)
+	priority, steps, err := shell.Load(ctx, "shellok", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -75,12 +77,12 @@ func TestShellLoadOk(t *testing.T) {
 }
 
 func TestShellLoadNoTag(t *testing.T) {
-	dss, v, err := setupLoad("testdata/good/steps/", "notags")
+	ctx, dss, v, err := setupLoad("testdata/good/steps/", "notags")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := shell.Load("notags", v, dss)
+	priority, steps, err := shell.Load(ctx, "notags", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -95,33 +97,33 @@ func TestShellLoadNoTag(t *testing.T) {
 }
 
 func TestShellLoadNoScript(t *testing.T) {
-	dss, v, err := setupLoad("testdata/fail/steps/", "noscript")
+	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "noscript")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = shell.Load("noscript", v, dss)
+	_, _, err = shell.Load(ctx, "noscript", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 }
 
 func TestShellLoadTemplateWrong(t *testing.T) {
-	dss, v, err := setupLoad("testdata/fail/steps/", "wrongtemplate")
+	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "wrongtemplate")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = shell.Load("wrongtemplate", v, dss)
+	_, _, err = shell.Load(ctx, "wrongtemplate", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 }
 
 func TestShellLoadWrongEngine(t *testing.T) {
-	dss, v, err := setupLoad("testdata/fail/steps/", "wrongengine")
+	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "wrongengine")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = shell.Load("wrongengine", v, dss)
+	_, _, err = shell.Load(ctx, "wrongengine", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

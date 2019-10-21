@@ -1,13 +1,15 @@
-package config
+package sync
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/marema31/kamino/filter"
 	"github.com/spf13/viper"
 )
 
-func (c *Config) getFilters(v *viper.Viper, sync string) ([]FilterConfig, error) {
-	var filters []FilterConfig
+func getFilters(ctx context.Context, v *viper.Viper, sync string) ([]filter.Filter, error) {
+	filters := make([]filter.Filter, 0)
 	var ok bool
 	fs := v.Get("filters")
 	if fs != nil { // There is a filter section
@@ -18,10 +20,13 @@ func (c *Config) getFilters(v *viper.Viper, sync string) ([]FilterConfig, error)
 
 			// for every element of the filters array that must be a map
 			for _, f := range casted {
-				var currentfilter FilterConfig
+				var filterType string
+				var AParam []string
+				var MParam map[string]string
+
 				switch fcasted := f.(type) { // Avoid panic if the type is not compatible with the one we want
 				case map[string]interface{}:
-					currentfilter.Type, ok = fcasted["type"].(string)
+					filterType, ok = fcasted["type"].(string)
 					if !ok {
 						return nil, fmt.Errorf("missing type for a filter of %s sync", sync)
 					}
@@ -34,20 +39,24 @@ func (c *Config) getFilters(v *viper.Viper, sync string) ([]FilterConfig, error)
 
 					switch pcasted := parameters.(type) { // Avoid panic if the type is not compatible with the one we want
 					case []interface{}:
-						currentpvalue := make([]string, 0)
+						AParam = make([]string, 0)
 						for _, pv := range pcasted {
-							currentpvalue = append(currentpvalue, pv.(string))
+							AParam = append(AParam, pv.(string))
 						}
-						currentfilter.AParam = currentpvalue
 
 					case map[string]interface{}:
-						ps := make(map[string]string)
+						MParam = make(map[string]string)
 						for pk, pv := range pcasted {
-							ps[pk] = pv.(string)
+							MParam[pk] = pv.(string)
 						}
-						currentfilter.MParam = ps
 					}
-					filters = append(filters, currentfilter)
+
+					f, err := filter.NewFilter(ctx, filterType, AParam, MParam)
+					if err != nil {
+						return nil, err
+					}
+					filters = append(filters, f)
+
 				default:
 					return nil, fmt.Errorf("one filter defined for %s sync is invalid", sync)
 				}

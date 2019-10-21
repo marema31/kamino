@@ -1,6 +1,7 @@
 package migration_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/marema31/kamino/datasource"
@@ -30,22 +31,23 @@ func (dss datasourcesMock) Lookup(tags []string, dsType []datasource.Type, engin
 	}
 }
 
-func setupLoad(path string, filename string) (datasource.Datasourcers, *viper.Viper, error) {
+func setupLoad(path string, filename string) (context.Context, datasource.Datasourcers, *viper.Viper, error) {
 	var dss datasourcesMock
 	v := viper.New()
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
 	v.AddConfigPath(path)
 	err := v.ReadInConfig()
-	return dss, v, err
+	ctx := context.Background()
+	return ctx, dss, v, err
 }
 
 func TestMigrationLoadOk(t *testing.T) {
-	dss, v, err := setupLoad("testdata/good/steps/", "migrationok")
+	ctx, dss, v, err := setupLoad("testdata/good/steps/", "migrationok")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := migration.Load("migrationok", v, dss)
+	priority, steps, err := migration.Load(ctx, "migrationok", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -75,12 +77,12 @@ func TestMigrationLoadOk(t *testing.T) {
 }
 
 func TestMigrationLoadNoTag(t *testing.T) {
-	dss, v, err := setupLoad("testdata/good/steps/", "notags")
+	ctx, dss, v, err := setupLoad("testdata/good/steps/", "notags")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := migration.Load("notags", v, dss)
+	priority, steps, err := migration.Load(ctx, "notags", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -95,33 +97,33 @@ func TestMigrationLoadNoTag(t *testing.T) {
 }
 
 func TestMigrationLoadNoFolder(t *testing.T) {
-	dss, v, err := setupLoad("testdata/fail/steps/", "nofolder")
+	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "nofolder")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = migration.Load("nofolder", v, dss)
+	_, _, err = migration.Load(ctx, "nofolder", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 }
 
 func TestMigrationLoadDFolderTemplateWrong(t *testing.T) {
-	dss, v, err := setupLoad("testdata/fail/steps/", "wrongfolder")
+	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "wrongfolder")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = migration.Load("wrongfolder", v, dss)
+	_, _, err = migration.Load(ctx, "wrongfolder", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 }
 
 func TestMigrationLoadWrongEngine(t *testing.T) {
-	dss, v, err := setupLoad("testdata/fail/steps/", "wrongengine")
+	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "wrongengine")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = migration.Load("wrongengine", v, dss)
+	_, _, err = migration.Load(ctx, "wrongengine", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

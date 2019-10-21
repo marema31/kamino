@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/marema31/kamino/config"
 	"github.com/marema31/kamino/provider/common"
 )
 
@@ -13,11 +12,11 @@ type OnlyFilter struct {
 	columns []string
 }
 
-func newOnlyFilter(ctx context.Context, config config.FilterConfig) (Filter, error) {
-	if config.AParam == nil {
+func newOnlyFilter(ctx context.Context, AParam []string) (Filter, error) {
+	if AParam == nil {
 		return nil, fmt.Errorf("no parameter to filter only")
 	}
-	return &OnlyFilter{columns: config.AParam}, nil
+	return &OnlyFilter{columns: AParam}, nil
 }
 
 // Filter : Only the content of column by provided values (insert the column if not present)

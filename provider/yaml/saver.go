@@ -6,22 +6,26 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/marema31/kamino/config"
+	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/common"
 )
 
 //KaminoYAMLSaver specifc state for database Saver provider
 type KaminoYAMLSaver struct {
+	ds      *datasource.Datasource
 	file    io.WriteCloser
 	name    string
-	tmpName string
 	content []map[string]string
 }
 
 //NewSaver open the encoding process on provider file and return a Saver compatible object
-func NewSaver(ctx context.Context, saverConfig config.DestinationConfig, tmpName string, file io.WriteCloser) (*KaminoYAMLSaver, error) {
+func NewSaver(ctx context.Context, ds *datasource.Datasource) (*KaminoYAMLSaver, error) {
+	file, err := ds.OpenWriteFile()
+	if err != nil {
+		return nil, err
+	}
 	content := make([]map[string]string, 0)
-	return &KaminoYAMLSaver{file: file, name: saverConfig.File, tmpName: tmpName, content: content}, nil
+	return &KaminoYAMLSaver{file: file, ds: ds, name: ds.FilePath, content: content}, nil
 }
 
 //Save writes the record to the destination
@@ -40,8 +44,7 @@ func (ys *KaminoYAMLSaver) Close() error {
 	if err != nil {
 		return err
 	}
-	//TODO: replace the following by the datasource.CloseFile()
-	return nil
+	return ys.ds.CloseFile()
 }
 
 //Name give the name of the destination
@@ -51,6 +54,5 @@ func (ys *KaminoYAMLSaver) Name() string {
 
 //Reset reinitialize the destination (if possible)
 func (ys *KaminoYAMLSaver) Reset() error {
-	//TODO: replace the following by the datasource.ResetFile()
-	return nil
+	return ys.ds.ResetFile()
 }

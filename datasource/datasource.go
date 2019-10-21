@@ -63,6 +63,30 @@ type Datasource struct {
 	Tags        []string
 }
 
+//StringToType convert string to corresponding Type typed value
+func StringToType(dsType string) (Type, error) {
+	switch strings.ToLower(dsType) {
+	case "db", "database", "databases":
+		return Database, nil
+	case "file", "files":
+		return File, nil
+	}
+	return File, fmt.Errorf("does not how to manage %s datasource type", dsType)
+}
+
+//StringsToTypes convert string slice to an slice of corresponding Type typed values
+func StringsToTypes(dsTypes []string) ([]Type, error) {
+	typeSlice := make([]Type, 0)
+	for _, dsType := range dsTypes {
+		t, err := StringToType(dsType)
+		if err != nil {
+			return nil, err
+		}
+		typeSlice = append(typeSlice, t)
+	}
+	return typeSlice, nil
+}
+
 //StringToEngine convert string to corresponding Engine typed value
 func StringToEngine(engine string) (Engine, error) {
 	switch strings.ToLower(engine) {

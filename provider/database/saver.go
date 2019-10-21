@@ -5,8 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/marema31/kamino/config"
-	"github.com/marema31/kamino/kaminodb"
+	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/common"
 )
 
@@ -24,7 +23,7 @@ const (
 
 //DbSaver specifc state for database Saver provider
 type DbSaver struct {
-	kdb          *kaminodb.KaminoDb
+	ds           *datasource.Datasource
 	db           *sql.DB
 	tx           *sql.Tx
 	database     string
@@ -42,134 +41,117 @@ type DbSaver struct {
 }
 
 //NewSaver open the database connection, prepare the insert statement and return a Saver compatible object
-func NewSaver(ctx context.Context, config *config.Config, saverConfig config.DestinationConfig, environment string, instances []string) ([]*DbSaver, error) {
-	var dss []*DbSaver
-	/*TODO: uncomment and adapt
-	var err error
-	if saverConfig.Database == "" {
-		return nil, fmt.Errorf("destination of sync does not provided a database")
-	}
+func NewSaver(ctx context.Context, ds *datasource.Datasource, table string, key string, mode string) (*DbSaver, error) {
+	var saver DbSaver
 
-	kdbs, err := config.GetDbs(saverConfig.Database, environment, instances)
+	saver.ds = ds
+	saver.ctx = ctx
+	saver.database = ds.Database
+
+	if table == "" {
+		return nil, fmt.Errorf("destination of sync does not provided a table name")
+	}
+	if ds.Schema != "" {
+		table = fmt.Sprintf("%s.%s", ds.Schema, table)
+	}
+	saver.table = table
+
+	db, err := ds.OpenDatabase(false, false)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("can't open %s database : %v", ds.Database, err)
 	}
-	for _, kdb := range kdbs {
-		var ds DbSaver
+	saver.db = db
+	saver.key = key
+	saver.mode = stringToMode(mode)
 
-		if saverConfig.Table == "" {
-			return nil, fmt.Errorf("destination of sync does not provided a table name")
+	saver.ids = make(map[string]bool)
+
+	if saver.mode == replace || saver.mode == exactCopy || saver.mode == update {
+		if saver.key == "" {
+			return nil, fmt.Errorf("modes replace and exactCopy need a primary key for %s.%s", saver.database, saver.table)
 		}
-
-		ds.table = saverConfig.Table
-		if kdb.Schema != "" {
-			ds.table = fmt.Sprintf("%s.%s", kdb.Schema, saverConfig.Table)
-		}
-
-		ds.db, err = kdb.Open()
-		if err != nil {
-			return nil, fmt.Errorf("can't open %s database : %v", kdb.Database, err)
-		}
-
-		ds.kdb = kdb
-		ds.database = kdb.Database
-		ds.ids = make(map[string]bool)
-		ds.ctx = ctx
-
-		err = ds.parseConfig(saverConfig)
+		err = saver.createIdsList()
 		if err != nil {
 			return nil, err
 		}
-
-		if ds.mode == replace || ds.mode == exactCopy {
-			if ds.key == "" {
-				return nil, fmt.Errorf("modes replace and exactCopy need a primary key for %s.%s", ds.database, ds.table)
-			}
-			err = ds.createIdsList()
-			if err != nil {
-				return nil, err
-			}
-		}
-		dss = append(dss, &ds)
 	}
-	*/
-	return dss, nil
+	return &saver, nil
 }
 
 //Save writes the record to the destination
-func (ds *DbSaver) Save(record common.Record) error {
+func (saver *DbSaver) Save(record common.Record) error {
 	var err error
 
 	// Is this method is called for the first time
 	//If yes fix the column order in csv file
-	if ds.colNames == nil {
-		if ds.kdb.Transaction {
-			ds.tx, err = ds.db.Begin()
+	if saver.colNames == nil {
+		if saver.ds.Transaction {
+			saver.tx, err = saver.db.Begin()
 			if err != nil {
 				return err
 			}
 		}
 
-		err := ds.createStatement(record)
+		err := saver.createStatement(record)
 		if err != nil {
 			return err
 		}
 		// The truncate will be done at the first record save to avoid truncate a table if there is an error on config file
-		if ds.mode == truncate {
-			if ds.kdb.Transaction {
-				_, err = ds.tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", ds.table))
+		if saver.mode == truncate {
+			if saver.ds.Transaction {
+				_, err = saver.tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", saver.table))
 			} else {
-				_, err = ds.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", ds.table))
+				_, err = saver.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", saver.table))
 			}
 			if err != nil {
 				return err
 			}
-			ds.wasEmpty = true // Avoid truncate after inserting the first record
+			saver.wasEmpty = true // Avoid truncate after inserting the first record
 		}
 	}
-	if ds.mode == onlyIfEmpty && !ds.wasEmpty {
+	if saver.mode == onlyIfEmpty && !saver.wasEmpty {
 		return nil
 	}
 
-	row := make([]interface{}, len(ds.colNames))
-	for i, col := range ds.colNames {
+	row := make([]interface{}, len(saver.colNames))
+	for i, col := range saver.colNames {
 		row[i] = record[col]
 	}
-	switch ds.mode {
+	switch saver.mode {
 	case onlyIfEmpty:
-		_, err := ds.insertStmt.Exec(row...)
+		_, err := saver.insertStmt.Exec(row...)
 		return err
 
 	case insert:
-		_, err := ds.insertStmt.Exec(row...)
+		_, err := saver.insertStmt.Exec(row...)
 		return err
 
 	case truncate:
-		_, err := ds.insertStmt.Exec(row...)
+		_, err := saver.insertStmt.Exec(row...)
 		return err
 
 	case update:
-		_, err := ds.updateStmt.Exec(row...)
+		_, err := saver.updateStmt.Exec(row...)
 		return err
 
 	case replace:
-		_, ok := ds.ids[record[ds.key]]
-		ds.ids[record[ds.key]] = true
+		_, ok := saver.ids[record[saver.key]]
+		saver.ids[record[saver.key]] = true
 		if ok {
-			_, err := ds.updateStmt.Exec(row...)
+			_, err := saver.updateStmt.Exec(row...)
 			return err
 		}
-		_, err := ds.insertStmt.Exec(row...)
+		_, err := saver.insertStmt.Exec(row...)
 		return err
 
 	case exactCopy:
-		_, ok := ds.ids[record[ds.key]]
-		ds.ids[record[ds.key]] = true
+		_, ok := saver.ids[record[saver.key]]
+		saver.ids[record[saver.key]] = true
 		if ok {
-			_, err := ds.updateStmt.Exec(row...)
+			_, err := saver.updateStmt.Exec(row...)
 			return err
 		}
-		_, err := ds.insertStmt.Exec(row...)
+		_, err := saver.insertStmt.Exec(row...)
 		return err
 
 	}
@@ -177,15 +159,15 @@ func (ds *DbSaver) Save(record common.Record) error {
 }
 
 //Close closes the destination
-func (ds *DbSaver) Close() error {
-	if ds.mode == exactCopy {
-		for id, modified := range ds.ids {
+func (saver *DbSaver) Close() error {
+	if saver.mode == exactCopy {
+		for id, modified := range saver.ids {
 			if !modified {
 				var err error
-				if ds.kdb.Transaction {
-					_, err = ds.tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", ds.table))
+				if saver.ds.Transaction {
+					_, err = saver.tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", saver.table))
 				} else {
-					_, err = ds.db.Exec(fmt.Sprintf("DELETE from %s WHERE %s=%s", ds.table, ds.key, id))
+					_, err = saver.db.Exec(fmt.Sprintf("DELETE from %s WHERE %s=%s", saver.table, saver.key, id))
 				}
 				if err != nil {
 					return err
@@ -193,25 +175,25 @@ func (ds *DbSaver) Close() error {
 			}
 		}
 	}
-	if ds.kdb.Transaction {
-		ds.tx.Commit()
+	if saver.ds.Transaction {
+		saver.tx.Commit()
 	}
 
-	ds.db.Close()
+	saver.db.Close()
 	return nil
 }
 
 //Reset reinitialize the destination (if possible)
-func (ds *DbSaver) Reset() error {
-	ds.colNames = nil
+func (saver *DbSaver) Reset() error {
+	saver.colNames = nil
 
-	if ds.kdb.Transaction && ds.tx != nil {
-		ds.tx.Rollback()
+	if saver.ds.Transaction && saver.tx != nil {
+		saver.tx.Rollback()
 	}
 	return nil
 }
 
 //Name give the name of the destination
-func (ds *DbSaver) Name() string {
-	return ds.database + "_" + ds.table
+func (saver *DbSaver) Name() string {
+	return saver.database + "_" + saver.table
 }
