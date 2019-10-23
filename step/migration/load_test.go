@@ -5,34 +5,18 @@ import (
 	"testing"
 
 	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/mockdatasource"
 	"github.com/marema31/kamino/step/migration"
 	"github.com/spf13/viper"
 )
 
-type datasourcesMock struct{}
-
-func (dss datasourcesMock) LoadAll(configpath string) error {
-	return nil
-}
-
-func (dss datasourcesMock) Lookup(tags []string, dsType []datasource.Type, engine []datasource.Engine) []*datasource.Datasource {
-	if len(tags) == 1 && tags[0] == "" {
-		return []*datasource.Datasource{}
-	}
-	if len(tags) == 2 && tags[0] == "tag1" && tags[1] == "tag2" {
-		return []*datasource.Datasource{
-			{Name: "ds1", Database: "db1", User: "user1", Tags: []string{"tag1a", "tag1b"}},
-			{Name: "ds2", Database: "db2", User: "user2", Tags: []string{"tag2"}},
-		}
-
-	}
-	return []*datasource.Datasource{
-		{Name: "wrongds1", Database: "db1", User: "user1", Tags: []string{"tag1a", "tag1b"}},
-	}
-}
-
 func setupLoad(path string, filename string) (context.Context, datasource.Datasourcers, *viper.Viper, error) {
-	var dss datasourcesMock
+	dss := mockdatasource.New()
+	ds1 := mockdatasource.MockDatasource{Name: "ds1", Database: "db1", User: "user1", Tags: []string{"tag1a", "tag1b"}}
+	ds2 := mockdatasource.MockDatasource{Name: "ds2", Database: "db2", User: "user2", Tags: []string{"tag2"}}
+	ds3 := mockdatasource.MockDatasource{Name: "ds3", Database: "db3", User: "user3", Tags: []string{"tag2"}}
+
+	dss.Insert([]string{"tag1", "tag2"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds1, &ds2, &ds3})
 	v := viper.New()
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
 	v.AddConfigPath(path)
@@ -52,8 +36,8 @@ func TestMigrationLoadOk(t *testing.T) {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
 
-	if len(steps) != 2 {
-		t.Fatalf("It should have been 2 steps created but it was created: %v", steps)
+	if len(steps) != 3 {
+		t.Fatalf("It should have been 3 steps created but it was created: %d", len(steps))
 	}
 
 	if priority != 42 {
@@ -88,7 +72,7 @@ func TestMigrationLoadNoTag(t *testing.T) {
 	}
 
 	if len(steps) != 0 {
-		t.Fatalf("It should have been 0 steps created but it was created: %v", steps)
+		t.Fatalf("It should have been 0 steps created but it was created: %v", len(steps))
 	}
 
 	if priority != 42 {

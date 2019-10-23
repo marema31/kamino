@@ -12,16 +12,24 @@ import (
 func setupLookupDatastore() *Datasources {
 	dss := Datasources{}
 
-	dss.datasources = map[string]*Datasource{
-		"ds1":   {Name: "ds1", Type: Database, Engine: Mysql},
-		"ds2":   {Name: "ds2", Type: Database, Engine: Postgres},
-		"ds3":   {Name: "ds3", Type: File, Engine: JSON},
-		"ds4":   {Name: "ds4", Type: File, Engine: YAML},
-		"ds5":   {Name: "ds5", Type: File, Engine: YAML},
-		"ds6":   {Name: "ds6", Type: File, Engine: YAML},
-		"ds7":   {Name: "ds7", Type: File, Engine: YAML},
-		"notag": {Name: "notag", Type: File, Engine: YAML},
-	}
+	dss.datasources = make(map[string]*Datasource)
+	ds1 := Datasource{name: "ds1", dstype: Database, engine: Mysql}
+	ds2 := Datasource{name: "ds2", dstype: Database, engine: Postgres}
+	ds3 := Datasource{name: "ds3", dstype: File, engine: JSON}
+	ds4 := Datasource{name: "ds4", dstype: File, engine: YAML}
+	ds5 := Datasource{name: "ds5", dstype: File, engine: YAML}
+	ds6 := Datasource{name: "ds6", dstype: File, engine: YAML}
+	ds7 := Datasource{name: "ds7", dstype: File, engine: YAML}
+	notag := Datasource{name: "notag", dstype: File, engine: YAML}
+
+	dss.datasources["ds1"] = &ds1
+	dss.datasources["ds2"] = &ds2
+	dss.datasources["ds3"] = &ds3
+	dss.datasources["ds4"] = &ds4
+	dss.datasources["ds5"] = &ds5
+	dss.datasources["ds6"] = &ds6
+	dss.datasources["ds7"] = &ds7
+	dss.datasources["notag"] = &notag
 
 	dss.tagToDatasource = map[string][]string{
 		"tag1":           {"ds1", "ds2"},
@@ -109,14 +117,15 @@ func helperTestLookup(t *testing.T, dss *Datasources, tags []string, dsTypes []T
 
 	anames := []string{}
 	for _, ds := range awaited {
-		anames = append(anames, ds.Name)
+		anames = append(anames, ds.name)
 	}
 	sort.Strings(anames)
 	aw := strings.Join(anames, " ")
 
 	rnames := []string{}
 	for _, ds := range result {
-		rnames = append(rnames, ds.Name)
+		tv := ds.FillTmplValues()
+		rnames = append(rnames, tv.Name)
 	}
 	sort.Strings(rnames)
 	rw := strings.Join(rnames, " ")

@@ -47,7 +47,7 @@ func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.D
 		step.Name = name
 		step.datasource = datasource
 
-		tfolder.Execute(renderedFolder, common.FillTmplValues(datasource))
+		tfolder.Execute(renderedFolder, datasource.FillTmplValues())
 		step.folder = renderedFolder.String()
 		//TODO: folder not found
 

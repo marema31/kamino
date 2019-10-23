@@ -11,66 +11,69 @@ import (
 	"path/filepath"
 	"strings"
 
-	_ "github.com/go-sql-driver/mysql" // Mysql library dynamically called by database/sql
-	_ "github.com/lib/pq"              //Postgres library dynamically called by database/sql
 	"github.com/spf13/viper"
 )
 
 // load a dile type datasource from the viper configuration
-func loadFileDatasource(filename string, v *viper.Viper, engine Engine) (*Datasource, error) {
+func loadFileDatasource(filename string, v *viper.Viper, engine Engine) (Datasource, error) {
 	var ds Datasource
-	ds.Type = File
-	ds.Engine = engine
-	ds.Name = filename
-	ds.Inline = v.GetString("inline")
-	ds.FilePath = v.GetString("file")
-	ds.URL = v.GetString("URL")
-	if ds.FilePath == "" && ds.URL == "" && ds.Inline == "" {
-		return nil, fmt.Errorf("the datasource %s does not provide the file path or URL", ds.Name)
+	ds.dstype = File
+	ds.engine = engine
+	ds.name = filename
+	ds.inline = v.GetString("inline")
+	ds.filePath = v.GetString("file")
+	ds.url = v.GetString("URL")
+	if ds.filePath == "" && ds.url == "" && ds.inline == "" {
+		return Datasource{}, fmt.Errorf("the datasource %s does not provide the file path or URL", ds.name)
 	}
 
-	ds.Tags = v.GetStringSlice("tags")
-	if len(ds.Tags) == 0 {
-		ds.Tags = []string{""}
+	ds.tags = v.GetStringSlice("tags")
+	if len(ds.tags) == 0 {
+		ds.tags = []string{""}
 	}
 
-	ds.Zip = v.GetBool("zip")
-	ds.Gzip = v.GetBool("gzip")
-	return &ds, nil
+	ds.zip = v.GetBool("zip")
+	ds.gzip = v.GetBool("gzip")
+	return ds, nil
 }
 
 //OpenReadFile open and return a io.ReadCloser corresponding to the datasource to be used by providers
 func (ds *Datasource) OpenReadFile() (io.ReadCloser, error) {
 	var reader io.ReadCloser
 	var err error
+	ds.tmpFilePath = ""
 
-	if ds.FilePath == "-" {
+	if ds.filePath == "-" {
 		reader = NewStdinReaderCloser()
-	} else if ds.FilePath != "" {
-		if ds.Zip {
-			archive, err := zip.OpenReader(ds.FilePath)
+	} else if ds.filePath != "" {
+		if ds.zip {
+			archive, err := zip.OpenReader(ds.filePath)
 			if err != nil {
 				return nil, err
 			}
 			return archive.File[0].Open()
 		}
-		reader, err = os.Open(ds.FilePath)
+		reader, err = os.Open(ds.filePath)
 		if err != nil {
 			return nil, err
 		}
-	} else if ds.URL != "" {
-		resp, err := http.Get(ds.URL)
+	} else if ds.url != "" {
+		resp, err := http.Get(ds.url)
 		if err != nil {
 			return nil, err
 		}
 
 		reader = resp.Body
-	} else if ds.Inline != "" {
+	} else if ds.inline != "" {
 		//string.NewReader returns a io.Reader, ioutil.NopCloser returns a io.ReadCloser with a Close implementation that do nothing
-		reader = ioutil.NopCloser(strings.NewReader(ds.Inline))
+		reader = ioutil.NopCloser(strings.NewReader(ds.inline))
 	}
 
-	if ds.Gzip {
+	if reader == nil {
+		return nil, fmt.Errorf("do not known what file to open for datasource: %s", ds.name)
+	}
+
+	if ds.gzip {
 		reader, err = gzip.NewReader(reader)
 		if err != nil {
 			return nil, err
@@ -86,11 +89,11 @@ func (ds *Datasource) OpenReadFile() (io.ReadCloser, error) {
 func (ds *Datasource) OpenWriteFile() (io.WriteCloser, error) {
 	var writer io.WriteCloser
 
-	if ds.FilePath == "-" {
+	if ds.filePath == "-" {
 		writer = NewStdoutWriterCloser()
 
 	} else {
-		dir, pattern := filepath.Split(ds.FilePath)
+		dir, pattern := filepath.Split(ds.filePath)
 		cache, err := ioutil.TempFile(dir, pattern+".")
 		if err != nil {
 			return nil, err
@@ -99,9 +102,12 @@ func (ds *Datasource) OpenWriteFile() (io.WriteCloser, error) {
 		ds.tmpFilePath = cache.Name()
 	}
 
-	if ds.Gzip {
-		writer = gzip.NewWriter(writer)
+	if writer == nil {
+		return nil, fmt.Errorf("do not known what file to open for datasource: %s", ds.name)
+	}
 
+	if ds.gzip {
+		writer = gzip.NewWriter(writer)
 	}
 
 	ds.filewriter = true
@@ -118,6 +124,7 @@ func (ds *Datasource) ResetFile() error {
 			return err
 		}
 	}
+	ds.tmpFilePath = ""
 	return nil
 }
 
@@ -126,20 +133,20 @@ func (ds *Datasource) CloseFile() error {
 
 	ds.fileHandle.Close()
 
-	if !ds.filewriter || ds.tmpFilePath == "" || ds.FilePath == "-" {
+	if !ds.filewriter || ds.tmpFilePath == "" || ds.filePath == "-" {
 		return nil // For file opened for read or stdin/stdout nothing more to do
 	}
 
-	if _, err := os.Stat(ds.FilePath); !os.IsNotExist(err) {
-		err = os.Remove(ds.FilePath)
+	if _, err := os.Stat(ds.filePath); !os.IsNotExist(err) {
+		err = os.Remove(ds.filePath)
 		if err != nil {
 			return err
 		}
 
 	}
 
-	if ds.Zip {
-		archivew, err := os.Create(ds.FilePath)
+	if ds.zip {
+		archivew, err := os.Create(ds.filePath)
 		if err != nil {
 			return err
 		}
@@ -151,8 +158,8 @@ func (ds *Datasource) CloseFile() error {
 			return err
 		}
 
-		name := filepath.Base(strings.TrimSuffix(ds.FilePath, "zip"))
-		writer, err := archive.Create(name + ds.GetEngine())
+		name := filepath.Base(strings.TrimSuffix(ds.filePath, "zip"))
+		writer, err := archive.Create(name + EngineToString(ds.engine))
 		if err != nil {
 			return err
 		}
@@ -171,9 +178,10 @@ func (ds *Datasource) CloseFile() error {
 	}
 
 	//rename the tempfile for cache to its real name
-	err := os.Rename(ds.tmpFilePath, ds.FilePath)
+	err := os.Rename(ds.tmpFilePath, ds.filePath)
 	if err != nil {
 		return err
 	}
+	ds.tmpFilePath = ""
 	return nil
 }

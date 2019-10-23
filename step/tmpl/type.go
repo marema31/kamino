@@ -22,7 +22,7 @@ const (
 // Step informations
 type Step struct {
 	Name         string
-	datasource   *datasource.Datasource
+	datasource   datasource.Datasourcer
 	templateFile string
 	template     *template.Template
 	destination  string

@@ -8,7 +8,7 @@ import (
 // Step informations
 type Step struct {
 	Name       string
-	datasource *datasource.Datasource
+	datasource datasource.Datasourcer
 	arguments  string
 	script     string
 }

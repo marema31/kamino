@@ -7,8 +7,6 @@ import (
 )
 
 func TestGetEngineOK(t *testing.T) {
-	ds := datasource.Datasource{}
-
 	set := map[datasource.Engine]string{
 		datasource.Mysql:    "mysql",
 		datasource.Postgres: "postgresql",
@@ -18,53 +16,54 @@ func TestGetEngineOK(t *testing.T) {
 	}
 
 	for k, v := range set {
-		ds.Engine = k
-		engine := ds.GetEngine()
-		if engine != v {
-			t.Errorf("GetEngine should return '%s' and returned '%s'", v, engine)
-		}
 
+		enginestr := datasource.EngineToString(k)
+		if enginestr != v {
+			t.Errorf("EngineToString should return '%s' and returned '%s'", v, enginestr)
+		}
+		engine, _ := datasource.StringToEngine(v)
+		if engine != k {
+			t.Errorf("GetEngine should return '%d' and returned '%d'", k, engine)
+		}
 	}
 }
 
 func TestGetEngineFail(t *testing.T) {
-	ds := datasource.Datasource{}
-
-	ds.Engine = datasource.Engine(15)
-	engine := ds.GetEngine()
+	engine := datasource.EngineToString(15)
 	if engine != "Unknown" {
 		t.Errorf("GetEngine should return 'Unknown' and returned '%s'", engine)
 	}
 
 }
 
-func TestStringToEngineOK(t *testing.T) {
+func TestStringToTypeOK(t *testing.T) {
 
-	set := map[datasource.Engine]string{
-		datasource.Mysql:    "mysql",
-		datasource.Postgres: "postgresql",
-		datasource.YAML:     "yaml",
-		datasource.JSON:     "json",
-		datasource.CSV:      "csv",
+	set := map[datasource.Type]string{
+		datasource.Database: "database",
+		datasource.File:     "file",
 	}
 
 	for k, v := range set {
-		engine, err := datasource.StringToEngine(v)
+		dstype, err := datasource.StringToType(v)
 		if err != nil {
 			t.Fatalf("StringToEngine should not return error, returned: %v", err)
 		}
-		if engine != k {
-			t.Errorf("StringToEngine should return '%d' and returned '%d'", k, engine)
+		if dstype != k {
+			t.Errorf("StringToEngine should return '%d' and returned '%d'", k, dstype)
+		}
+		dstypestr := datasource.TypeToString(k)
+		if dstypestr != v {
+			t.Errorf("StringToEngine should return '%s' and returned '%s'", dstypestr, v)
 		}
 
 	}
 }
 
-func TestStringToEngineFail(t *testing.T) {
-	engine, err := datasource.StringToEngine("unknown")
+func TestStringToTypeFail(t *testing.T) {
+	dstype, err := datasource.StringToType("unknown")
 
 	if err == nil {
-		t.Fatalf("StringToEngine should not return error, returned: %d", engine)
+		t.Fatalf("StringToEngine should not return error, returned: %d", dstype)
 	}
 }
 
@@ -90,10 +89,11 @@ func TestStringsToEnginesFail(t *testing.T) {
 	}
 }
 
+/*
 func TestGetNamedTags(t *testing.T) {
 	ds := datasource.Datasource{}
 
-	ds.Tags = []string{"az1", "environment:production", "instance:fr"}
+	ds.tags = []string{"az1", "environment:production", "instance:fr"}
 	value := ds.GetNamedTag("environment")
 	if value != "production" {
 		t.Errorf("Should return 'production' and returned '%s'", value)
@@ -104,3 +104,4 @@ func TestGetNamedTags(t *testing.T) {
 		t.Errorf("Should return '' and returned '%s'", value)
 	}
 }
+*/

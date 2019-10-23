@@ -11,7 +11,7 @@ import (
 )
 
 //LoadAll Lookup the provided folder for datasource configuration files
-func (dss Datasources) LoadAll(configPath string) error {
+func (dss *Datasources) LoadAll(configPath string) error {
 	dsfolder := filepath.Join(configPath, "datasources")
 
 	files, err := ioutil.ReadDir(dsfolder)
@@ -28,7 +28,7 @@ func (dss Datasources) LoadAll(configPath string) error {
 				if err != nil {
 					return err
 				}
-				dss.datasources[name] = ds
+				dss.datasources[name] = &ds
 
 			}
 		}
@@ -36,12 +36,12 @@ func (dss Datasources) LoadAll(configPath string) error {
 	// Insert the datasource name in all entry of the dictionnary
 	// that correspond to one tag of the tag list
 	for _, ds := range dss.datasources {
-		for _, tag := range ds.Tags {
+		for _, tag := range ds.tags {
 			if _, ok := dss.tagToDatasource[tag]; ok {
-				dss.tagToDatasource[tag] = append(dss.tagToDatasource[tag], ds.Name)
+				dss.tagToDatasource[tag] = append(dss.tagToDatasource[tag], ds.name)
 			} else {
 				dl := make([]string, 0, 1)
-				dl = append(dl, ds.Name)
+				dl = append(dl, ds.name)
 				dss.tagToDatasource[tag] = dl
 			}
 		}
@@ -49,24 +49,24 @@ func (dss Datasources) LoadAll(configPath string) error {
 	return nil
 }
 
-func (dss *Datasources) load(path string, filename string) (*Datasource, error) {
+func (dss *Datasources) load(path string, filename string) (Datasource, error) {
 	v := viper.New()
 
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
 	v.AddConfigPath(path)
 	err := v.ReadInConfig()
 	if err != nil {
-		return nil, err
+		return Datasource{}, err
 	}
 
 	engine := strings.ToLower(v.GetString("engine"))
 	if engine == "" {
-		return nil, fmt.Errorf("the datasource %s does not provide the engine name", filename)
+		return Datasource{}, fmt.Errorf("the datasource %s does not provide the engine name", filename)
 	}
 
 	e, err := StringToEngine(engine)
 	if err != nil {
-		return nil, err
+		return Datasource{}, err
 	}
 
 	switch e {
@@ -75,5 +75,5 @@ func (dss *Datasources) load(path string, filename string) (*Datasource, error) 
 	case JSON, YAML, CSV:
 		return loadFileDatasource(filename, v, e)
 	}
-	return nil, fmt.Errorf("does not how to manage %s datasource engine", engine)
+	return Datasource{}, fmt.Errorf("does not how to manage %s datasource engine", engine)
 }

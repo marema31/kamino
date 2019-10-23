@@ -36,7 +36,7 @@ type StdoutWriterCloser struct {
 
 // NewStdoutWriterCloser return an new instance of StdoutWriterCloser
 func NewStdoutWriterCloser() *StdoutWriterCloser {
-	var s StdoutWriterCloser
+	s := StdoutWriterCloser{}
 	return &s
 }
 

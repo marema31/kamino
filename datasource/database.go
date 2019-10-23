@@ -11,94 +11,94 @@ import (
 )
 
 // load a database type datasource from the viper configuration
-func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine) (*Datasource, error) {
+func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine) (Datasource, error) {
 	var ds Datasource
-	ds.Type = Database
-	ds.Engine = engine
-	ds.Name = filename
-	ds.Database = v.GetString("database")
-	if ds.Database == "" {
-		return nil, fmt.Errorf("the datasource %s does not provide the database name", ds.Name)
+	ds.dstype = Database
+	ds.engine = engine
+	ds.name = filename
+	ds.database = v.GetString("database")
+	if ds.database == "" {
+		return Datasource{}, fmt.Errorf("the datasource %s does not provide the database name", ds.name)
 	}
 
-	ds.Tags = v.GetStringSlice("tags")
-	if len(ds.Tags) == 0 {
-		ds.Tags = []string{""}
+	ds.tags = v.GetStringSlice("tags")
+	if len(ds.tags) == 0 {
+		ds.tags = []string{""}
 	}
 
-	ds.Schema = v.GetString("schema")
+	ds.schema = v.GetString("schema")
 
-	ds.Transaction = v.GetBool("transaction")
+	ds.transaction = v.GetBool("transaction")
 
-	ds.Host = v.GetString("host")
-	if ds.Host == "" {
-		ds.Host = "127.0.0.1"
+	ds.host = v.GetString("host")
+	if ds.host == "" {
+		ds.host = "127.0.0.1"
 	}
-	ds.Port = v.GetString("port")
+	ds.port = v.GetString("port")
 
-	ds.User = v.GetString("user")
-	ds.Admin = v.GetString("admin")
-	ds.UserPw = v.GetString("password")
-	ds.AdminPw = v.GetString("adminpassword")
-	if ds.AdminPw == "" {
-		ds.AdminPw = ds.UserPw
+	ds.user = v.GetString("user")
+	ds.admin = v.GetString("admin")
+	ds.userPw = v.GetString("password")
+	ds.adminPw = v.GetString("adminpassword")
+	if ds.adminPw == "" {
+		ds.adminPw = ds.userPw
 	}
-	if ds.UserPw == "" {
-		ds.UserPw = ds.AdminPw
+	if ds.userPw == "" {
+		ds.userPw = ds.adminPw
 	}
 
-	switch ds.Engine {
+	switch ds.engine {
 	case Mysql:
-		if ds.User == "" {
-			ds.User = "root"
+		if ds.user == "" {
+			ds.user = "root"
 		}
-		if ds.Admin == "" {
-			ds.Admin = "root"
+		if ds.admin == "" {
+			ds.admin = "root"
 		}
-		if ds.Port == "" {
-			ds.Port = "3306"
+		if ds.port == "" {
+			ds.port = "3306"
 		}
 
-		ds.URL = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", ds.User, ds.UserPw, ds.Host, ds.Port, ds.Database)
-		ds.URLAdmin = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", ds.Admin, ds.AdminPw, ds.Host, ds.Port, ds.Database)
-		ds.URLNoDb = fmt.Sprintf("%s:%s@tcp(%s:%s)", ds.Admin, ds.AdminPw, ds.Host, ds.Port)
+		ds.url = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", ds.user, ds.userPw, ds.host, ds.port, ds.database)
+		ds.urlAdmin = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", ds.admin, ds.adminPw, ds.host, ds.port, ds.database)
+		ds.urlNoDb = fmt.Sprintf("%s:%s@tcp(%s:%s)", ds.admin, ds.adminPw, ds.host, ds.port)
 
 	case Postgres:
-		ds.User = v.GetString("user")
-		if ds.User == "" {
-			ds.User = "postgres"
+		ds.user = v.GetString("user")
+		if ds.user == "" {
+			ds.user = "postgres"
 		}
-		if ds.Admin == "" {
-			ds.Admin = "postgres"
+		if ds.admin == "" {
+			ds.admin = "postgres"
 		}
-		ds.Port = v.GetString("port")
-		if ds.Port == "" {
-			ds.Port = "5432"
+		ds.port = v.GetString("port")
+		if ds.port == "" {
+			ds.port = "5432"
 		}
 		//TODO: try without ssldisable or make it a option on datasource
 		//TODO: manage ds.Schema
-		ds.URL = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", ds.Host, ds.Port, ds.User, ds.UserPw, ds.Database)
-		ds.URLAdmin = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", ds.Host, ds.Port, ds.Admin, ds.AdminPw, ds.Database)
-		ds.URLNoDb = fmt.Sprintf("host=%s port=%s user=%s password=%s sslmode=disable", ds.Host, ds.Port, ds.Admin, ds.AdminPw)
+		ds.url = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", ds.host, ds.port, ds.user, ds.userPw, ds.database)
+		ds.urlAdmin = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", ds.host, ds.port, ds.admin, ds.adminPw, ds.database)
+		ds.urlNoDb = fmt.Sprintf("host=%s port=%s user=%s password=%s sslmode=disable", ds.host, ds.port, ds.admin, ds.adminPw)
 	}
-	return &ds, nil
+	return ds, nil
 }
 
 //OpenDatabase open connection to the corresponding database
 func (ds *Datasource) OpenDatabase(admin bool, nodb bool) (*sql.DB, error) {
-	if ds.Type != Database {
-		return nil, fmt.Errorf("the datasource %s is not a database cannot open it", ds.Name)
+	if ds.dstype != Database {
+		return nil, fmt.Errorf("the datasource %s is not a database cannot open it", ds.name)
 	}
-	URL := ds.URL
+	URL := ds.url
 	if admin {
-		URL = ds.URLAdmin
+		URL = ds.urlAdmin
 	}
 	if nodb {
-		URL = ds.URLNoDb
+		URL = ds.urlNoDb
 	}
 
 	var driver string
-	switch ds.Engine {
+	switch ds.engine {
 	case Mysql:
 		driver = "mysql"
 	case Postgres:

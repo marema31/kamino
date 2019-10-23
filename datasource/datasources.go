@@ -19,5 +19,5 @@ func New() *Datasources {
 // Datasourcers interface to allow switching the way of storing the datasources
 type Datasourcers interface {
 	LoadAll(string) error
-	Lookup([]string, []Type, []Engine) []*Datasource
+	Lookup([]string, []Type, []Engine) []Datasourcer
 }

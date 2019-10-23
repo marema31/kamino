@@ -10,7 +10,7 @@ import (
 // Step informations
 type Step struct {
 	Name         string
-	datasource   *datasource.Datasource
+	datasource   datasource.Datasourcer
 	admin        bool
 	noDb         bool
 	query        string

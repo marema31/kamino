@@ -31,7 +31,7 @@ type DestinationConfig struct {
 	Mode    string
 }
 
-func getDatasource(dss datasource.Datasourcers, tags []string, engines []string, dsTypes []string) ([]*datasource.Datasource, error) {
+func getDatasource(dss datasource.Datasourcers, tags []string, engines []string, dsTypes []string) ([]datasource.Datasourcer, error) {
 	if len(tags) == 0 {
 		tags = []string{""}
 	}

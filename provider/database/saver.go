@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/marema31/kamino/datasource"
-	"github.com/marema31/kamino/provider/common"
+	"github.com/marema31/kamino/provider/types"
 )
 
 type dbSaverMode int
@@ -23,7 +23,7 @@ const (
 
 //DbSaver specifc state for database Saver provider
 type DbSaver struct {
-	ds           *datasource.Datasource
+	ds           datasource.Datasourcer
 	db           *sql.DB
 	tx           *sql.Tx
 	database     string
@@ -36,29 +36,34 @@ type DbSaver struct {
 	mode         dbSaverMode
 	wasEmpty     bool
 	key          string
+	transaction  bool
+	engine       datasource.Engine
 	ids          map[string]bool
 	ctx          context.Context
 }
 
 //NewSaver open the database connection, prepare the insert statement and return a Saver compatible object
-func NewSaver(ctx context.Context, ds *datasource.Datasource, table string, key string, mode string) (*DbSaver, error) {
+func NewSaver(ctx context.Context, ds datasource.Datasourcer, table string, key string, mode string) (*DbSaver, error) {
 	var saver DbSaver
+	tv := ds.FillTmplValues()
 
 	saver.ds = ds
 	saver.ctx = ctx
-	saver.database = ds.Database
+	saver.database = tv.Database
+	saver.transaction = tv.Transaction
+	saver.engine, _ = datasource.StringToEngine(tv.Engine)
 
 	if table == "" {
 		return nil, fmt.Errorf("destination of sync does not provided a table name")
 	}
-	if ds.Schema != "" {
-		table = fmt.Sprintf("%s.%s", ds.Schema, table)
+	if tv.Schema != "" {
+		table = fmt.Sprintf("%s.%s", tv.Schema, table)
 	}
 	saver.table = table
 
 	db, err := ds.OpenDatabase(false, false)
 	if err != nil {
-		return nil, fmt.Errorf("can't open %s database : %v", ds.Database, err)
+		return nil, fmt.Errorf("can't open %s database : %v", tv.Database, err)
 	}
 	saver.db = db
 	saver.key = key
@@ -79,13 +84,13 @@ func NewSaver(ctx context.Context, ds *datasource.Datasource, table string, key 
 }
 
 //Save writes the record to the destination
-func (saver *DbSaver) Save(record common.Record) error {
+func (saver *DbSaver) Save(record types.Record) error {
 	var err error
 
 	// Is this method is called for the first time
 	//If yes fix the column order in csv file
 	if saver.colNames == nil {
-		if saver.ds.Transaction {
+		if saver.transaction {
 			saver.tx, err = saver.db.Begin()
 			if err != nil {
 				return err
@@ -98,7 +103,7 @@ func (saver *DbSaver) Save(record common.Record) error {
 		}
 		// The truncate will be done at the first record save to avoid truncate a table if there is an error on config file
 		if saver.mode == truncate {
-			if saver.ds.Transaction {
+			if saver.transaction {
 				_, err = saver.tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", saver.table))
 			} else {
 				_, err = saver.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", saver.table))
@@ -164,7 +169,7 @@ func (saver *DbSaver) Close() error {
 		for id, modified := range saver.ids {
 			if !modified {
 				var err error
-				if saver.ds.Transaction {
+				if saver.transaction {
 					_, err = saver.tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", saver.table))
 				} else {
 					_, err = saver.db.Exec(fmt.Sprintf("DELETE from %s WHERE %s=%s", saver.table, saver.key, id))
@@ -175,7 +180,7 @@ func (saver *DbSaver) Close() error {
 			}
 		}
 	}
-	if saver.ds.Transaction {
+	if saver.transaction {
 		saver.tx.Commit()
 	}
 
@@ -187,7 +192,7 @@ func (saver *DbSaver) Close() error {
 func (saver *DbSaver) Reset() error {
 	saver.colNames = nil
 
-	if saver.ds.Transaction && saver.tx != nil {
+	if saver.transaction && saver.tx != nil {
 		saver.tx.Rollback()
 	}
 	return nil

@@ -6,12 +6,12 @@ import (
 	"io"
 
 	"github.com/marema31/kamino/datasource"
-	"github.com/marema31/kamino/provider/common"
+	"github.com/marema31/kamino/provider/types"
 )
 
 //KaminoCsvSaver specifc state for database Saver provider
 type KaminoCsvSaver struct {
-	ds       *datasource.Datasource
+	ds       datasource.Datasourcer
 	file     io.WriteCloser
 	name     string
 	writer   csv.Writer
@@ -19,17 +19,18 @@ type KaminoCsvSaver struct {
 }
 
 //NewSaver open the encoding process on provider file and return a Saver compatible object
-func NewSaver(ctx context.Context, ds *datasource.Datasource) (*KaminoCsvSaver, error) {
+func NewSaver(ctx context.Context, ds datasource.Datasourcer) (*KaminoCsvSaver, error) {
 	file, err := ds.OpenWriteFile()
 	if err != nil {
 		return nil, err
 	}
 	writer := csv.NewWriter(file)
-	return &KaminoCsvSaver{file: file, ds: ds, name: ds.FilePath, writer: *writer, colNames: nil}, nil
+	tv := ds.FillTmplValues()
+	return &KaminoCsvSaver{file: file, ds: ds, name: tv.FilePath, writer: *writer, colNames: nil}, nil
 }
 
 //Save writes the record to the destination
-func (cs *KaminoCsvSaver) Save(record common.Record) error {
+func (cs *KaminoCsvSaver) Save(record types.Record) error {
 	// Is this method is called for the first time
 	//If yes fix the column order in csv file
 	if cs.colNames == nil {

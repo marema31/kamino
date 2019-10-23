@@ -62,7 +62,7 @@ func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.D
 		step.admin = admin
 		step.noDb = noDb
 
-		tquery.Execute(renderedQuery, common.FillTmplValues(datasource))
+		tquery.Execute(renderedQuery, datasource.FillTmplValues())
 		step.query = renderedQuery.String()
 
 		steps = append(steps, step)

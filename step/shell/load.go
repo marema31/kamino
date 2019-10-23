@@ -50,7 +50,7 @@ func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.D
 
 		step.Name = name
 		step.script = script
-		targuments.Execute(renderedArguments, common.FillTmplValues(datasource))
+		targuments.Execute(renderedArguments, datasource.FillTmplValues())
 		step.arguments = renderedArguments.String()
 
 		step.datasource = datasource

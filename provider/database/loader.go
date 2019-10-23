@@ -6,12 +6,12 @@ import (
 	"fmt"
 
 	"github.com/marema31/kamino/datasource"
-	"github.com/marema31/kamino/provider/common"
+	"github.com/marema31/kamino/provider/types"
 )
 
 //DbLoader specifc state for database Loader provider
 type DbLoader struct {
-	ds       *datasource.Datasource
+	ds       datasource.Datasourcer
 	db       *sql.DB
 	database string
 	table    string
@@ -22,13 +22,15 @@ type DbLoader struct {
 }
 
 //NewLoader open the database connection, make the data query and return a Loader compatible object
-func NewLoader(ctx context.Context, ds *datasource.Datasource, table string, where string) (*DbLoader, error) {
+func NewLoader(ctx context.Context, ds datasource.Datasourcer, table string, where string) (*DbLoader, error) {
 	if table == "" {
 		return nil, fmt.Errorf("source of sync does not provided a table name")
 	}
 
-	if ds.Schema != "" {
-		table = fmt.Sprintf("%s.%s", ds.Schema, table)
+	tv := ds.FillTmplValues()
+
+	if tv.Schema != "" {
+		table = fmt.Sprintf("%s.%s", tv.Schema, table)
 	}
 
 	if where != "" {
@@ -37,7 +39,7 @@ func NewLoader(ctx context.Context, ds *datasource.Datasource, table string, whe
 
 	db, err := ds.OpenDatabase(false, false)
 	if err != nil {
-		return nil, fmt.Errorf("can't open %s database : %v", ds.Database, err)
+		return nil, fmt.Errorf("can't open %s database : %v", tv.Database, err)
 	}
 
 	rows, err := db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s %s", table, where))
@@ -63,7 +65,7 @@ func NewLoader(ctx context.Context, ds *datasource.Datasource, table string, whe
 	return &DbLoader{
 		ds:       ds,
 		db:       db,
-		database: ds.Database,
+		database: tv.Database,
 		table:    table,
 		rows:     rows,
 		scanned:  scanned,
@@ -77,7 +79,7 @@ func (dl *DbLoader) Next() bool {
 }
 
 //Load reads the next record and return it
-func (dl *DbLoader) Load() (common.Record, error) {
+func (dl *DbLoader) Load() (types.Record, error) {
 	err := dl.rows.Scan(dl.scanned...)
 	if err != nil {
 		return nil, err
@@ -88,7 +90,7 @@ func (dl *DbLoader) Load() (common.Record, error) {
 		return nil, err
 	}
 
-	record := make(common.Record, len(dl.colNames))
+	record := make(types.Record, len(dl.colNames))
 	for i, col := range dl.colNames {
 		record[col] = string(dl.rawBytes[i])
 	}

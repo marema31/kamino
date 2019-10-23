@@ -16,43 +16,39 @@ func TestLoadMysqlCompleteEngine(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds == nil {
-		t.Fatalf("Should have been inserted in datasources with the name mysqlcomplete")
-	}
-
-	if ds.Type != Database {
+	if ds.dstype != Database {
 		t.Errorf("Should be recognized as database datasource")
 	}
 
-	if ds.Engine != Mysql {
-		t.Errorf("Should be recognized as Mysql datasource but was recognized as '%s'", ds.GetEngine())
+	if ds.engine != Mysql {
+		t.Errorf("Should be recognized as Mysql datasource but was recognized as '%s'", EngineToString(ds.GetEngine()))
 	}
 
-	if ds.Database != "dbmc" {
-		t.Errorf("The database is '%s'", ds.Database)
+	if ds.database != "dbmc" {
+		t.Errorf("The database is '%s'", ds.database)
 	}
 
-	if ds.Schema != "" {
-		t.Errorf("The schema is '%s'", ds.Schema)
+	if ds.schema != "" {
+		t.Errorf("The schema is '%s'", ds.schema)
 	}
 
-	if ds.URL != "bob:123soleil@tcp(hmc:1234)/dbmc" {
-		t.Errorf("The user URL is '%s'", ds.URL)
+	if ds.url != "bob:123soleil@tcp(hmc:1234)/dbmc" {
+		t.Errorf("The user url is '%s'", ds.url)
 	}
 
-	if ds.URLAdmin != "super:adminpw@tcp(hmc:1234)/dbmc" {
-		t.Errorf("The admin URL is '%s'", ds.URLAdmin)
+	if ds.urlAdmin != "super:adminpw@tcp(hmc:1234)/dbmc" {
+		t.Errorf("The admin url is '%s'", ds.urlAdmin)
 	}
 
-	if ds.URLNoDb != "super:adminpw@tcp(hmc:1234)" {
-		t.Errorf("The nodb URL is '%s'", ds.URLNoDb)
+	if ds.urlNoDb != "super:adminpw@tcp(hmc:1234)" {
+		t.Errorf("The nodb url is '%s'", ds.urlNoDb)
 	}
 
-	if !ds.Transaction {
+	if !ds.transaction {
 		t.Errorf("Should have transaction")
 	}
 
-	if len(ds.Tags) != 0 && ds.Tags[0] != "tagmc" {
+	if len(ds.tags) != 0 && ds.tags[0] != "tagmc" {
 		t.Errorf("The tag should be found")
 	}
 }
@@ -64,43 +60,39 @@ func TestLoadMysqlMinimalEngine(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds == nil {
-		t.Fatalf("Should have been inserted in datasources with the name mysqlminimal")
-	}
-
-	if ds.Type != Database {
+	if ds.dstype != Database {
 		t.Errorf("Should be recognized as database datasource")
 	}
 
-	if ds.Engine != Mysql {
-		t.Errorf("Should be recognized as Mysql datasource but was recognized as '%s'", ds.GetEngine())
+	if ds.engine != Mysql {
+		t.Errorf("Should be recognized as Mysql datasource but was recognized as '%s'", EngineToString(ds.GetEngine()))
 	}
 
-	if ds.Database != "dbmm" {
-		t.Errorf("The database is '%s'", ds.Database)
+	if ds.database != "dbmm" {
+		t.Errorf("The database is '%s'", ds.database)
 	}
 
-	if ds.Schema != "" {
-		t.Errorf("The schema is '%s'", ds.Schema)
+	if ds.schema != "" {
+		t.Errorf("The schema is '%s'", ds.schema)
 	}
 
-	if ds.URL != "root:123soleil@tcp(127.0.0.1:3306)/dbmm" {
-		t.Errorf("The user URL is '%s'", ds.URL)
+	if ds.url != "root:123soleil@tcp(127.0.0.1:3306)/dbmm" {
+		t.Errorf("The user url is '%s'", ds.url)
 	}
 
-	if ds.URLAdmin != "root:123soleil@tcp(127.0.0.1:3306)/dbmm" {
-		t.Errorf("The admin URL is '%s'", ds.URLAdmin)
+	if ds.urlAdmin != "root:123soleil@tcp(127.0.0.1:3306)/dbmm" {
+		t.Errorf("The admin url is '%s'", ds.urlAdmin)
 	}
 
-	if ds.URLNoDb != "root:123soleil@tcp(127.0.0.1:3306)" {
-		t.Errorf("The nodb URL is '%s'", ds.URLNoDb)
+	if ds.urlNoDb != "root:123soleil@tcp(127.0.0.1:3306)" {
+		t.Errorf("The nodb url is '%s'", ds.urlNoDb)
 	}
 
-	if ds.Transaction {
+	if ds.transaction {
 		t.Errorf("Should not have transaction")
 	}
 
-	if len(ds.Tags) != 0 && ds.Tags[0] != "tagmm" {
+	if len(ds.tags) != 0 && ds.tags[0] != "tagmm" {
 		t.Errorf("The tag should be found")
 	}
 }
@@ -112,43 +104,39 @@ func TestLoadPostgresCompleteEngine(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds == nil {
-		t.Fatalf("Should have been inserted in datasources with the name postgrescomplete")
-	}
-
-	if ds.Type != Database {
+	if ds.dstype != Database {
 		t.Errorf("Should be recognized as database datasource")
 	}
 
-	if ds.Engine != Postgres {
-		t.Errorf("Should be recognized as Postgres datasource but was recognized as '%s'", ds.GetEngine())
+	if ds.engine != Postgres {
+		t.Errorf("Should be recognized as Postgres datasource but was recognized as '%s'", EngineToString(ds.GetEngine()))
 	}
 
-	if ds.Database != "dbpc" {
-		t.Errorf("The database is '%s'", ds.Database)
+	if ds.database != "dbpc" {
+		t.Errorf("The database is '%s'", ds.database)
 	}
 
-	if ds.Schema != "shpc" {
-		t.Errorf("The schema is '%s'", ds.Schema)
+	if ds.schema != "shpc" {
+		t.Errorf("The schema is '%s'", ds.schema)
 	}
 
-	if ds.URL != "host=hpc port=1234 user=bob password=123soleil dbname=dbpc sslmode=disable" {
-		t.Errorf("The user URL is '%s'", ds.URL)
+	if ds.url != "host=hpc port=1234 user=bob password=123soleil dbname=dbpc sslmode=disable" {
+		t.Errorf("The user url is '%s'", ds.url)
 	}
 
-	if ds.URLAdmin != "host=hpc port=1234 user=super password=adminpw dbname=dbpc sslmode=disable" {
-		t.Errorf("The admin URL is '%s'", ds.URLAdmin)
+	if ds.urlAdmin != "host=hpc port=1234 user=super password=adminpw dbname=dbpc sslmode=disable" {
+		t.Errorf("The admin url is '%s'", ds.urlAdmin)
 	}
 
-	if ds.URLNoDb != "host=hpc port=1234 user=super password=adminpw sslmode=disable" {
-		t.Errorf("The nodb URL is '%s'", ds.URLNoDb)
+	if ds.urlNoDb != "host=hpc port=1234 user=super password=adminpw sslmode=disable" {
+		t.Errorf("The nodb url is '%s'", ds.urlNoDb)
 	}
 
-	if !ds.Transaction {
+	if !ds.transaction {
 		t.Errorf("Should have transaction")
 	}
 
-	if len(ds.Tags) != 0 && ds.Tags[0] != "tagpc" {
+	if len(ds.tags) != 0 && ds.tags[0] != "tagpc" {
 		t.Errorf("The tag should be found")
 	}
 }
@@ -160,43 +148,39 @@ func TestLoadPostgresMinimalEngine(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds == nil {
-		t.Fatalf("Should have been inserted in datasources with the name postgresminimal")
-	}
-
-	if ds.Type != Database {
+	if ds.dstype != Database {
 		t.Errorf("Should be recognized as database datasource")
 	}
 
-	if ds.Engine != Postgres {
-		t.Errorf("Should be recognized as Postgres datasource but was recognized as '%s'", ds.GetEngine())
+	if ds.engine != Postgres {
+		t.Errorf("Should be recognized as Postgres datasource but was recognized as '%s'", EngineToString(ds.GetEngine()))
 	}
 
-	if ds.Database != "dbpm" {
-		t.Errorf("The database is '%s'", ds.Database)
+	if ds.database != "dbpm" {
+		t.Errorf("The database is '%s'", ds.database)
 	}
 
-	if ds.Schema != "" {
-		t.Errorf("The schema is '%s'", ds.Schema)
+	if ds.schema != "" {
+		t.Errorf("The schema is '%s'", ds.schema)
 	}
 
-	if ds.URL != "host=127.0.0.1 port=5432 user=postgres password=adminpw dbname=dbpm sslmode=disable" {
-		t.Errorf("The user URL is '%s'", ds.URL)
+	if ds.url != "host=127.0.0.1 port=5432 user=postgres password=adminpw dbname=dbpm sslmode=disable" {
+		t.Errorf("The user url is '%s'", ds.url)
 	}
 
-	if ds.URLAdmin != "host=127.0.0.1 port=5432 user=postgres password=adminpw dbname=dbpm sslmode=disable" {
-		t.Errorf("The admin URL is '%s'", ds.URLAdmin)
+	if ds.urlAdmin != "host=127.0.0.1 port=5432 user=postgres password=adminpw dbname=dbpm sslmode=disable" {
+		t.Errorf("The admin url is '%s'", ds.urlAdmin)
 	}
 
-	if ds.URLNoDb != "host=127.0.0.1 port=5432 user=postgres password=adminpw sslmode=disable" {
-		t.Errorf("The nodb URL is '%s'", ds.URLNoDb)
+	if ds.urlNoDb != "host=127.0.0.1 port=5432 user=postgres password=adminpw sslmode=disable" {
+		t.Errorf("The nodb url is '%s'", ds.urlNoDb)
 	}
 
-	if ds.Transaction {
+	if ds.transaction {
 		t.Errorf("Should not have transaction")
 	}
 
-	if len(ds.Tags) != 0 && ds.Tags[0] != "tagpm" {
+	if len(ds.tags) != 0 && ds.tags[0] != "tagpm" {
 		t.Errorf("The tag should be found")
 	}
 }
@@ -211,7 +195,7 @@ func TestLoadNoDatabase(t *testing.T) {
 
 func TestDatabaseOpenWrongType(t *testing.T) {
 
-	ds := Datasource{Engine: JSON, Type: File}
+	ds := Datasource{engine: JSON, dstype: File}
 	if _, err := ds.OpenDatabase(false, false); err == nil {
 		t.Errorf("OpenDatabase should returns an error")
 	}
@@ -219,7 +203,7 @@ func TestDatabaseOpenWrongType(t *testing.T) {
 
 func TestDatabaseOpenMysql(t *testing.T) {
 	mockingSQL = true
-	ds := Datasource{Engine: Mysql, Type: Database, URL: "bob:123soleil@tcp(localhost:1234)/dbmc", URLAdmin: "URLAdmin", URLNoDb: "URLNoDb"}
+	ds := Datasource{engine: Mysql, dstype: Database, url: "bob:123soleil@tcp(localhost:1234)/dbmc", urlAdmin: "urlAdmin", urlNoDb: "urlNoDb"}
 	if _, err := ds.OpenDatabase(false, false); err != nil {
 		t.Errorf("OpenDatabase should not returns an error, was: %v", err)
 	}
@@ -227,22 +211,22 @@ func TestDatabaseOpenMysql(t *testing.T) {
 
 func TestDatabaseOpenPostgres(t *testing.T) {
 	mockingSQL = true
-	ds := Datasource{Engine: Postgres, Type: Database, URL: "URL", URLAdmin: "URLAdmin", URLNoDb: "URLNoDb"}
+	ds := Datasource{engine: Postgres, dstype: Database, url: "url", urlAdmin: "urlAdmin", urlNoDb: "urlNoDb"}
 	if _, err := ds.OpenDatabase(false, false); err != nil {
 		t.Errorf("OpenDatabase should not returns an error, was: %v", err)
 	}
 }
 
-func TestDatabaseOpenURLAdmin(t *testing.T) {
+func TestDatabaseOpenurlAdmin(t *testing.T) {
 	mockingSQL = true
-	ds := Datasource{Engine: Mysql, Type: Database, URL: "URL", URLAdmin: "bob:123soleil@tcp(localhost:1234)/dbmc", URLNoDb: "URLNoDb"}
+	ds := Datasource{engine: Mysql, dstype: Database, url: "url", urlAdmin: "bob:123soleil@tcp(localhost:1234)/dbmc", urlNoDb: "urlNoDb"}
 	if _, err := ds.OpenDatabase(true, false); err != nil {
 		t.Errorf("OpenDatabase should not returns an error, was: %v", err)
 	}
 }
-func TestDatabaseOpenURLNoDb(t *testing.T) {
+func TestDatabaseOpenurlNoDb(t *testing.T) {
 	mockingSQL = true
-	ds := Datasource{Engine: Mysql, Type: Database, URL: "URL", URLAdmin: "URLAdmin", URLNoDb: "bob:123soleil@tcp(localhost:1234)/dbmc"}
+	ds := Datasource{engine: Mysql, dstype: Database, url: "url", urlAdmin: "urlAdmin", urlNoDb: "bob:123soleil@tcp(localhost:1234)/dbmc"}
 	if _, err := ds.OpenDatabase(false, true); err != nil {
 		t.Errorf("OpenDatabase should not returns an error, was: %v", err)
 	}

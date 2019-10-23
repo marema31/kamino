@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/marema31/kamino/provider/common"
+	"github.com/marema31/kamino/provider/types"
 )
 
 //Filter provides way to filter record by record
 type Filter interface {
-	Filter(common.Record) (common.Record, error)
+	Filter(types.Record) (types.Record, error)
 }
 
 //NewFilter analyze the config map and return object implemnting Filter of the asked type

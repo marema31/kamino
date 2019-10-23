@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"github.com/marema31/kamino/datasource"
-	"github.com/marema31/kamino/provider/common"
+	"github.com/marema31/kamino/provider/types"
 )
 
 func (saver *DbSaver) questionMarkByEngine(qm *[]string) string {
 
-	switch saver.ds.Engine {
+	switch saver.engine {
 	case datasource.Mysql:
 		return "?"
 	case datasource.Postgres:
@@ -20,7 +20,7 @@ func (saver *DbSaver) questionMarkByEngine(qm *[]string) string {
 	return ""
 }
 
-func (saver *DbSaver) getColNames(record common.Record) ([]string, []string, error) {
+func (saver *DbSaver) getColNames(record types.Record) ([]string, []string, error) {
 
 	var updateSet []string
 	var questionmark []string
@@ -89,7 +89,7 @@ func (saver *DbSaver) getColNames(record common.Record) ([]string, []string, err
 }
 
 // createStatement Query the destination table to determine the available colums, create the corresponding insert/update statement and save them in the dbSaver instance
-func (saver *DbSaver) createStatement(record common.Record) error {
+func (saver *DbSaver) createStatement(record types.Record) error {
 	questionmark, updateSet, err := saver.getColNames(record)
 	if err != nil {
 		return err
@@ -98,7 +98,7 @@ func (saver *DbSaver) createStatement(record common.Record) error {
 	saver.insertString = fmt.Sprintf("INSERT INTO %s ( %s) VALUES ( %s )", saver.table, strings.Join(saver.colNames[:], ","), strings.Join(questionmark[:], ","))
 	saver.updateString = fmt.Sprintf("UPDATE %s SET  %s WHERE %s = %s", saver.table, strings.Join(updateSet[:], ","), saver.key, saver.questionMarkByEngine(&updateSet))
 
-	if saver.ds.Transaction {
+	if saver.transaction {
 		saver.insertStmt, err = saver.tx.Prepare(saver.insertString)
 	} else {
 		saver.insertStmt, err = saver.db.Prepare(saver.insertString)
@@ -107,7 +107,7 @@ func (saver *DbSaver) createStatement(record common.Record) error {
 		return err
 	}
 	if saver.mode == replace || saver.mode == update || saver.mode == exactCopy {
-		if saver.ds.Transaction {
+		if saver.transaction {
 			saver.updateStmt, err = saver.tx.Prepare(saver.updateString)
 		} else {
 			saver.updateStmt, err = saver.db.Prepare(saver.updateString)
