@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/provider"
 	"github.com/marema31/kamino/step/common"
 	"github.com/marema31/kamino/step/migration"
 	"github.com/marema31/kamino/step/shell"
@@ -18,7 +19,7 @@ import (
 )
 
 // Load the step file and returns the priority and a list of steper for this file
-func Load(ctx context.Context, path string, filename string, dss datasource.Datasourcers) (priority uint, stepList []common.Steper, err error) {
+func Load(ctx context.Context, path string, filename string, dss datasource.Datasourcers, prov provider.Provider) (priority uint, stepList []common.Steper, err error) {
 	v := viper.New()
 
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
@@ -40,7 +41,7 @@ func Load(ctx context.Context, path string, filename string, dss datasource.Data
 	case "migration":
 		return migration.Load(ctx, filename, v, dss)
 	case "sync", "synchro", "synchronization":
-		return sync.Load(ctx, filename, v, dss)
+		return sync.Load(ctx, filename, v, dss, prov)
 	case "template":
 		return tmpl.Load(ctx, filename, v, dss)
 	case "shell":

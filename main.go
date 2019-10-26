@@ -8,6 +8,9 @@ import (
 	"time"
 
 	"github.com/marema31/kamino/cmd"
+	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/provider"
+	"github.com/marema31/kamino/recipe"
 	//	"github.com/marema31/kamino/config"
 	//	kaminoSync "github.com/marema31/kamino/sync"
 )
@@ -36,6 +39,8 @@ func main() {
 		os.Exit(1)
 	}()
 	cmd.Execute(ctx)
+	//TODO: not the right action, just for testing
+	_ = recipe.Load(context.Background(), "testdata", "pokemon", datasource.New(), &provider.KaminoProvider{})
 }
 
 /* func main() {

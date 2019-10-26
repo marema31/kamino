@@ -22,7 +22,7 @@ type Loader interface {
 }
 
 //NewLoader analyze the datasource and return object implemnting Loader of the asked type
-func NewLoader(ctx context.Context, ds datasource.Datasourcer, table string, where string) (Loader, error) {
+func (p *KaminoProvider) NewLoader(ctx context.Context, ds datasource.Datasourcer, table string, where string) (Loader, error) {
 	engine := ds.GetEngine()
 
 	switch engine {

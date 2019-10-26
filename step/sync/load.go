@@ -48,7 +48,7 @@ func getDatasource(dss datasource.Datasourcers, tags []string, engines []string,
 	return dss.Lookup(tags, t, e), nil
 }
 
-func getLoader(ctx context.Context, name string, objectType string, v *viper.Viper, dss datasource.Datasourcers) (provider.Loader, error) {
+func getLoader(ctx context.Context, name string, objectType string, v *viper.Viper, dss datasource.Datasourcers, prov provider.Provider) (provider.Loader, error) {
 	var source SourceConfig
 	err := v.Unmarshal(&source)
 	if err != nil {
@@ -65,10 +65,10 @@ func getLoader(ctx context.Context, name string, objectType string, v *viper.Vip
 	if len(datasources) != 1 {
 		return nil, fmt.Errorf("too many %ss found for synchronization %s", objectType, name)
 	}
-	return provider.NewLoader(ctx, datasources[0], source.Table, source.Where)
+	return prov.NewLoader(ctx, datasources[0], source.Table, source.Where)
 }
 
-func getSavers(ctx context.Context, name string, objectType string, v *viper.Viper, dss datasource.Datasourcers) ([]provider.Saver, error) {
+func getSavers(ctx context.Context, name string, objectType string, v *viper.Viper, dss datasource.Datasourcers, prov provider.Provider) ([]provider.Saver, error) {
 	var dests []DestinationConfig
 	savers := make([]provider.Saver, 0)
 
@@ -85,7 +85,7 @@ func getSavers(ctx context.Context, name string, objectType string, v *viper.Vip
 		}
 
 		for _, datasource := range datasources {
-			saver, err := provider.NewSaver(ctx, datasource, dest.Table, dest.Key, dest.Mode)
+			saver, err := prov.NewSaver(ctx, datasource, dest.Table, dest.Key, dest.Mode)
 			if err != nil {
 				return nil, err
 			}
@@ -99,7 +99,7 @@ func getSavers(ctx context.Context, name string, objectType string, v *viper.Vip
 }
 
 //Load data from step file using its viper representation a return priority and list of steps
-func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.Datasourcers) (priority uint, steps []common.Steper, err error) {
+func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.Datasourcers, provider provider.Provider) (priority uint, steps []common.Steper, err error) {
 	var step Step
 
 	priority = v.GetUint("priority")
@@ -114,24 +114,24 @@ func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.D
 		return 0, nil, fmt.Errorf("synchronization %s does not have a destinations definition", name)
 	}
 
-	//Lookup source configuration
+	//Lookup source
 	sub := v.Sub("source")
 
-	step.source, err = getLoader(ctx, name, "source", sub, dss)
+	step.source, err = getLoader(ctx, name, "source", sub, dss, provider)
 	if err != nil {
 		return 0, nil, err
 	}
 
-	//Lookup cache (tags + ttl) 1 element
+	//Lookup cache
 	if v.IsSet("cache") {
 		step.cacheTTL = v.GetDuration("cache.ttl")
 		sub = v.Sub("cache")
 
-		step.cacheLoader, err = getLoader(ctx, name, "cache", sub, dss)
+		step.cacheLoader, err = getLoader(ctx, name, "cache", sub, dss, provider)
 		if err != nil {
 			return 0, nil, err
 		}
-		cs, err := getSavers(ctx, name, "cache", sub, dss)
+		cs, err := getSavers(ctx, name, "cache", sub, dss, provider)
 		if err != nil {
 			return 0, nil, err
 		}
@@ -145,9 +145,9 @@ func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.D
 		return 0, nil, err
 	}
 
-	//Lookup destinations (tags + table + key + mode + engine + type (File/Database)) Array
+	//Lookup destinations
 	sub = v.Sub("destinations")
-	step.destinations, err = getSavers(ctx, name, "destination", sub, dss)
+	step.destinations, err = getSavers(ctx, name, "destination", sub, dss, provider)
 	if err != nil {
 		return 0, nil, err
 	}

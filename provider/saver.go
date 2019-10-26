@@ -21,7 +21,7 @@ type Saver interface {
 }
 
 //NewSaver analyze the datasource and return object implemnting Saver of the asked type
-func NewSaver(ctx context.Context, ds datasource.Datasourcer, table string, key string, mode string) (Saver, error) {
+func (p *KaminoProvider) NewSaver(ctx context.Context, ds datasource.Datasourcer, table string, key string, mode string) (Saver, error) {
 	tv := ds.FillTmplValues()
 	engine, _ := datasource.StringToEngine(tv.Engine)
 
