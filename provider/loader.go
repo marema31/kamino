@@ -17,11 +17,11 @@ import (
 type Loader interface {
 	Next() bool
 	Load() (types.Record, error)
-	Close()
+	Close() error
 	Name() string
 }
 
-//NewLoader analyze the datasource and return object implemnting Loader of the asked type
+//NewLoader analyze the datasource and return object implementing Loader of the asked type
 func (p *KaminoProvider) NewLoader(ctx context.Context, ds datasource.Datasourcer, table string, where string) (Loader, error) {
 	engine := ds.GetEngine()
 

@@ -50,7 +50,7 @@ func (jl *KaminoJSONLoader) Next() bool {
 
 //Load reads the next record and return it
 func (jl *KaminoJSONLoader) Load() (types.Record, error) {
-	if jl.currentRow > len(jl.content) {
+	if jl.currentRow >= len(jl.content) {
 		return nil, fmt.Errorf("no more data to read")
 	}
 
@@ -61,9 +61,9 @@ func (jl *KaminoJSONLoader) Load() (types.Record, error) {
 }
 
 //Close closes the datasource
-func (jl *KaminoJSONLoader) Close() {
+func (jl *KaminoJSONLoader) Close() error {
 	//TODO: replace the following by the datasource.CloseFile()
-	jl.ds.CloseFile()
+	return jl.ds.CloseFile()
 }
 
 //Name give the name of the destination

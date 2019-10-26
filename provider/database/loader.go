@@ -100,9 +100,9 @@ func (dl *DbLoader) Load() (types.Record, error) {
 }
 
 //Close closes the datasource
-func (dl *DbLoader) Close() {
+func (dl *DbLoader) Close() error {
 	dl.rows.Close()
-	dl.db.Close()
+	return dl.db.Close()
 }
 
 //Name give the name of the destination

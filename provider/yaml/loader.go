@@ -52,7 +52,7 @@ func (yl *KaminoYAMLLoader) Next() bool {
 
 //Load reads the next record and return it
 func (yl *KaminoYAMLLoader) Load() (types.Record, error) {
-	if yl.currentRow > len(yl.content) {
+	if yl.currentRow >= len(yl.content) {
 		return nil, fmt.Errorf("no more data to read")
 	}
 
@@ -63,8 +63,8 @@ func (yl *KaminoYAMLLoader) Load() (types.Record, error) {
 }
 
 //Close closes the datasource
-func (yl *KaminoYAMLLoader) Close() {
-	yl.ds.CloseFile()
+func (yl *KaminoYAMLLoader) Close() error {
+	return yl.ds.CloseFile()
 }
 
 //Name give the name of the destination

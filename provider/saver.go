@@ -20,10 +20,9 @@ type Saver interface {
 	Name() string
 }
 
-//NewSaver analyze the datasource and return object implemnting Saver of the asked type
+//NewSaver analyze the datasource and return object implementing Saver of the asked type
 func (p *KaminoProvider) NewSaver(ctx context.Context, ds datasource.Datasourcer, table string, key string, mode string) (Saver, error) {
-	tv := ds.FillTmplValues()
-	engine, _ := datasource.StringToEngine(tv.Engine)
+	engine := ds.GetEngine()
 
 	switch engine {
 	case datasource.Mysql, datasource.Postgres:

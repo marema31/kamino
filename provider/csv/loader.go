@@ -70,8 +70,8 @@ func (cl *KaminoCsvLoader) Load() (types.Record, error) {
 }
 
 //Close closes the datasource
-func (cl *KaminoCsvLoader) Close() {
-	cl.ds.CloseFile()
+func (cl *KaminoCsvLoader) Close() error {
+	return cl.ds.CloseFile()
 }
 
 //Name give the name of the destination
