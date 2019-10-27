@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/filter"
 	"github.com/marema31/kamino/provider"
 	"github.com/marema31/kamino/step/common"
 )
@@ -29,6 +30,13 @@ type DestinationConfig struct {
 	Table   string
 	Key     string
 	Mode    string
+}
+
+// FilterConfig type for filter contain all possible fields without verification
+type FilterConfig struct {
+	Aparameters []string
+	Mparameters map[string]string
+	Type        string
 }
 
 func getDatasource(dss datasource.Datasourcers, tags []string, engines []string, dsTypes []string) ([]datasource.Datasourcer, error) {
@@ -72,7 +80,7 @@ func getSavers(ctx context.Context, name string, objectType string, v *viper.Vip
 	var dests []DestinationConfig
 	savers := make([]provider.Saver, 0)
 
-	err := v.Unmarshal(&dests)
+	err := v.UnmarshalKey(objectType, &dests)
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -96,6 +104,26 @@ func getSavers(ctx context.Context, name string, objectType string, v *viper.Vip
 		return nil, fmt.Errorf("no %s found for synchronization %s", objectType, name)
 	}
 	return savers, nil
+}
+
+func getFilters(ctx context.Context, v *viper.Viper, sync string) ([]filter.Filter, error) {
+	fcs := make([]FilterConfig, 0)
+	filters := make([]filter.Filter, 0)
+	err := v.UnmarshalKey("filters", &fcs)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+
+	for _, fc := range fcs {
+		f, err := filter.NewFilter(ctx, fc.Type, fc.Aparameters, fc.Mparameters)
+		if err != nil {
+			return nil, err
+		}
+		filters = append(filters, f)
+
+	}
+	return filters, nil
 }
 
 //Load data from step file using its viper representation a return priority and list of steps
@@ -126,12 +154,11 @@ func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.D
 	if v.IsSet("cache") {
 		step.cacheTTL = v.GetDuration("cache.ttl")
 		sub = v.Sub("cache")
-
 		step.cacheLoader, err = getLoader(ctx, name, "cache", sub, dss, provider)
 		if err != nil {
 			return 0, nil, err
 		}
-		cs, err := getSavers(ctx, name, "cache", sub, dss, provider)
+		cs, err := getSavers(ctx, name, "cache", v, dss, provider)
 		if err != nil {
 			return 0, nil, err
 		}
@@ -140,14 +167,14 @@ func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.D
 	}
 
 	//Lookup filters
-	step.filters, err = getFilters(ctx, v, name)
-	if err != nil {
-		return 0, nil, err
+	if v.IsSet("filters") {
+		step.filters, err = getFilters(ctx, v, name)
+		if err != nil {
+			return 0, nil, err
+		}
 	}
-
 	//Lookup destinations
-	sub = v.Sub("destinations")
-	step.destinations, err = getSavers(ctx, name, "destination", sub, dss, provider)
+	step.destinations, err = getSavers(ctx, name, "destinations", v, dss, provider)
 	if err != nil {
 		return 0, nil, err
 	}

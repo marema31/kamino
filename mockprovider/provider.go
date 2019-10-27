@@ -4,30 +4,33 @@ import (
 	"context"
 
 	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/provider"
 )
 
 //MockProvider implement the Provider interface with mocked actions
 type MockProvider struct {
 	ErrorLoader error
 	ErrorSaver  error
+	Loader      *MockLoader
+	Savers      []*MockSaver
 }
 
 //NewLoader analyze the datasource and return mock object implementing Loader
-func (p *MockProvider) NewLoader(ctx context.Context, ds datasource.Datasourcer, table string, where string) (*MockLoader, error) {
-	k := MockLoader{}
+func (p *MockProvider) NewLoader(ctx context.Context, ds datasource.Datasourcer, table string, where string) (provider.Loader, error) {
 	if p.ErrorLoader != nil {
-		return &k, p.ErrorLoader
+		return nil, p.ErrorLoader
 	}
-
-	return &k, nil
+	k := &MockLoader{}
+	p.Loader = k
+	return k, nil
 }
 
 //NewSaver analyze the datasource and return mock object implementing Saver
-func (p *MockProvider) NewSaver(ctx context.Context, ds datasource.Datasourcer, table string, key string, mode string) (*MockSaver, error) {
-	k := MockSaver{}
+func (p *MockProvider) NewSaver(ctx context.Context, ds datasource.Datasourcer, table string, key string, mode string) (provider.Saver, error) {
 	if p.ErrorSaver != nil {
-		return &k, p.ErrorSaver
+		return nil, p.ErrorSaver
 	}
-
+	k := MockSaver{}
+	p.Savers = append(p.Savers, &k)
 	return &k, nil
 }
