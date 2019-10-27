@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/csv"
 	"io"
+	"sort"
 
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/types"
@@ -34,9 +35,14 @@ func (cs *KaminoCsvSaver) Save(record types.Record) error {
 	// Is this method is called for the first time
 	//If yes fix the column order in csv file
 	if cs.colNames == nil {
+		//The order of columns could change between two executions of the test
+		//TODO: add an options to datasource to provides the column order
+		var keys []string
 		for col := range record {
-			cs.colNames = append(cs.colNames, col)
+			keys = append(keys, col)
 		}
+		sort.Strings(keys)
+		cs.colNames = keys
 		err := cs.writer.Write(cs.colNames)
 		if err != nil {
 			return nil
