@@ -17,30 +17,26 @@ func TestLoadCsvEngine(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds == nil {
-		t.Fatalf("Should have been inserted in datasources with the name csv")
-	}
-
-	if ds.Type != File {
+	if ds.dstype != File {
 		t.Errorf("Should be recognized as file datasource")
 	}
 
-	if ds.Engine != CSV {
-		t.Errorf("Should be recognized as CSV datasource but was recognized as '%s'", ds.GetEngine())
+	if ds.engine != CSV {
+		t.Errorf("Should be recognized as CSV datasource but was recognized as '%s'", EngineToString(ds.GetEngine()))
 	}
-	if ds.FilePath != "tmp/file.csv" {
-		t.Errorf("The file path is '%s'", ds.FilePath)
+	if ds.filePath != "tmp/file.csv" {
+		t.Errorf("The file path is '%s'", ds.filePath)
 	}
 
-	if ds.Zip {
+	if ds.zip {
 		t.Errorf("Should not be zipped")
 	}
 
-	if ds.Gzip {
+	if ds.gzip {
 		t.Errorf("Should not be gzipped")
 	}
 
-	if len(ds.Tags) != 0 && ds.Tags[0] != "tagcsv" {
+	if len(ds.tags) != 0 && ds.tags[0] != "tagcsv" {
 		t.Errorf("The tag should be found")
 	}
 }
@@ -52,30 +48,26 @@ func TestLoadZipCsvEngine(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds == nil {
-		t.Fatalf("Should have been inserted in datasources with the name zipcsv")
-	}
-
-	if ds.Type != File {
+	if ds.dstype != File {
 		t.Errorf("Should be recognized as file datasource")
 	}
 
-	if ds.Engine != CSV {
-		t.Errorf("Should be recognized as CSV datasource but was recognized as '%s'", ds.GetEngine())
+	if ds.engine != CSV {
+		t.Errorf("Should be recognized as CSV datasource but was recognized as '%s'", EngineToString(ds.GetEngine()))
 	}
-	if ds.FilePath != "tmp/file.zip" {
-		t.Errorf("The file path is '%s'", ds.FilePath)
+	if ds.filePath != "tmp/file.zip" {
+		t.Errorf("The file path is '%s'", ds.filePath)
 	}
 
-	if !ds.Zip {
+	if !ds.zip {
 		t.Errorf("Should be zipped")
 	}
 
-	if ds.Gzip {
+	if ds.gzip {
 		t.Errorf("Should not be gzipped")
 	}
 
-	if len(ds.Tags) != 0 && ds.Tags[0] != "tagzipcsv" {
+	if len(ds.tags) != 0 && ds.tags[0] != "tagzipcsv" {
 		t.Errorf("The tag should be found")
 	}
 }
@@ -87,30 +79,26 @@ func TestLoadGZipCsvEngine(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds == nil {
-		t.Fatalf("Should have been inserted in datasources with the name gzipcsv")
-	}
-
-	if ds.Type != File {
+	if ds.dstype != File {
 		t.Errorf("Should be recognized as file datasource")
 	}
 
-	if ds.Engine != CSV {
-		t.Errorf("Should be recognized as CSV datasource but was recognized as '%s'", ds.GetEngine())
+	if ds.engine != CSV {
+		t.Errorf("Should be recognized as CSV datasource but was recognized as '%s'", EngineToString(ds.GetEngine()))
 	}
-	if ds.FilePath != "tmp/file.csv.gz" {
-		t.Errorf("The file path is '%s'", ds.FilePath)
+	if ds.filePath != "tmp/file.csv.gz" {
+		t.Errorf("The file path is '%s'", ds.filePath)
 	}
 
-	if ds.Zip {
+	if ds.zip {
 		t.Errorf("Should not be zipped")
 	}
 
-	if !ds.Gzip {
+	if !ds.gzip {
 		t.Errorf("Should be gzipped")
 	}
 
-	if len(ds.Tags) != 0 && ds.Tags[0] != "taggzipcsv" {
+	if len(ds.tags) != 0 && ds.tags[0] != "taggzipcsv" {
 		t.Errorf("The tag should be found")
 	}
 }
@@ -122,30 +110,26 @@ func TestLoadYamlEngine(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds == nil {
-		t.Fatalf("Should have been inserted in datasources with the name yaml")
-	}
-
-	if ds.Type != File {
+	if ds.dstype != File {
 		t.Errorf("Should be recognized as file datasource")
 	}
 
-	if ds.Engine != YAML {
-		t.Errorf("Should be recognized as CSV datasource but was recognized as '%s'", ds.GetEngine())
+	if ds.engine != YAML {
+		t.Errorf("Should be recognized as CSV datasource but was recognized as '%s'", EngineToString(ds.GetEngine()))
 	}
-	if ds.FilePath != "tmp/file.yaml" {
-		t.Errorf("The file path is '%s'", ds.FilePath)
+	if ds.filePath != "tmp/file.yaml" {
+		t.Errorf("The file path is '%s'", ds.filePath)
 	}
 
-	if ds.Zip {
+	if ds.zip {
 		t.Errorf("Should not be zipped")
 	}
 
-	if ds.Gzip {
+	if ds.gzip {
 		t.Errorf("Should not be gzipped")
 	}
 
-	if len(ds.Tags) != 0 && ds.Tags[0] != "tagyaml" {
+	if len(ds.tags) != 0 && ds.tags[0] != "tagyaml" {
 		t.Errorf("The tag should be found")
 	}
 }
@@ -157,30 +141,26 @@ func TestLoadJsonEngine(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds == nil {
-		t.Fatalf("Should have been inserted in datasources with the name json")
-	}
-
-	if ds.Type != File {
+	if ds.dstype != File {
 		t.Errorf("Should be recognized as file datasource")
 	}
 
-	if ds.Engine != JSON {
-		t.Errorf("Should be recognized as JSON datasource but was recognized as '%s'", ds.GetEngine())
+	if ds.engine != JSON {
+		t.Errorf("Should be recognized as JSON datasource but was recognized as '%s'", EngineToString(ds.GetEngine()))
 	}
-	if ds.FilePath != "tmp/file.json" {
-		t.Errorf("The file path is '%s'", ds.FilePath)
+	if ds.filePath != "tmp/file.json" {
+		t.Errorf("The file path is '%s'", ds.filePath)
 	}
 
-	if ds.Zip {
+	if ds.zip {
 		t.Errorf("Should not be zipped")
 	}
 
-	if ds.Gzip {
+	if ds.gzip {
 		t.Errorf("Should not be gzipped")
 	}
 
-	if len(ds.Tags) != 0 && ds.Tags[0] != "tagjson" {
+	if len(ds.tags) != 0 && ds.tags[0] != "tagjson" {
 		t.Errorf("The tag should be found")
 	}
 }
@@ -192,12 +172,8 @@ func TestLoadStdio(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds == nil {
-		t.Fatalf("Should have been inserted in datasources with the name stdio")
-	}
-
-	if ds.FilePath != "-" {
-		t.Errorf("The file path is '%s'", ds.FilePath)
+	if ds.filePath != "-" {
+		t.Errorf("The file path is '%s'", ds.filePath)
 	}
 }
 
@@ -208,12 +184,8 @@ func TestLoadURL(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds == nil {
-		t.Fatalf("Should have been inserted in datasources with the name url")
-	}
-
-	if ds.URL != "http://127.0.0.1/file.json" {
-		t.Errorf("The URL is '%s'", ds.URL)
+	if ds.url != "http://127.0.0.1/file.json" {
+		t.Errorf("The URL is '%s'", ds.url)
 	}
 }
 
@@ -224,12 +196,8 @@ func TestLoadInline(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds == nil {
-		t.Fatalf("Should have been inserted in datasources with the name inline")
-	}
-
-	if ds.Inline != "[{\"id\":1,\"value\":\"test\"}]" {
-		t.Errorf("Inline is '%s'", ds.Inline)
+	if ds.inline != "[{\"id\":1,\"value\":\"test\"}]" {
+		t.Errorf("Inline is '%s'", ds.inline)
 	}
 }
 
@@ -243,13 +211,13 @@ func TestLoadNoPath(t *testing.T) {
 }
 
 func TestOpenStdio(t *testing.T) {
-	ds := Datasource{Type: File, Zip: false, Gzip: false, FilePath: "-"}
+	ds := Datasource{dstype: File, zip: false, gzip: false, filePath: "-"}
 
 	_, err := ds.OpenWriteFile()
 	if err != nil {
 		t.Fatalf("Should not return error and returned '%v'", err)
 	}
-	ds.CloseFile()
+	err = ds.CloseFile()
 	if err != nil {
 		t.Errorf("Should not return error and returned '%v'", err)
 	}
@@ -258,7 +226,7 @@ func TestOpenStdio(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Should not return error and returned '%v'", err)
 	}
-	ds.CloseFile()
+	err = ds.CloseFile()
 	if err != nil {
 		t.Errorf("Should not return error and returned '%v'", err)
 	}
@@ -266,7 +234,7 @@ func TestOpenStdio(t *testing.T) {
 }
 
 func TestOpenInline(t *testing.T) {
-	ds := Datasource{Type: File, Zip: false, Gzip: false, Inline: "testinline"}
+	ds := Datasource{dstype: File, zip: false, gzip: false, inline: "testinline"}
 
 	reader, err := ds.OpenReadFile()
 	if err != nil {
@@ -280,7 +248,7 @@ func TestOpenInline(t *testing.T) {
 	if string(test) != "testinline" {
 		t.Errorf("The content of inline is not the one we waits for :%v", test)
 	}
-	ds.CloseFile()
+	err = ds.CloseFile()
 	if err != nil {
 		t.Errorf("Close Should not return error and returned '%v'", err)
 	}
@@ -293,15 +261,15 @@ func TestOpenFile(t *testing.T) {
 
 	test := []byte{1, 2, 3}
 
-	ds := Datasource{Type: File, Zip: false, Gzip: false, FilePath: "testdata/tmp/testfile"}
+	ds := Datasource{dstype: File, zip: false, gzip: false, filePath: "testdata/tmp/testfile"}
 
-	writer, err := ds.OpenWriteFile()
+	_, err := ds.OpenWriteFile()
 	if err != nil {
-		t.Fatalf("OpenWriteFile Should not return error and returned '%v'", err)
+		t.Errorf("OpenWriteFile Should not return error and returned '%v'", err)
 	}
-	writer.Write(test)
+	//	writer.Write(test)
 
-	ds.CloseFile()
+	err = ds.CloseFile()
 	if err != nil {
 		t.Errorf("CloseFile Should not return error and returned '%v'", err)
 	}
@@ -314,7 +282,7 @@ func TestOpenFile(t *testing.T) {
 	if test[2] != 3 {
 		t.Errorf("The content of file is not the one we waits for :%v", test)
 	}
-	ds.CloseFile()
+	err = ds.CloseFile()
 	if err != nil {
 		t.Errorf("Close Should not return error and returned '%v'", err)
 	}
@@ -329,7 +297,7 @@ func TestOpenZipFile(t *testing.T) {
 
 	test := []byte{1, 2, 3}
 
-	ds := Datasource{Type: File, Zip: true, Gzip: false, FilePath: "testdata/tmp/testfile.zip"}
+	ds := Datasource{dstype: File, zip: true, gzip: false, filePath: "testdata/tmp/testfile.zip"}
 
 	writer, err := ds.OpenWriteFile()
 	if err != nil {
@@ -337,7 +305,7 @@ func TestOpenZipFile(t *testing.T) {
 	}
 	writer.Write(test)
 
-	ds.CloseFile()
+	err = ds.CloseFile()
 	if err != nil {
 		t.Errorf("CloseFile Should not return error and returned '%v'", err)
 	}
@@ -350,7 +318,7 @@ func TestOpenZipFile(t *testing.T) {
 	if test[2] != 3 {
 		t.Errorf("The content of file is not the one we waits for :%v", test)
 	}
-	ds.CloseFile()
+	err = ds.CloseFile()
 	if err != nil {
 		t.Errorf("Close Should not return error and returned '%v'", err)
 	}
@@ -365,7 +333,7 @@ func TestOpenGzipFile(t *testing.T) {
 
 	test := []byte{1, 2, 3}
 
-	ds := Datasource{Type: File, Zip: false, Gzip: true, FilePath: "testdata/tmp/testfile.gz"}
+	ds := Datasource{dstype: File, zip: false, gzip: true, filePath: "testdata/tmp/testfile.gz"}
 
 	writer, err := ds.OpenWriteFile()
 	if err != nil {
@@ -373,7 +341,7 @@ func TestOpenGzipFile(t *testing.T) {
 	}
 	writer.Write(test)
 
-	ds.CloseFile()
+	err = ds.CloseFile()
 	if err != nil {
 		t.Errorf("CloseFile Should not return error and returned '%v'", err)
 	}
@@ -386,7 +354,7 @@ func TestOpenGzipFile(t *testing.T) {
 	if test[2] != 3 {
 		t.Errorf("The content of file is not the one we waits for :%v", test)
 	}
-	ds.CloseFile()
+	err = ds.CloseFile()
 	if err != nil {
 		t.Errorf("Close Should not return error and returned '%v'", err)
 	}
@@ -401,7 +369,7 @@ func TestReadWrongZip(t *testing.T) {
 
 	test := []byte{1, 2, 3}
 
-	ds := Datasource{Type: File, Zip: false, Gzip: false, FilePath: "testdata/tmp/testfile"}
+	ds := Datasource{dstype: File, zip: false, gzip: false, filePath: "testdata/tmp/testfile"}
 
 	writer, err := ds.OpenWriteFile()
 	if err != nil {
@@ -409,12 +377,12 @@ func TestReadWrongZip(t *testing.T) {
 	}
 	writer.Write(test)
 
-	ds.CloseFile()
+	err = ds.CloseFile()
 	if err != nil {
 		t.Errorf("CloseFile Should not return error and returned '%v'", err)
 	}
 
-	ds.Zip = true
+	ds.zip = true
 	_, err = ds.OpenReadFile()
 	if err == nil {
 		t.Errorf("OpenReadFile Should return error")
@@ -430,7 +398,7 @@ func TestReadWrongGzip(t *testing.T) {
 
 	test := []byte{1, 2, 3}
 
-	ds := Datasource{Type: File, Zip: false, Gzip: false, FilePath: "testdata/tmp/testfile"}
+	ds := Datasource{dstype: File, zip: false, gzip: false, filePath: "testdata/tmp/testfile"}
 
 	writer, err := ds.OpenWriteFile()
 	if err != nil {
@@ -438,12 +406,12 @@ func TestReadWrongGzip(t *testing.T) {
 	}
 	writer.Write(test)
 
-	ds.CloseFile()
+	err = ds.CloseFile()
 	if err != nil {
 		t.Errorf("CloseFile Should not return error and returned '%v'", err)
 	}
 
-	ds.Gzip = true
+	ds.gzip = true
 	_, err = ds.OpenReadFile()
 	if err == nil {
 		t.Errorf("OpenReadFile Should return error")
@@ -459,7 +427,7 @@ func TestResetFile(t *testing.T) {
 
 	test := []byte{1, 2, 3}
 
-	ds := Datasource{Type: File, Zip: false, Gzip: false, FilePath: "testdata/tmp/testfile"}
+	ds := Datasource{dstype: File, zip: false, gzip: false, filePath: "testdata/tmp/testfile"}
 
 	writer, err := ds.OpenWriteFile()
 	if err != nil {
@@ -467,7 +435,7 @@ func TestResetFile(t *testing.T) {
 	}
 	writer.Write(test)
 
-	ds.ResetFile()
+	err = ds.ResetFile()
 	if err != nil {
 		t.Errorf("ResetFile Should not return error and returned '%v'", err)
 	}

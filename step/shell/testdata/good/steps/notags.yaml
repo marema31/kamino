@@ -1,0 +1,6 @@
+---
+priority: 42
+name: "nameshellok"
+type: "shell"
+script: "bin/shell.sh"
+ 

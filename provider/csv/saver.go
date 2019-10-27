@@ -4,34 +4,45 @@ import (
 	"context"
 	"encoding/csv"
 	"io"
+	"sort"
 
-	"github.com/marema31/kamino/config"
-	"github.com/marema31/kamino/provider/common"
+	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/provider/types"
 )
 
 //KaminoCsvSaver specifc state for database Saver provider
 type KaminoCsvSaver struct {
+	ds       datasource.Datasourcer
 	file     io.WriteCloser
 	name     string
-	tmpName  string
 	writer   csv.Writer
 	colNames []string
 }
 
 //NewSaver open the encoding process on provider file and return a Saver compatible object
-func NewSaver(ctx context.Context, saverConfig config.DestinationConfig, tmpName string, file io.WriteCloser) (*KaminoCsvSaver, error) {
+func NewSaver(ctx context.Context, ds datasource.Datasourcer) (*KaminoCsvSaver, error) {
+	file, err := ds.OpenWriteFile()
+	if err != nil {
+		return nil, err
+	}
 	writer := csv.NewWriter(file)
-	return &KaminoCsvSaver{file: file, name: saverConfig.File, tmpName: tmpName, writer: *writer, colNames: nil}, nil
+	tv := ds.FillTmplValues()
+	return &KaminoCsvSaver{file: file, ds: ds, name: tv.FilePath, writer: *writer, colNames: nil}, nil
 }
 
 //Save writes the record to the destination
-func (cs *KaminoCsvSaver) Save(record common.Record) error {
+func (cs *KaminoCsvSaver) Save(record types.Record) error {
 	// Is this method is called for the first time
 	//If yes fix the column order in csv file
 	if cs.colNames == nil {
+		//The order of columns could change between two executions of the test
+		//TODO: add an options to datasource to provides the column order
+		var keys []string
 		for col := range record {
-			cs.colNames = append(cs.colNames, col)
+			keys = append(keys, col)
 		}
+		sort.Strings(keys)
+		cs.colNames = keys
 		err := cs.writer.Write(cs.colNames)
 		if err != nil {
 			return nil
@@ -50,8 +61,7 @@ func (cs *KaminoCsvSaver) Save(record common.Record) error {
 //Close closes the destination
 func (cs *KaminoCsvSaver) Close() error {
 	cs.writer.Flush()
-	//TODO: replace the following by the datasource.CloseFile()
-	return nil
+	return cs.ds.CloseFile()
 }
 
 //Name give the name of the destination
@@ -61,6 +71,5 @@ func (cs *KaminoCsvSaver) Name() string {
 
 //Reset reinitialize the destination (if possible)
 func (cs *KaminoCsvSaver) Reset() error {
-	//TODO: replace the following by the datasource.ResetFile()
-	return nil
+	return cs.ds.ResetFile()
 }

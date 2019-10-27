@@ -3,61 +3,38 @@ package provider
 import (
 	"context"
 	"fmt"
-	"os"
 
-	"github.com/marema31/kamino/config"
-	"github.com/marema31/kamino/provider/common"
+	"github.com/marema31/kamino/datasource"
+
 	"github.com/marema31/kamino/provider/csv"
 	"github.com/marema31/kamino/provider/database"
 	"github.com/marema31/kamino/provider/json"
+	"github.com/marema31/kamino/provider/types"
 	"github.com/marema31/kamino/provider/yaml"
 )
 
 //Loader provides way to load record by record
 type Loader interface {
 	Next() bool
-	Load() (common.Record, error)
-	Close()
+	Load() (types.Record, error)
+	Close() error
 	Name() string
 }
 
-//NewLoader analyze the config map and return object implemnting Loader of the asked type
-func NewLoader(ctx context.Context, config *config.Config, loaderConfig config.SourceConfig, environment string, instance string) (Loader, error) {
-	if loaderConfig.Type == "" {
-		return nil, fmt.Errorf("the configuration block for this source does not provide the type")
-	}
-	//TODO: replace the common.OpenReader by datasource.OpenReadFile
-	switch loaderConfig.Type {
-	case "database":
-		return database.NewLoader(ctx, config, loaderConfig, environment, instance)
-	case "csv":
-		//TODO: replace by datasource.OpenReader
-		reader := os.Stdin
-		var err error
-		//		reader, err := common.OpenReader(loaderConfig)
-		if err != nil {
-			return nil, err
-		}
-		return csv.NewLoader(ctx, loaderConfig, reader)
-	case "json":
-		//TODO: replace by datasource.OpenReader
-		reader := os.Stdin
-		var err error
-		//		reader, err := common.OpenReader(loaderConfig)
-		if err != nil {
-			return nil, err
-		}
-		return json.NewLoader(ctx, loaderConfig, reader)
-	case "yaml":
-		//TODO: replace by datasource.OpenReader
-		reader := os.Stdin
-		var err error
-		//		reader, err := common.OpenReader(loaderConfig)
-		if err != nil {
-			return nil, err
-		}
-		return yaml.NewLoader(ctx, loaderConfig, reader)
+//NewLoader analyze the datasource and return object implementing Loader of the asked type
+func (p *KaminoProvider) NewLoader(ctx context.Context, ds datasource.Datasourcer, table string, where string) (Loader, error) {
+	engine := ds.GetEngine()
+
+	switch engine {
+	case datasource.Mysql, datasource.Postgres:
+		return database.NewLoader(ctx, ds, table, where)
+	case datasource.CSV:
+		return csv.NewLoader(ctx, ds)
+	case datasource.JSON:
+		return json.NewLoader(ctx, ds)
+	case datasource.YAML:
+		return yaml.NewLoader(ctx, ds)
 	default:
-		return nil, fmt.Errorf("don't know how to manage %s", loaderConfig.Type)
+		return nil, fmt.Errorf("don't know how to manage this datasource engine")
 	}
 }

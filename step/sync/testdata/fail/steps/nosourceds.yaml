@@ -1,0 +1,37 @@
+---
+priority: 42
+name: "namesyncok"
+type: "sync"
+source: 
+  tags: "unknown"
+  types: "Database"
+  engines: "Mysql"
+  table: "tablesource"
+cache: 
+  tags: "tagcache"
+  types: "Database"
+  engines: "Mysql"
+  ttl: "3m"
+filters:
+  - type: "only"
+    aparameters:
+     - "id"
+     - "name"
+     - "hp"
+  - type: "replace"
+    mparameters:
+      name: "myname"
+      hp: "100"
+destinations:
+  - tags: ["tag1","tag2"]
+    types: "Database"
+    engines: "Mysql"
+    table: "tabledest1"
+    key: "id"
+    mode: "replace"
+  - tags: ["tag3"]
+    types: "Database"
+    engines: "Mysql"
+    table: "tabledest2"
+    key: "id"
+    mode: "OnlyIfEmpty"

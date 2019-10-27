@@ -8,7 +8,7 @@ func (ds *Datasource) isSelectedEngine(engines []Engine) bool {
 	}
 
 	for _, e := range engines {
-		if e == ds.Engine {
+		if e == ds.engine {
 			return true
 		}
 	}
@@ -21,7 +21,7 @@ func (ds *Datasource) isSelectedType(dsTypes []Type) bool {
 	}
 
 	for _, t := range dsTypes {
-		if t == ds.Type {
+		if t == ds.dstype {
 			return true
 		}
 	}
@@ -29,6 +29,7 @@ func (ds *Datasource) isSelectedType(dsTypes []Type) bool {
 }
 
 func (dss *Datasources) lookupOneTag(tag string, dsTypes []Type, engines []Engine) (selected []string) {
+	//TODO: Implement "!tag" for all but this tag
 	for _, name := range dss.tagToDatasource[tag] {
 		ds := dss.datasources[name]
 		if ds.isSelectedEngine(engines) && ds.isSelectedType(dsTypes) {
@@ -52,7 +53,7 @@ func (dss *Datasources) lookupWithoutTag(dsTypes []Type, engines []Engine) (sele
 
 //Lookup return a list of *Datasource that correspond to the
 // list of tag expression
-func (dss *Datasources) Lookup(tagList []string, dsTypes []Type, engines []Engine) []*Datasource {
+func (dss *Datasources) Lookup(tagList []string, dsTypes []Type, engines []Engine) []Datasourcer {
 	selected := make(map[string]*Datasource) // Use map to emulate a "set" to avoid duplicates
 	if len(tagList) == 0 {
 		// The selection is not based on tag, lookup for all of them
@@ -97,7 +98,7 @@ func (dss *Datasources) Lookup(tagList []string, dsTypes []Type, engines []Engin
 		}
 	}
 
-	selectedDs := make([]*Datasource, 0, len(selected))
+	selectedDs := make([]Datasourcer, 0, len(selected))
 	for _, ds := range selected {
 		selectedDs = append(selectedDs, ds)
 	}

@@ -1,0 +1,6 @@
+---
+priority: 42
+name: "nametmplok"
+type: "tmpl"
+template: "testdata/templates/config.cfg"
+destination: "testdata/tmp/{{.Database}}.cfg"

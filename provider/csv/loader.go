@@ -5,12 +5,13 @@ import (
 	"encoding/csv"
 	"io"
 
-	"github.com/marema31/kamino/config"
-	"github.com/marema31/kamino/provider/common"
+	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/provider/types"
 )
 
 //KaminoCsvLoader specifc state for database Saver provider
 type KaminoCsvLoader struct {
+	ds           datasource.Datasourcer
 	file         io.ReadCloser
 	reader       csv.Reader
 	name         string
@@ -20,15 +21,20 @@ type KaminoCsvLoader struct {
 }
 
 //NewLoader open the encoding process on provider file, read the header from the first line and return a Loader compatible object
-func NewLoader(ctx context.Context, loaderConfig config.SourceConfig, file io.ReadCloser) (*KaminoCsvLoader, error) {
+func NewLoader(ctx context.Context, ds datasource.Datasourcer) (*KaminoCsvLoader, error) {
+	file, err := ds.OpenReadFile()
+	if err != nil {
+		return nil, err
+	}
 	reader := csv.NewReader(file)
 	//Read the header to dertermine the column order
 	row, err := reader.Read()
 	if err != nil {
 		return nil, err
 	}
+	tv := ds.FillTmplValues()
 
-	return &KaminoCsvLoader{file: file, name: loaderConfig.File, reader: *reader, colNames: row, currentRow: nil, currentError: nil}, nil
+	return &KaminoCsvLoader{ds: ds, file: file, name: tv.FilePath, reader: *reader, colNames: row, currentRow: nil, currentError: nil}, nil
 }
 
 //Next moves to next record and return false if there is no more records
@@ -49,12 +55,12 @@ func (cl *KaminoCsvLoader) Next() bool {
 }
 
 //Load reads the next record and return it
-func (cl *KaminoCsvLoader) Load() (common.Record, error) {
+func (cl *KaminoCsvLoader) Load() (types.Record, error) {
 	if cl.currentError != nil {
 		return nil, cl.currentError
 	}
 
-	record := make(common.Record, len(cl.colNames))
+	record := make(types.Record, len(cl.colNames))
 	for i, col := range cl.colNames {
 		record[col] = string(cl.currentRow[i])
 	}
@@ -64,9 +70,8 @@ func (cl *KaminoCsvLoader) Load() (common.Record, error) {
 }
 
 //Close closes the datasource
-func (cl *KaminoCsvLoader) Close() {
-	//TODO: replace the following by the datasource.CloseFile()
-	cl.file.Close()
+func (cl *KaminoCsvLoader) Close() error {
+	return cl.ds.CloseFile()
 }
 
 //Name give the name of the destination

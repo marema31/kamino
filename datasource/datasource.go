@@ -3,9 +3,23 @@
 package datasource
 
 import (
+	"database/sql"
+	"fmt"
 	"io"
 	"strings"
 )
+
+//Datasourcer interface for allowing mocking of Datasource object
+type Datasourcer interface {
+	FillTmplValues() TmplValues
+	OpenDatabase(bool, bool) (*sql.DB, error)
+	OpenReadFile() (io.ReadCloser, error)
+	OpenWriteFile() (io.WriteCloser, error)
+	ResetFile() error
+	CloseFile() error
+	GetName() string
+	GetEngine() Engine
+}
 
 //Engine constants for file/database engine
 type Engine int
@@ -33,38 +47,90 @@ const (
 	File Type = iota
 )
 
-//TODO: comment the fields
-
 // Datasource is handle to the corresponding datasource (either file/database)
 type Datasource struct {
-	Name        string
-	Type        Type
-	Database    string
-	Engine      Engine
-	Inline      string
-	Host        string
-	Port        string
-	User        string
-	UserPw      string
-	Admin       string
-	AdminPw     string
-	URL         string //TODO: not exported ?
-	URLAdmin    string //TODO: not exported ?
-	URLNoDb     string //TODO: not exported ?
-	Transaction bool
-	Schema      string
-	FilePath    string
+	name        string
+	dstype      Type
+	database    string
+	engine      Engine
+	inline      string
+	host        string
+	port        string
+	user        string
+	userPw      string
+	admin       string
+	adminPw     string
+	url         string
+	urlAdmin    string
+	urlNoDb     string
+	transaction bool
+	schema      string
+	filePath    string
 	tmpFilePath string
-	Gzip        bool // TODO: not exported ?
-	Zip         bool // TODO: not exported ?
+	gzip        bool
+	zip         bool
 	fileHandle  io.Closer
 	filewriter  bool
-	Tags        []string
+	tags        []string
 }
 
-//GetEngine return a string containing the engine name
-func (ds *Datasource) GetEngine() string {
-	switch ds.Engine {
+//StringToType convert string to corresponding Type typed value
+func StringToType(dsType string) (Type, error) {
+	switch strings.ToLower(dsType) {
+	case "db", "database", "databases":
+		return Database, nil
+	case "file", "files":
+		return File, nil
+	}
+	return File, fmt.Errorf("does not how to manage %s datasource type", dsType)
+}
+
+//StringsToTypes convert string slice to an slice of corresponding Type typed values
+func StringsToTypes(dsTypes []string) ([]Type, error) {
+	typeSlice := make([]Type, 0)
+	for _, dsType := range dsTypes {
+		t, err := StringToType(dsType)
+		if err != nil {
+			return nil, err
+		}
+		typeSlice = append(typeSlice, t)
+	}
+	return typeSlice, nil
+}
+
+//StringToEngine convert string to corresponding Engine typed value
+func StringToEngine(engine string) (Engine, error) {
+	switch strings.ToLower(engine) {
+	case "mysql", "maria", "mariadb":
+		return Mysql, nil
+	case "pgsql", "postgres", "postgresql":
+		return Postgres, nil
+	case "json":
+		return JSON, nil
+	case "yaml":
+		return YAML, nil
+	case "csv":
+		return CSV, nil
+	}
+	return CSV, fmt.Errorf("does not how to manage %s datasource engine", engine)
+}
+
+//StringsToEngines convert string slice to an slice of corresponding Engine typed values
+func StringsToEngines(engines []string) ([]Engine, error) {
+	engineSlice := make([]Engine, 0)
+	for _, engine := range engines {
+		e, err := StringToEngine(engine)
+		if err != nil {
+			return nil, err
+		}
+		engineSlice = append(engineSlice, e)
+	}
+	return engineSlice, nil
+}
+
+//EngineToString return do the conversion
+func EngineToString(engine Engine) string {
+	switch engine {
 	case Mysql:
 		return "mysql"
 	case Postgres:
@@ -79,12 +145,33 @@ func (ds *Datasource) GetEngine() string {
 	return "Unknown" // We will never arrive here
 }
 
+//TypeToString return do the conversion
+func TypeToString(dsType Type) string {
+	switch dsType {
+	case Database:
+		return "database"
+	case File:
+		return "file"
+	}
+	return "Unknown" // We will never arrive here
+}
+
+//GetEngine return the engine enum value
+func (ds *Datasource) GetEngine() Engine {
+	return ds.engine
+}
+
 //GetNamedTag return the value of the tag with the provided name or "" if not exists
 func (ds *Datasource) GetNamedTag(name string) string {
-	for _, tag := range ds.Tags {
+	for _, tag := range ds.tags {
 		if strings.Contains(tag, name+":") {
 			return tag[len(name)+1:]
 		}
 	}
 	return ""
+}
+
+//GetName return the name of the datasource
+func (ds *Datasource) GetName() string {
+	return ds.name
 }

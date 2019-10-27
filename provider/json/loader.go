@@ -7,12 +7,13 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/marema31/kamino/config"
-	"github.com/marema31/kamino/provider/common"
+	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/provider/types"
 )
 
 //KaminoJSONLoader specifc state for database Saver provider
 type KaminoJSONLoader struct {
+	ds         datasource.Datasourcer
 	file       io.ReadCloser
 	name       string
 	content    []map[string]string
@@ -20,13 +21,18 @@ type KaminoJSONLoader struct {
 }
 
 //NewLoader open the encoding process on provider file, read the whole file, unMarshal it and return a Loader compatible object
-func NewLoader(ctx context.Context, loaderConfig config.SourceConfig, file io.ReadCloser) (*KaminoJSONLoader, error) {
+func NewLoader(ctx context.Context, ds datasource.Datasourcer) (*KaminoJSONLoader, error) {
+	file, err := ds.OpenReadFile()
+	if err != nil {
+		return nil, err
+	}
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
 
-	k := KaminoJSONLoader{file: file, name: loaderConfig.File, content: nil, currentRow: 0}
+	tv := ds.FillTmplValues()
+	k := KaminoJSONLoader{ds: ds, file: file, name: tv.FilePath, content: nil, currentRow: 0}
 	k.content = make([]map[string]string, 0)
 	err = json.Unmarshal([]byte(byteValue), &k.content)
 	if err != nil {
@@ -43,8 +49,8 @@ func (jl *KaminoJSONLoader) Next() bool {
 }
 
 //Load reads the next record and return it
-func (jl *KaminoJSONLoader) Load() (common.Record, error) {
-	if jl.currentRow > len(jl.content) {
+func (jl *KaminoJSONLoader) Load() (types.Record, error) {
+	if jl.currentRow >= len(jl.content) {
 		return nil, fmt.Errorf("no more data to read")
 	}
 
@@ -55,9 +61,9 @@ func (jl *KaminoJSONLoader) Load() (common.Record, error) {
 }
 
 //Close closes the datasource
-func (jl *KaminoJSONLoader) Close() {
+func (jl *KaminoJSONLoader) Close() error {
 	//TODO: replace the following by the datasource.CloseFile()
-	jl.file.Close()
+	return jl.ds.CloseFile()
 }
 
 //Name give the name of the destination

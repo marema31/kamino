@@ -3,10 +3,10 @@ priority: 6
 name: "synchronization"
 type: "sync"
 source: 
-  tag: "pokemon.source"
+  tags: "pokemon.source"
   table: "pokemon"
 cache: 
-  tag: "pokemon.cache"
+  tags: "pokemon.cache"
   ttl: "3m"
 filters:
   - type: "only"
