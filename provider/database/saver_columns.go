@@ -82,7 +82,7 @@ func (saver *DbSaver) getColNames(record types.Record) ([]string, []string, erro
 	}
 
 	if saver.key != "" && !keyseen {
-		return nil, nil, fmt.Errorf("provided key %s is not available from filtered source for %s.%s ", saver.key, saver.database, saver.table)
+		return nil, nil, fmt.Errorf("provided key %s is not available in destination table for %s.%s ", saver.key, saver.database, saver.table)
 	}
 
 	return questionmark, updateSet, nil

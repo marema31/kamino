@@ -62,7 +62,7 @@ func TestOk(t *testing.T) {
 
 	err = loader.Close()
 	if err != nil {
-		t.Errorf("Saver close should not return error and returned '%v'", err)
+		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}
 
 	readString := make([]byte, len(testString))

@@ -5,8 +5,8 @@ import (
 )
 
 //OpenDatabase open connection to the corresponding database
-func (ds *MockDatasource) OpenDatabase(generateError bool, nodb bool) (*sql.DB, error) {
-	if generateError {
+func (ds *MockDatasource) OpenDatabase(admin bool, nodb bool) (*sql.DB, error) {
+	if ds.ErrorOpenDb != nil {
 		return nil, ds.ErrorOpenDb
 	}
 	return ds.MockedDb, nil

@@ -170,7 +170,7 @@ func (saver *DbSaver) Close() error {
 			if !modified {
 				var err error
 				if saver.transaction {
-					_, err = saver.tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", saver.table))
+					_, err = saver.tx.Exec(fmt.Sprintf("DELETE from %s WHERE %s=%s", saver.table, saver.key, id))
 				} else {
 					_, err = saver.db.Exec(fmt.Sprintf("DELETE from %s WHERE %s=%s", saver.table, saver.key, id))
 				}

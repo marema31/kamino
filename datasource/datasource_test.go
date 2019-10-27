@@ -46,14 +46,14 @@ func TestStringToTypeOK(t *testing.T) {
 	for k, v := range set {
 		dstype, err := datasource.StringToType(v)
 		if err != nil {
-			t.Fatalf("StringToEngine should not return error, returned: %v", err)
+			t.Fatalf("StringToType should not return error, returned: %v", err)
 		}
 		if dstype != k {
-			t.Errorf("StringToEngine should return '%d' and returned '%d'", k, dstype)
+			t.Errorf("StringToType should return '%d' and returned '%d'", k, dstype)
 		}
 		dstypestr := datasource.TypeToString(k)
 		if dstypestr != v {
-			t.Errorf("StringToEngine should return '%s' and returned '%s'", dstypestr, v)
+			t.Errorf("StringToType should return '%s' and returned '%s'", dstypestr, v)
 		}
 
 	}
@@ -63,10 +63,28 @@ func TestStringToTypeFail(t *testing.T) {
 	dstype, err := datasource.StringToType("unknown")
 
 	if err == nil {
-		t.Fatalf("StringToEngine should not return error, returned: %d", dstype)
+		t.Fatalf("StringToType should not return error, returned: %d", dstype)
 	}
 }
 
+func TestStringsToTypesOK(t *testing.T) {
+
+	dstypes, err := datasource.StringsToTypes([]string{"database", "file"})
+	if err != nil {
+		t.Fatalf("StringsToTypes should not return error, returned: %v", err)
+	}
+	if dstypes[0] != datasource.Database || dstypes[1] != datasource.File {
+		t.Errorf("StringsToTypes should return '%v' and returned '%v'", []datasource.Type{datasource.Database, datasource.File}, dstypes)
+	}
+}
+
+func TestStringsToTypesFail(t *testing.T) {
+	dstype, err := datasource.StringsToTypes([]string{"database", "file", "unknown"})
+
+	if err == nil {
+		t.Fatalf("StringsToTypes should not return error, returned: %d", dstype)
+	}
+}
 func TestStringsToEnginesOk(t *testing.T) {
 	engines, err := datasource.StringsToEngines([]string{"mariadb", "postgres"})
 	if err != nil {
