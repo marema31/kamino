@@ -180,6 +180,6 @@ func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.D
 	}
 
 	steps = make([]common.Steper, 0, 1)
-	steps = append(steps, step)
+	steps = append(steps, &step)
 	return priority, steps, nil
 }

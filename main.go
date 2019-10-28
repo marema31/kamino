@@ -8,11 +8,6 @@ import (
 	"time"
 
 	"github.com/marema31/kamino/cmd"
-	"github.com/marema31/kamino/datasource"
-	"github.com/marema31/kamino/provider"
-	"github.com/marema31/kamino/recipe"
-	//	"github.com/marema31/kamino/config"
-	//	kaminoSync "github.com/marema31/kamino/sync"
 )
 
 func main() {
@@ -39,31 +34,11 @@ func main() {
 		os.Exit(1)
 	}()
 	cmd.Execute(ctx)
-	//TODO: not the right action, just for testing
-	_ = recipe.Load(context.Background(), "testdata", "pokemon", datasource.New(), &provider.KaminoProvider{})
 }
 
 /* func main() {
 
 /*
-	//TODO: During CLI review add options for environment and instances
-	environment := ""
-	var instances []string
-
-	//	instances = append(instances, "sch1")
-	//	instances = append(instances, "1")
-
-	if len(os.Args) > 2 && os.Args[1] == "-d" {
-		i = 3
-		configPath = os.Args[2]
-		//	configFile = filepath.Base(os.Args[2])
-	}
-
-	config, err := config.New(configPath, configFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	fmt.Printf("Will run the sync %s\n", strings.Join(os.Args[i:], ", "))
 
 	for _, syncName := range os.Args[i:] {

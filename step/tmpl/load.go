@@ -74,7 +74,7 @@ func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.D
 		tdestination.Execute(renderedDestination, datasource.FillTmplValues())
 		step.destination = renderedDestination.String()
 
-		steps = append(steps, step)
+		steps = append(steps, &step)
 
 	}
 

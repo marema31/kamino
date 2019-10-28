@@ -18,8 +18,16 @@ import (
 	"github.com/marema31/kamino/step/tmpl"
 )
 
+// Creater is an interface to an object able to create Steper from configuration
+type Creater interface {
+	Load(context.Context, string, string, datasource.Datasourcers, provider.Provider) (uint, []common.Steper, error)
+}
+
+// Factory implements the StepCreated and use configuration files to create the steps
+type Factory struct{}
+
 // Load the step file and returns the priority and a list of steper for this file
-func Load(ctx context.Context, path string, filename string, dss datasource.Datasourcers, prov provider.Provider) (priority uint, stepList []common.Steper, err error) {
+func (sf Factory) Load(ctx context.Context, path string, filename string, dss datasource.Datasourcers, prov provider.Provider) (priority uint, stepList []common.Steper, err error) {
 	v := viper.New()
 
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]

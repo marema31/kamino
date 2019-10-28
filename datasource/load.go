@@ -3,7 +3,6 @@ package datasource
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"path/filepath"
 	"strings"
 
@@ -16,7 +15,7 @@ func (dss *Datasources) LoadAll(configPath string) error {
 
 	files, err := ioutil.ReadDir(dsfolder)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	for _, file := range files {

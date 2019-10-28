@@ -47,7 +47,7 @@ func TestShellLoadOk(t *testing.T) {
 	step := steps[0]
 
 	//For test purpose we must see what is inside the step and for this convert the interface to the presumed type
-	s, ok := step.(shell.Step)
+	s, ok := step.(*shell.Step)
 
 	if !ok {
 		t.Fatalf("The first step should be a shell step")
