@@ -1,6 +1,6 @@
 ---
 priority: 5
-name: "synchronization"
+name: "initialSynchronization"
 type: "sync"
 source: 
   tag: "pokemon.initial"

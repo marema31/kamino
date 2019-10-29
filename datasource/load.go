@@ -23,7 +23,7 @@ func (dss *Datasources) LoadAll(configPath string) error {
 			ext := filepath.Ext(file.Name())
 			if ext == ".yml" || ext == ".yaml" || ext == ".json" || ext == ".toml" {
 				name := strings.TrimSuffix(file.Name(), ext)
-				ds, err := dss.load(dsfolder, name)
+				ds, err := dss.load(configPath, name)
 				if err != nil {
 					return err
 				}
@@ -31,6 +31,10 @@ func (dss *Datasources) LoadAll(configPath string) error {
 
 			}
 		}
+	}
+
+	if len(dss.datasources) == 0 {
+		return fmt.Errorf("no datasources configuration files found in %s", dsfolder)
 	}
 	// Insert the datasource name in all entry of the dictionnary
 	// that correspond to one tag of the tag list
@@ -52,7 +56,8 @@ func (dss *Datasources) load(path string, filename string) (Datasource, error) {
 	v := viper.New()
 
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
-	v.AddConfigPath(path)
+	dsfolder := filepath.Join(path, "datasources")
+	v.AddConfigPath(dsfolder)
 	err := v.ReadInConfig()
 	if err != nil {
 		return Datasource{}, err
@@ -72,7 +77,7 @@ func (dss *Datasources) load(path string, filename string) (Datasource, error) {
 	case Mysql, Postgres:
 		return loadDatabaseDatasource(filename, v, e)
 	case JSON, YAML, CSV:
-		return loadFileDatasource(filename, v, e)
+		return loadFileDatasource(path, filename, v, e)
 	}
 	return Datasource{}, fmt.Errorf("does not how to manage %s datasource engine", engine)
 }

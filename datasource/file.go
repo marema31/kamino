@@ -15,13 +15,17 @@ import (
 )
 
 // load a dile type datasource from the viper configuration
-func loadFileDatasource(filename string, v *viper.Viper, engine Engine) (Datasource, error) {
+func loadFileDatasource(path string, filename string, v *viper.Viper, engine Engine) (Datasource, error) {
 	var ds Datasource
 	ds.dstype = File
 	ds.engine = engine
 	ds.name = filename
 	ds.inline = v.GetString("inline")
 	ds.filePath = v.GetString("file")
+	if ds.filePath != "" && ds.filePath != "-" {
+		ds.filePath = filepath.Join(path, ds.filePath)
+	}
+
 	ds.url = v.GetString("URL")
 	if ds.filePath == "" && ds.url == "" && ds.inline == "" {
 		return Datasource{}, fmt.Errorf("the datasource %s does not provide the file path or URL", ds.name)

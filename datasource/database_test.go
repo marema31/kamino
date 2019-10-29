@@ -11,7 +11,7 @@ func setupDatabaseTest() *Datasources {
 
 func TestLoadMysqlCompleteEngine(t *testing.T) {
 	dss := setupDatabaseTest()
-	ds, err := dss.load("testdata/good/datasources", "mysqlcomplete")
+	ds, err := dss.load("testdata/good", "mysqlcomplete")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -55,7 +55,7 @@ func TestLoadMysqlCompleteEngine(t *testing.T) {
 
 func TestLoadMysqlMinimalEngine(t *testing.T) {
 	dss := setupDatabaseTest()
-	ds, err := dss.load("testdata/good/datasources", "mysqlminimal")
+	ds, err := dss.load("testdata/good", "mysqlminimal")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -99,7 +99,7 @@ func TestLoadMysqlMinimalEngine(t *testing.T) {
 
 func TestLoadPostgresCompleteEngine(t *testing.T) {
 	dss := setupDatabaseTest()
-	ds, err := dss.load("testdata/good/datasources", "postgrescomplete")
+	ds, err := dss.load("testdata/good", "postgrescomplete")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -143,7 +143,7 @@ func TestLoadPostgresCompleteEngine(t *testing.T) {
 
 func TestLoadPostgresMinimalEngine(t *testing.T) {
 	dss := setupDatabaseTest()
-	ds, err := dss.load("testdata/good/datasources", "postgresminimal")
+	ds, err := dss.load("testdata/good", "postgresminimal")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -187,7 +187,7 @@ func TestLoadPostgresMinimalEngine(t *testing.T) {
 
 func TestLoadNoDatabase(t *testing.T) {
 	dss := setupDatabaseTest()
-	_, err := dss.load("testdata/fail/datasources", "nodatabase")
+	_, err := dss.load("testdata/fail", "nodatabase")
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

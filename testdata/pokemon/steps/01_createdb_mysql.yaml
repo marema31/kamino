@@ -2,7 +2,7 @@
 priority: 1
 name: "createdb"
 type: "sql"
-template: "templates/createdb_mysql.sql.tmpl"
+script: "templates/createdb_mysql.sql.tmpl"
 tags: 
   - "pokemon"
 admin: "true"
