@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -20,20 +21,37 @@ func main() {
 	// At end of function we remove signal trapping
 	defer signal.Stop(sigChan)
 
-	//Waiting for signal on the channel and call cancel on the context
+	end := make(chan bool, 1)
+
 	//This function will stop itself at context cancellation or at end of main goroutine
 	go func() {
-		select {
-		case <-sigChan:
-			cancel() // Cancellation of context, that will propagate to all function that listen cts.Done
-			log.Println("Aborting ....")
-		case <-ctx.Done(): // the context has been cancelled
+		err := cmd.Execute(ctx)
+		if err != nil {
+			fmt.Println(err)
+			end <- true
 		}
+		end <- false
+	}()
+
+	//Waiting for signal on the channel and call cancel on the context
+	select {
+	case <-sigChan:
+		cancel() // Cancellation of context, that will propagate to all function that listen ctx.Done
+		log.Println("Aborting ....")
 		log.Println("Waiting for all sub task abortion...")
 		time.Sleep(5 * time.Second) //TODO: Wait on waitgroup ??
 		os.Exit(1)
-	}()
-	cmd.Execute(ctx)
+	case <-ctx.Done(): // the context has been cancelled
+		log.Println("Waiting for all sub task abortion...")
+		time.Sleep(5 * time.Second) //TODO: Wait on waitgroup ??
+		os.Exit(1)
+	case inError := <-end:
+		//The goroutine executing the action is finished we can stop here
+		if inError {
+			os.Exit(1)
+		}
+	}
+	os.Exit(0)
 }
 
 /* func main() {
@@ -45,7 +63,7 @@ func main() {
 		err := kaminoSync.Do(ctx, config, syncName, environment, instances)
 		if err != nil {
 			log.Println(err)
-			cancel()                    // Cancellation of context, that will propagate to all function that listen cts.Done
+			cancel()                    // Cancellation of context, that will propagate to all function that listen ct.Done
 			time.Sleep(5 * time.Second) // TODO:Wait on waitgroup ??
 			os.Exit(1)
 		}

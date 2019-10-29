@@ -3,8 +3,7 @@ package cmd
 
 import (
 	"context"
-	"fmt"
-	"os"
+	"time"
 
 	"github.com/marema31/kamino/cmd/migrate"
 
@@ -42,12 +41,10 @@ var rootCmd = &cobra.Command{
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute(c context.Context) {
-	ctx = c //Store the context for all sub-command definition
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+func Execute(c context.Context) error {
+	ctx = c                      //Store the context for all sub-command definition
+	time.Sleep(60 * time.Second) //TODO: remove after cancellation
+	return rootCmd.Execute()
 }
 
 func init() {
