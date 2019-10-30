@@ -9,15 +9,15 @@ import (
 )
 
 type mockedCookbook struct {
-	called    bool
-	errorLoad error
-	errorDo   error
+	called        bool
+	errorLoad     error
+	doReturnValue bool
 }
 
 //Do manage the runnning of the cookbook
-func (ck *mockedCookbook) Do(ctx context.Context) error {
+func (ck *mockedCookbook) Do(ctx context.Context) bool {
 	ck.called = true
-	return ck.errorDo
+	return ck.doReturnValue
 }
 
 // Load the step file and returns the priority and a list of steper for this file
@@ -61,7 +61,7 @@ func TestApplyLoadError(t *testing.T) {
 
 func TestApplyDoError(t *testing.T) {
 	ck := &mockedCookbook{}
-	ck.errorDo = fmt.Errorf("fake error")
+	ck.doReturnValue = true
 	err := cmd.Apply(ck, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")

@@ -4,6 +4,7 @@ package step
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -27,13 +28,12 @@ type Creater interface {
 type Factory struct{}
 
 // Load the step file and returns the priority and a list of steper for this file
-func (sf Factory) Load(ctx context.Context, path string, filename string, dss datasource.Datasourcers, prov provider.Provider) (priority uint, stepList []common.Steper, err error) {
+func (sf Factory) Load(ctx context.Context, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider) (priority uint, stepList []common.Steper, err error) {
 	v := viper.New()
-
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
-	v.AddConfigPath(path)
+	stepsFolder := filepath.Join(recipePath, "steps")
+	v.AddConfigPath(stepsFolder)
 	err = v.ReadInConfig()
-
 	if err != nil {
 		return 0, nil, err
 	}

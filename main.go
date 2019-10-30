@@ -2,11 +2,9 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/marema31/kamino/cmd"
 )
@@ -21,33 +19,25 @@ func main() {
 	// At end of function we remove signal trapping
 	defer signal.Stop(sigChan)
 
-	end := make(chan bool, 1)
+	end := make(chan error, 1)
 
 	//This function will stop itself at context cancellation or at end of main goroutine
 	go func() {
-		err := cmd.Execute(ctx)
-		if err != nil {
-			fmt.Println(err)
-			end <- true
-		}
-		end <- false
+		end <- cmd.Execute(ctx)
 	}()
 
 	//Waiting for signal on the channel and call cancel on the context
 	select {
-	case <-sigChan:
+	case <-sigChan: //Received CTRL+C
 		cancel() // Cancellation of context, that will propagate to all function that listen ctx.Done
 		log.Println("Aborting ....")
 		log.Println("Waiting for all sub task abortion...")
-		time.Sleep(5 * time.Second) //TODO: Wait on waitgroup ??
-		os.Exit(1)
+		<-end
 	case <-ctx.Done(): // the context has been cancelled
 		log.Println("Waiting for all sub task abortion...")
-		time.Sleep(5 * time.Second) //TODO: Wait on waitgroup ??
-		os.Exit(1)
-	case inError := <-end:
-		//The goroutine executing the action is finished we can stop here
-		if inError {
+		<-end
+	case executeError := <-end: //The goroutine executing the action is finished we can stop here
+		if executeError != nil {
 			os.Exit(1)
 		}
 	}

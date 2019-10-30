@@ -10,8 +10,8 @@ import (
 )
 
 //LoadAll Lookup the provided folder for datasource configuration files
-func (dss *Datasources) LoadAll(configPath string) error {
-	dsfolder := filepath.Join(configPath, "datasources")
+func (dss *Datasources) LoadAll(recipePath string) error {
+	dsfolder := filepath.Join(recipePath, "datasources")
 
 	files, err := ioutil.ReadDir(dsfolder)
 	if err != nil {
@@ -23,7 +23,7 @@ func (dss *Datasources) LoadAll(configPath string) error {
 			ext := filepath.Ext(file.Name())
 			if ext == ".yml" || ext == ".yaml" || ext == ".json" || ext == ".toml" {
 				name := strings.TrimSuffix(file.Name(), ext)
-				ds, err := dss.load(configPath, name)
+				ds, err := dss.load(recipePath, name)
 				if err != nil {
 					return err
 				}
@@ -52,11 +52,11 @@ func (dss *Datasources) LoadAll(configPath string) error {
 	return nil
 }
 
-func (dss *Datasources) load(path string, filename string) (Datasource, error) {
+func (dss *Datasources) load(recipePath string, filename string) (Datasource, error) {
 	v := viper.New()
 
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
-	dsfolder := filepath.Join(path, "datasources")
+	dsfolder := filepath.Join(recipePath, "datasources")
 	v.AddConfigPath(dsfolder)
 	err := v.ReadInConfig()
 	if err != nil {
@@ -77,7 +77,7 @@ func (dss *Datasources) load(path string, filename string) (Datasource, error) {
 	case Mysql, Postgres:
 		return loadDatabaseDatasource(filename, v, e)
 	case JSON, YAML, CSV:
-		return loadFileDatasource(path, filename, v, e)
+		return loadFileDatasource(recipePath, filename, v, e)
 	}
 	return Datasource{}, fmt.Errorf("does not how to manage %s datasource engine", engine)
 }

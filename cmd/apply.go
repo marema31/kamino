@@ -35,5 +35,8 @@ func Apply(cookbook recipe.Cooker, cfgFolder string, names []string, types []str
 	if err != nil {
 		return fmt.Errorf("error while loading the recipes: %v", err)
 	}
-	return cookbook.Do(ctx)
+	if cookbook.Do(ctx) {
+		return fmt.Errorf("a step had an error")
+	}
+	return nil
 }

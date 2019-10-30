@@ -1,4 +1,13 @@
-//Package recipe manage the list of recipe to be applied and their workflow
+/*Package recipe provides two objects and manage their workflow:
+   - Recipe : set of steps selected by the user (by tags/step type or step name on CLI)
+   - Cookbook: set of recipes selected by the user (by name of recipe on the CLI)
+
+The folder of a recipe must contains at least two folders:
+	- steps containing the step files of the recipe
+	- datasources containing the datasource files to be used by the recipe
+but it can also contain whatever files/folders needed for the steps (initial dataset, templates, script, etc...).
+All the relative path defined in a step will be relative to the recipe folder.
+*/
 package recipe
 
 import (
@@ -13,7 +22,7 @@ import (
 type Cooker interface {
 	Statistics() (map[string][]int, int)
 	Load(context.Context, string, []string, []string, []string) error
-	Do(context.Context) error
+	Do(context.Context) bool
 }
 
 type recipe struct {
