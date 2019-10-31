@@ -5,14 +5,8 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/marema31/kamino/cmd"
-	"github.com/marema31/kamino/datasource"
-	"github.com/marema31/kamino/provider"
-	"github.com/marema31/kamino/recipe"
-	//	"github.com/marema31/kamino/config"
-	//	kaminoSync "github.com/marema31/kamino/sync"
 )
 
 func main() {
@@ -25,52 +19,41 @@ func main() {
 	// At end of function we remove signal trapping
 	defer signal.Stop(sigChan)
 
-	//Waiting for signal on the channel and call cancel on the context
+	end := make(chan error, 1)
+
 	//This function will stop itself at context cancellation or at end of main goroutine
 	go func() {
-		select {
-		case <-sigChan:
-			cancel() // Cancellation of context, that will propagate to all function that listen cts.Done
-			log.Println("Aborting ....")
-		case <-ctx.Done(): // the context has been cancelled
-		}
-		log.Println("Waiting for all sub task abortion...")
-		time.Sleep(5 * time.Second) //TODO: Wait on waitgroup ??
-		os.Exit(1)
+		end <- cmd.Execute(ctx)
 	}()
-	cmd.Execute(ctx)
-	//TODO: not the right action, just for testing
-	_ = recipe.Load(context.Background(), "testdata", "pokemon", datasource.New(), &provider.KaminoProvider{})
+
+	//Waiting for signal on the channel and call cancel on the context
+	select {
+	case <-sigChan: //Received CTRL+C
+		cancel() // Cancellation of context, that will propagate to all function that listen ctx.Done
+		log.Println("Aborting ....")
+		log.Println("Waiting for all sub task abortion...")
+		<-end
+	case <-ctx.Done(): // the context has been cancelled
+		log.Println("Waiting for all sub task abortion...")
+		<-end
+	case executeError := <-end: //The goroutine executing the action is finished we can stop here
+		if executeError != nil {
+			os.Exit(1)
+		}
+	}
+	os.Exit(0)
 }
 
 /* func main() {
 
 /*
-	//TODO: During CLI review add options for environment and instances
-	environment := ""
-	var instances []string
-
-	//	instances = append(instances, "sch1")
-	//	instances = append(instances, "1")
-
-	if len(os.Args) > 2 && os.Args[1] == "-d" {
-		i = 3
-		configPath = os.Args[2]
-		//	configFile = filepath.Base(os.Args[2])
-	}
-
-	config, err := config.New(configPath, configFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	fmt.Printf("Will run the sync %s\n", strings.Join(os.Args[i:], ", "))
 
 	for _, syncName := range os.Args[i:] {
 		err := kaminoSync.Do(ctx, config, syncName, environment, instances)
 		if err != nil {
 			log.Println(err)
-			cancel()                    // Cancellation of context, that will propagate to all function that listen cts.Done
+			cancel()                    // Cancellation of context, that will propagate to all function that listen ct.Done
 			time.Sleep(5 * time.Second) // TODO:Wait on waitgroup ??
 			os.Exit(1)
 		}

@@ -65,7 +65,7 @@ func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.D
 		tquery.Execute(renderedQuery, datasource.FillTmplValues())
 		step.query = renderedQuery.String()
 
-		steps = append(steps, step)
+		steps = append(steps, &step)
 
 	}
 

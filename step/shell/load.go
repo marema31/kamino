@@ -55,7 +55,7 @@ func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.D
 
 		step.datasource = datasource
 
-		steps = append(steps, step)
+		steps = append(steps, &step)
 
 	}
 

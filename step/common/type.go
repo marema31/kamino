@@ -8,4 +8,5 @@ import (
 // Steper Interface that will be used to run the steps
 type Steper interface {
 	Do(context.Context) error
+	Cancel()
 }

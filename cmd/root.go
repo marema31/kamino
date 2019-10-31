@@ -3,8 +3,7 @@ package cmd
 
 import (
 	"context"
-	"fmt"
-	"os"
+	"time"
 
 	"github.com/marema31/kamino/cmd/migrate"
 
@@ -12,12 +11,12 @@ import (
 )
 
 var (
-	ctx         context.Context
-	cfgFolder   string
-	dryRun      bool
-	quiet       bool
-	environment string
-	instances   []string
+	ctx       context.Context
+	cfgFolder string
+	dryRun    bool
+	quiet     bool
+	//TODO: use this for the subcommands
+	tags []string
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -42,12 +41,10 @@ var rootCmd = &cobra.Command{
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute(c context.Context) {
-	ctx = c //Store the context for all sub-command definition
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+func Execute(c context.Context) error {
+	ctx = c                      //Store the context for all sub-command definition
+	time.Sleep(60 * time.Second) //TODO: remove after cancellation
+	return rootCmd.Execute()
 }
 
 func init() {
@@ -56,11 +53,10 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	rootCmd.PersistentFlags().StringVarP(&cfgFolder, "config", "c", "", "config folder (default is $HOME/.kamino.d)")
+	rootCmd.PersistentFlags().StringVarP(&cfgFolder, "config", "c", "", "config folder")
 	rootCmd.PersistentFlags().BoolVarP(&dryRun, "dry-run", "d", false, "list action only do not do them")
 	rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "do not print to screen")
-	rootCmd.PersistentFlags().StringVarP(&environment, "environment", "e", "", "database environment (by default the only existing environment)")
-	rootCmd.PersistentFlags().StringSliceVarP(&instances, "instances", "i", []string{}, "comma separated list of instance (default is all the instances)")
+	rootCmd.PersistentFlags().StringSliceVarP(&tags, "tags", "T", []string{}, "comma separated list of tags to filter the calculated impacted datasources")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

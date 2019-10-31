@@ -2,7 +2,7 @@
 priority: 3
 name: "createschema"
 type: "sql"
-template: "templates/createschema_postgres.sql.tmpl"
+script: "templates/createschema_postgres.sql.tmpl"
 tags: 
   - "pokemon"
 admin: "true"

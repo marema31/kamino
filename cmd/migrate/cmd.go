@@ -2,22 +2,20 @@ package migrate
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/spf13/cobra"
 )
 
 var admin, user bool
-var ctx context.Context
+
+//TODO:var ctx context.Context
 
 //AddCommands adds all subcommands to RootCmd
 func AddCommands(c context.Context, cmd *cobra.Command) {
-	ctx = c //Save context only to make it accessible to sub-command
+	//TODO:	ctx = c //Save context only to make it accessible to sub-command
 	cmd.AddCommand(
 		NewMigrateCommand(),
 	)
-	//TODO: remove this line when ctx will be used elsewhere
-	fmt.Print(ctx)
 }
 
 //NewMigrateCommand declare the migration sub commands

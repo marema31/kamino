@@ -51,7 +51,7 @@ func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.D
 		step.folder = renderedFolder.String()
 		//TODO: folder not found
 
-		steps = append(steps, step)
+		steps = append(steps, &step)
 
 	}
 

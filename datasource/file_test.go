@@ -12,7 +12,7 @@ func setupFileTest() *Datasources {
 }
 func TestLoadCsvEngine(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good/datasources", "csv")
+	ds, err := dss.load("testdata/good", "csv")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -24,7 +24,7 @@ func TestLoadCsvEngine(t *testing.T) {
 	if ds.engine != CSV {
 		t.Errorf("Should be recognized as CSV datasource but was recognized as '%s'", EngineToString(ds.GetEngine()))
 	}
-	if ds.filePath != "tmp/file.csv" {
+	if ds.filePath != "testdata/good/tmp/file.csv" {
 		t.Errorf("The file path is '%s'", ds.filePath)
 	}
 
@@ -43,7 +43,7 @@ func TestLoadCsvEngine(t *testing.T) {
 
 func TestLoadZipCsvEngine(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good/datasources", "zipcsv")
+	ds, err := dss.load("testdata/good", "zipcsv")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -55,7 +55,7 @@ func TestLoadZipCsvEngine(t *testing.T) {
 	if ds.engine != CSV {
 		t.Errorf("Should be recognized as CSV datasource but was recognized as '%s'", EngineToString(ds.GetEngine()))
 	}
-	if ds.filePath != "tmp/file.zip" {
+	if ds.filePath != "testdata/good/tmp/file.zip" {
 		t.Errorf("The file path is '%s'", ds.filePath)
 	}
 
@@ -74,7 +74,7 @@ func TestLoadZipCsvEngine(t *testing.T) {
 
 func TestLoadGZipCsvEngine(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good/datasources", "gzipcsv")
+	ds, err := dss.load("testdata/good", "gzipcsv")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -86,7 +86,7 @@ func TestLoadGZipCsvEngine(t *testing.T) {
 	if ds.engine != CSV {
 		t.Errorf("Should be recognized as CSV datasource but was recognized as '%s'", EngineToString(ds.GetEngine()))
 	}
-	if ds.filePath != "tmp/file.csv.gz" {
+	if ds.filePath != "testdata/good/tmp/file.csv.gz" {
 		t.Errorf("The file path is '%s'", ds.filePath)
 	}
 
@@ -105,7 +105,7 @@ func TestLoadGZipCsvEngine(t *testing.T) {
 
 func TestLoadYamlEngine(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good/datasources", "yaml")
+	ds, err := dss.load("testdata/good", "yaml")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -117,7 +117,7 @@ func TestLoadYamlEngine(t *testing.T) {
 	if ds.engine != YAML {
 		t.Errorf("Should be recognized as CSV datasource but was recognized as '%s'", EngineToString(ds.GetEngine()))
 	}
-	if ds.filePath != "tmp/file.yaml" {
+	if ds.filePath != "testdata/good/tmp/file.yaml" {
 		t.Errorf("The file path is '%s'", ds.filePath)
 	}
 
@@ -136,7 +136,7 @@ func TestLoadYamlEngine(t *testing.T) {
 
 func TestLoadJsonEngine(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good/datasources", "json")
+	ds, err := dss.load("testdata/good", "json")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -148,7 +148,7 @@ func TestLoadJsonEngine(t *testing.T) {
 	if ds.engine != JSON {
 		t.Errorf("Should be recognized as JSON datasource but was recognized as '%s'", EngineToString(ds.GetEngine()))
 	}
-	if ds.filePath != "tmp/file.json" {
+	if ds.filePath != "testdata/good/tmp/file.json" {
 		t.Errorf("The file path is '%s'", ds.filePath)
 	}
 
@@ -167,7 +167,7 @@ func TestLoadJsonEngine(t *testing.T) {
 
 func TestLoadStdio(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good/datasources", "stdio")
+	ds, err := dss.load("testdata/good", "stdio")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -179,7 +179,7 @@ func TestLoadStdio(t *testing.T) {
 
 func TestLoadURL(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good/datasources", "url")
+	ds, err := dss.load("testdata/good", "url")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -191,7 +191,7 @@ func TestLoadURL(t *testing.T) {
 
 func TestLoadInline(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good/datasources", "inline")
+	ds, err := dss.load("testdata/good", "inline")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -203,7 +203,7 @@ func TestLoadInline(t *testing.T) {
 
 func TestLoadNoPath(t *testing.T) {
 	dss := setupFileTest()
-	_, err := dss.load("testdata/fail/datasources", "nopath")
+	_, err := dss.load("testdata/fail", "nopath")
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

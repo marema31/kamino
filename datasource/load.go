@@ -3,7 +3,6 @@ package datasource
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"path/filepath"
 	"strings"
 
@@ -11,12 +10,12 @@ import (
 )
 
 //LoadAll Lookup the provided folder for datasource configuration files
-func (dss *Datasources) LoadAll(configPath string) error {
-	dsfolder := filepath.Join(configPath, "datasources")
+func (dss *Datasources) LoadAll(recipePath string) error {
+	dsfolder := filepath.Join(recipePath, "datasources")
 
 	files, err := ioutil.ReadDir(dsfolder)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	for _, file := range files {
@@ -24,7 +23,7 @@ func (dss *Datasources) LoadAll(configPath string) error {
 			ext := filepath.Ext(file.Name())
 			if ext == ".yml" || ext == ".yaml" || ext == ".json" || ext == ".toml" {
 				name := strings.TrimSuffix(file.Name(), ext)
-				ds, err := dss.load(dsfolder, name)
+				ds, err := dss.load(recipePath, name)
 				if err != nil {
 					return err
 				}
@@ -32,6 +31,10 @@ func (dss *Datasources) LoadAll(configPath string) error {
 
 			}
 		}
+	}
+
+	if len(dss.datasources) == 0 {
+		return fmt.Errorf("no datasources configuration files found in %s", dsfolder)
 	}
 	// Insert the datasource name in all entry of the dictionnary
 	// that correspond to one tag of the tag list
@@ -49,11 +52,12 @@ func (dss *Datasources) LoadAll(configPath string) error {
 	return nil
 }
 
-func (dss *Datasources) load(path string, filename string) (Datasource, error) {
+func (dss *Datasources) load(recipePath string, filename string) (Datasource, error) {
 	v := viper.New()
 
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
-	v.AddConfigPath(path)
+	dsfolder := filepath.Join(recipePath, "datasources")
+	v.AddConfigPath(dsfolder)
 	err := v.ReadInConfig()
 	if err != nil {
 		return Datasource{}, err
@@ -73,7 +77,7 @@ func (dss *Datasources) load(path string, filename string) (Datasource, error) {
 	case Mysql, Postgres:
 		return loadDatabaseDatasource(filename, v, e)
 	case JSON, YAML, CSV:
-		return loadFileDatasource(filename, v, e)
+		return loadFileDatasource(recipePath, filename, v, e)
 	}
 	return Datasource{}, fmt.Errorf("does not how to manage %s datasource engine", engine)
 }
