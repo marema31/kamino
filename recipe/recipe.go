@@ -66,14 +66,3 @@ func (ck *Cookbook) Statistics() (map[string][]int, int) {
 	}
 	return result, total
 }
-
-/*TODO:
-
-Gestion des logs se baser sur Packer par exemple:
-https://github.com/hashicorp/packer/blob/3d5af49bf32aca277c573af2e454ee5ed84ef505/log.go#L17
-
-Ou voir a utiliser https://github.com/hashicorp/go-hclog
-
-Pas besoin d'utiliser un channel dans ce cas là, un mutex pour le screen est suffisant (on peut aussi utiliser channel et une goroutine dédiée)
-
-*/

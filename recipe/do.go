@@ -12,8 +12,10 @@ var mu sync.Mutex
 var hadError bool
 
 //watchdog will run has a parallel goroutine until the context is cancelled or the Do sub push to the end channel
-func stepWatchdog(ctxRecipe context.Context, end chan bool, step common.Steper) {
+func stepWatchdog(ctxRecipe context.Context, wgWatchdog *sync.WaitGroup, end chan bool, step common.Steper) {
 	defer close(end)
+	defer wgWatchdog.Done()
+
 	select {
 	case <-ctxRecipe.Done(): // the context has been cancelled
 		//Step aborted, revert the action of the step if we can
@@ -25,10 +27,11 @@ func stepWatchdog(ctxRecipe context.Context, end chan bool, step common.Steper) 
 }
 
 //stepExecutor will execute the step, cancel the context and raise the global fi
-func stepExecutor(ctxRecipe context.Context, step common.Steper, wgStep *sync.WaitGroup, cancelRecipe func(), end chan bool, hadError chan bool) {
+func stepExecutor(ctxRecipe context.Context, step common.Steper, wgStep *sync.WaitGroup, wgWatchdog *sync.WaitGroup, cancelRecipe func(), end chan bool, hadError chan bool) {
 	defer wgStep.Done()
 
-	go stepWatchdog(ctxRecipe, end, step)
+	wgWatchdog.Add(1)
+	go stepWatchdog(ctxRecipe, wgWatchdog, end, step)
 
 	err := step.Do(ctxRecipe)
 	if err != nil {
@@ -58,8 +61,11 @@ func (ck *Cookbook) doOneRecipe(ctx context.Context, wgRecipe *sync.WaitGroup, r
 	for _, priority := range priorities {
 		nbSteps := len(ck.Recipes[rname].steps[uint(priority)])
 
-		//Waitgroup for this priority level
+		//Waitgroup for steps of this priority level
 		var wgStep sync.WaitGroup
+
+		//Waitgroup for watchdog of this priority level
+		var wgWatchdog sync.WaitGroup
 
 		//Channel to allow stepExecutor to inform if the step finished in error
 		recipeHadError := make(chan bool, nbSteps)
@@ -72,13 +78,18 @@ func (ck *Cookbook) doOneRecipe(ctx context.Context, wgRecipe *sync.WaitGroup, r
 			end := make(chan bool, 1)
 			ends = append(ends, end)
 
-			go stepExecutor(ctxRecipe, step, &wgStep, cancelRecipe, end, recipeHadError)
+			go stepExecutor(ctxRecipe, step, &wgStep, &wgWatchdog, cancelRecipe, end, recipeHadError)
 		}
+
+		//Wait for all step/stepExecutor to finish
 		wgStep.Wait()
 		// All the step of this priority has finished (completed or cancelled), it's time to stop the watchdogs
 		for _, end := range ends {
 			end <- true
 		}
+
+		//Wait for all the watchdog to finish
+		wgWatchdog.Wait()
 
 		//Since there is one end channel by stepExecutor
 		//Each stepExecutor will send only one boolean to the recipeHadError channel
@@ -108,15 +119,19 @@ receive an cancelation that they could use to rollback by example and all the st
 with a priority level not already launched will not be runned.
 */
 func (ck *Cookbook) Do(ctx context.Context) bool {
+	// Waitgroup for the recipes
 	var wgRecipe sync.WaitGroup
+
 	for rname := range ck.Recipes {
 		wgRecipe.Add(1)
 		go ck.doOneRecipe(ctx, &wgRecipe, rname)
 	}
 	wgRecipe.Wait()
+	//We wont treat the event before all recipe goroutine are finished
 	select {
-	case <-ctx.Done(): // the context has been cancelled we want the shell return code to be not ok
-		return true
+	case <-ctx.Done(): // the context has been cancelled before, since all the goroutine has also be notified
+		//  via context inheritance, we can afford to take this event in account after their termination (via the wgRecipe.Wait)
+		return true // we want the shell return code to be not ok
 
 	default: // Make the poll to ctx.Done() non blocking
 		// Do nothing

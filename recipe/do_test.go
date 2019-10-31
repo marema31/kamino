@@ -102,6 +102,9 @@ func TestRecipeDoStepError(t *testing.T) {
 		}
 	}
 
+	// Way to verify the status of all steps in synthetic way (only for debug)
+	//debug := make([]string, 0, 5)
+	//debug = append(debug, fmt.Sprintf("\n%11v | %6v | %10v | %6v", "name", "Called", "Cancelled", "Error"))
 	for _, step := range sf.Steps["steperror"] {
 		if step.Priority < 5 && step.Canceled {
 			t.Errorf("A step with priority less than 5 of steperror was cancelled")
@@ -109,7 +112,10 @@ func TestRecipeDoStepError(t *testing.T) {
 		if step.Priority < 5 && !step.Called {
 			t.Errorf("A step with priority less than 5 of steperror was not called")
 		}
-		if step.Priority == 5 && !step.Canceled {
+		/*		if step.Priority == 5 {
+					debug = append(debug, fmt.Sprintf("%11v | %6v | %10v | %6v", step.name, step.Called, step.Canceled, step.HasError))
+				}
+		*/if step.Priority == 5 && !step.Canceled {
 			t.Errorf("A step with priority 5 of steperror was not cancelled")
 		}
 		if step.Priority == 5 && !step.Called {
@@ -122,4 +128,6 @@ func TestRecipeDoStepError(t *testing.T) {
 			t.Errorf("A step with priority more than 5 of steperror was cancelled")
 		}
 	}
+
+	//t.Fatal(strings.Join(debug, "\n"))
 }
