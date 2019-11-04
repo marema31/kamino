@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/mockdatasource"
 	"github.com/marema31/kamino/provider/database"
@@ -36,12 +37,14 @@ func TestPostgresOk(t *testing.T) {
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Postgres, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "insert")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
@@ -56,27 +59,27 @@ func TestPostgresOk(t *testing.T) {
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
 
-	_, err = loader.Load()
+	_, err = loader.Load(log)
 	if err == nil {
 		t.Errorf("Load should return error ")
 	}
 
-	err = saver.Close()
+	err = saver.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}
@@ -117,13 +120,17 @@ func TestPostgresTransactionOk(t *testing.T) {
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectCommit()
 	dmock.ExpectClose()
+	dmock.ExpectClose() // sqlmock and close/defer have erratic behavior
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Postgres, Database: "blog", Transaction: true}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "insert")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
@@ -138,27 +145,27 @@ func TestPostgresTransactionOk(t *testing.T) {
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
 
-	_, err = loader.Load()
+	_, err = loader.Load(log)
 	if err == nil {
 		t.Errorf("Load should return error ")
 	}
 
-	err = saver.Close()
+	err = saver.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}
@@ -198,12 +205,14 @@ func TestPostgresSchemaOk(t *testing.T) {
 	dmock.ExpectExec("INSERT INTO greatbob.dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Postgres, Database: "blog", Schema: "greatbob"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "insert")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
@@ -218,27 +227,27 @@ func TestPostgresSchemaOk(t *testing.T) {
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
 
-	_, err = loader.Load()
+	_, err = loader.Load(log)
 	if err == nil {
 		t.Errorf("Load should return error ")
 	}
 
-	err = saver.Close()
+	err = saver.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}

@@ -14,6 +14,7 @@ import (
 	"context"
 	"sort"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/step"
 	"github.com/marema31/kamino/step/common"
 )
@@ -21,8 +22,8 @@ import (
 // Cooker interface for cookbook testing
 type Cooker interface {
 	Statistics() (map[string][]int, int)
-	Load(context.Context, string, []string, []string, []string) error
-	Do(context.Context) bool
+	Load(context.Context, *logrus.Entry, string, []string, []string, []string) error
+	Do(context.Context, *logrus.Entry) bool
 }
 
 type recipe struct {

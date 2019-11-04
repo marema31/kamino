@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/provider/types"
 )
 
@@ -12,11 +13,14 @@ type OnlyFilter struct {
 	columns []string
 }
 
-func newOnlyFilter(ctx context.Context, AParam []string) (Filter, error) {
+func newOnlyFilter(ctx context.Context, log *logrus.Entry, AParam []string) (Filter, error) {
+	logFilter := log.WithField("filter", "only")
 	if AParam == nil {
+		logFilter.Error("Missing AParameters")
 		return nil, fmt.Errorf("no parameter to filter only")
 	}
 	if len(AParam) == 0 {
+		logFilter.Error("Refuse to filter everything")
 		return nil, fmt.Errorf("filter only refuse to filter everything")
 	}
 

@@ -8,6 +8,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/types"
 )
@@ -22,13 +23,18 @@ type KaminoYAMLLoader struct {
 }
 
 //NewLoader open the encoding process on provider file, read the whole file, unMarshal it and return a Loader compatible object
-func NewLoader(ctx context.Context, ds datasource.Datasourcer) (*KaminoYAMLLoader, error) {
-	file, err := ds.OpenReadFile()
+func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer) (*KaminoYAMLLoader, error) {
+	logFile := log.WithField("datasource", ds.GetName())
+	file, err := ds.OpenReadFile(logFile)
 	if err != nil {
 		return nil, err
 	}
+
+	logFile.Debug("Reading the YAML file to be able to parse it")
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
+		logFile.Error("Reading the JSON file failed")
+		logFile.Error(err)
 		return nil, err
 	}
 
@@ -38,6 +44,8 @@ func NewLoader(ctx context.Context, ds datasource.Datasourcer) (*KaminoYAMLLoade
 
 	err = yaml.Unmarshal([]byte(byteValue), &k.content)
 	if err != nil {
+		logFile.Error("Parsing the YAML file failed")
+		logFile.Error(err)
 		return nil, err
 	}
 
@@ -51,8 +59,10 @@ func (yl *KaminoYAMLLoader) Next() bool {
 }
 
 //Load reads the next record and return it
-func (yl *KaminoYAMLLoader) Load() (types.Record, error) {
+func (yl *KaminoYAMLLoader) Load(log *logrus.Entry) (types.Record, error) {
+	logFile := log.WithField("datasource", yl.ds.GetName())
 	if yl.currentRow >= len(yl.content) {
+		logFile.Error("no more data to read")
 		return nil, fmt.Errorf("no more data to read")
 	}
 
@@ -63,8 +73,9 @@ func (yl *KaminoYAMLLoader) Load() (types.Record, error) {
 }
 
 //Close closes the datasource
-func (yl *KaminoYAMLLoader) Close() error {
-	return yl.ds.CloseFile()
+func (yl *KaminoYAMLLoader) Close(log *logrus.Entry) error {
+	logFile := log.WithField("datasource", yl.ds.GetName())
+	return yl.ds.CloseFile(logFile)
 }
 
 //Name give the name of the destination

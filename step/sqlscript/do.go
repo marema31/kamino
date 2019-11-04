@@ -2,17 +2,21 @@ package sqlscript
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/Sirupsen/logrus"
 )
 
 //Cancel manage the cancellation of the step
-func (st *Step) Cancel() {
-	fmt.Printf("Will cancel sqlscript for %s\n", st.Name)
+func (st *Step) Cancel(log *logrus.Entry) {
+	logStep := log.WithField("name", st.Name).WithField("type", "sql")
+	//TODO: to be implemented
+	logStep.Info("Cancelling step")
 }
 
 //Do manage the runnning of the step
-func (st *Step) Do(ctx context.Context) error {
+func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
+	logStep := log.WithField("name", st.Name).WithField("type", "sql")
 	//TODO: to be implemented
-	fmt.Printf("Will do sqlscript for %s\n", st.Name)
+	logStep.Debug("Beginning step")
 	return nil
 }

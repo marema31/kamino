@@ -4,13 +4,14 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/mockdatasource"
 	"github.com/marema31/kamino/step/migration"
 	"github.com/spf13/viper"
 )
 
-func setupLoad(path string, filename string) (context.Context, datasource.Datasourcers, *viper.Viper, error) {
+func setupLoad(path string, filename string) (context.Context, *logrus.Entry, datasource.Datasourcers, *viper.Viper, error) {
 	dss := mockdatasource.New()
 	ds1 := mockdatasource.MockDatasource{Name: "ds1", Database: "db1", User: "user1", Tags: []string{"tag1a", "tag1b"}}
 	ds2 := mockdatasource.MockDatasource{Name: "ds2", Database: "db2", User: "user2", Tags: []string{"tag2"}}
@@ -22,16 +23,20 @@ func setupLoad(path string, filename string) (context.Context, datasource.Dataso
 	v.AddConfigPath(path)
 	err := v.ReadInConfig()
 	ctx := context.Background()
-	return ctx, dss, v, err
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	return ctx, log, dss, v, err
 }
 
 func TestMigrationLoadOk(t *testing.T) {
-	ctx, dss, v, err := setupLoad("testdata/good/steps/", "migrationok")
+	ctx, log, dss, v, err := setupLoad("testdata/good/steps/", "migrationok")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := migration.Load(ctx, "migrationok", v, dss)
+	priority, steps, err := migration.Load(ctx, log, "migrationok", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -53,20 +58,20 @@ func TestMigrationLoadOk(t *testing.T) {
 		t.Fatalf("The first step should be a migration step")
 	}
 
-	if s.Name != "namemigrationok" {
-		t.Errorf("The name of the first step should be namemigrationok, it was: %v", s.Name)
+	if s.Name != "namemigrationok:0" {
+		t.Errorf("The name of the first step should be namemigrationok:0, it was: %v", s.Name)
 	}
 
 	//Using black box strategy, we cannot test the others field members, they could be tested only via the Do test
 }
 
 func TestMigrationLoadNoTag(t *testing.T) {
-	ctx, dss, v, err := setupLoad("testdata/good/steps/", "notags")
+	ctx, log, dss, v, err := setupLoad("testdata/good/steps/", "notags")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := migration.Load(ctx, "notags", v, dss)
+	priority, steps, err := migration.Load(ctx, log, "notags", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -81,33 +86,33 @@ func TestMigrationLoadNoTag(t *testing.T) {
 }
 
 func TestMigrationLoadNoFolder(t *testing.T) {
-	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "nofolder")
+	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "nofolder")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = migration.Load(ctx, "nofolder", v, dss)
+	_, _, err = migration.Load(ctx, log, "nofolder", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 }
 
 func TestMigrationLoadDFolderTemplateWrong(t *testing.T) {
-	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "wrongfolder")
+	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "wrongfolder")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = migration.Load(ctx, "wrongfolder", v, dss)
+	_, _, err = migration.Load(ctx, log, "wrongfolder", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 }
 
 func TestMigrationLoadWrongEngine(t *testing.T) {
-	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "wrongengine")
+	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "wrongengine")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = migration.Load(ctx, "wrongengine", v, dss)
+	_, _, err = migration.Load(ctx, log, "wrongengine", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

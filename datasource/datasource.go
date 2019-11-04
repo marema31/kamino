@@ -7,16 +7,18 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/Sirupsen/logrus"
 )
 
 //Datasourcer interface for allowing mocking of Datasource object
 type Datasourcer interface {
 	FillTmplValues() TmplValues
-	OpenDatabase(bool, bool) (*sql.DB, error)
-	OpenReadFile() (io.ReadCloser, error)
-	OpenWriteFile() (io.WriteCloser, error)
-	ResetFile() error
-	CloseFile() error
+	OpenDatabase(*logrus.Entry, bool, bool) (*sql.DB, error)
+	OpenReadFile(*logrus.Entry) (io.ReadCloser, error)
+	OpenWriteFile(*logrus.Entry) (io.WriteCloser, error)
+	ResetFile(*logrus.Entry) error
+	CloseFile(*logrus.Entry) error
 	GetName() string
 	GetEngine() Engine
 }

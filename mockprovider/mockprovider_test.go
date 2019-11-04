@@ -5,20 +5,23 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/mockdatasource"
 	"github.com/marema31/kamino/mockprovider"
 )
 
 func TestOk(t *testing.T) {
 	pf := &mockprovider.MockProvider{}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	saver, err := pf.NewSaver(context.Background(), &mockdatasource.MockDatasource{}, "", "", "")
+	saver, err := pf.NewSaver(context.Background(), log, &mockdatasource.MockDatasource{}, "", "", "")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
 	mockedSaver := pf.Savers[0]
 
-	loader, err := pf.NewLoader(context.Background(), &mockdatasource.MockDatasource{}, "", "")
+	loader, err := pf.NewLoader(context.Background(), log, &mockdatasource.MockDatasource{}, "", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
@@ -31,12 +34,12 @@ func TestOk(t *testing.T) {
 	mockedLoader.MockName = "myload"
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
@@ -49,7 +52,7 @@ func TestOk(t *testing.T) {
 		}
 	}
 
-	_, err = loader.Load()
+	_, err = loader.Load(log)
 	if err == nil {
 		t.Fatalf("Load should return error")
 	}
@@ -62,12 +65,12 @@ func TestOk(t *testing.T) {
 		t.Errorf("Loader name function does not return the correct name %s", loader.Name())
 	}
 
-	err = saver.Close()
+	err = saver.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
@@ -76,58 +79,60 @@ func TestOk(t *testing.T) {
 
 func TestError(t *testing.T) {
 	pf := &mockprovider.MockProvider{}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
 	pf.ErrorLoader = fmt.Errorf("Fake error")
-	saver, err := pf.NewSaver(context.Background(), &mockdatasource.MockDatasource{}, "", "", "")
+	saver, err := pf.NewSaver(context.Background(), log, &mockdatasource.MockDatasource{}, "", "", "")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
 
 	pf.ErrorSaver = fmt.Errorf("Fake error")
-	_, err = pf.NewSaver(context.Background(), &mockdatasource.MockDatasource{}, "", "", "")
+	_, err = pf.NewSaver(context.Background(), log, &mockdatasource.MockDatasource{}, "", "", "")
 	if err == nil {
 		t.Fatalf("NewSaver should return error")
 	}
 	mockedSaver := pf.Savers[0]
 
 	pf.ErrorLoader = nil
-	loader, err := pf.NewLoader(context.Background(), &mockdatasource.MockDatasource{}, "", "")
+	loader, err := pf.NewLoader(context.Background(), log, &mockdatasource.MockDatasource{}, "", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
 	mockedLoader := pf.Loader
 
 	pf.ErrorLoader = fmt.Errorf("Fake error")
-	_, err = pf.NewLoader(context.Background(), &mockdatasource.MockDatasource{}, "", "")
+	_, err = pf.NewLoader(context.Background(), log, &mockdatasource.MockDatasource{}, "", "")
 	if err == nil {
 		t.Fatalf("NewLoader should return error")
 	}
 
 	mockedSaver.ErrorReset = fmt.Errorf("Fake error")
-	err = saver.Close()
+	err = saver.Close(log)
 	if err != nil {
 		t.Fatalf("Saver close should not return error and returned '%v'", err)
 	}
 	mockedSaver.ErrorClose = fmt.Errorf("Fake error")
 
-	err = saver.Close()
+	err = saver.Close(log)
 	if err == nil {
 		t.Fatalf("Saver close should return error")
 	}
 	mockedSaver.ErrorReset = nil
-	err = saver.Reset()
+	err = saver.Reset(log)
 	if err != nil {
 		t.Fatalf("Saver Resetshould not return error and returned '%v'", err)
 	}
 	mockedSaver.ErrorReset = fmt.Errorf("Fake error")
 
-	err = saver.Reset()
+	err = saver.Reset(log)
 	if err == nil {
 		t.Fatalf("Saver Reset should return error")
 	}
 
 	mockedLoader.ErrorClose = fmt.Errorf("fake error")
-	err = loader.Close()
+	err = loader.Close(log)
 	if err == nil {
 		t.Fatalf("Loader close should return error")
 	}

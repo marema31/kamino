@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/mockdatasource"
 	"github.com/marema31/kamino/provider/database"
@@ -36,8 +37,11 @@ func TestOnlyIfEmptyOk(t *testing.T) {
 	dmockfull.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmockfull.ExpectClose()
 	destfull := mockdatasource.MockDatasource{MockedDb: ddbfull, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
 
-	saverfull, err := database.NewSaver(context.Background(), &destfull, "dtable", "id", "onlyIfEmpty")
+	saverfull, err := database.NewSaver(context.Background(), log, &destfull, "dtable", "id", "onlyIfEmpty")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
@@ -54,40 +58,40 @@ func TestOnlyIfEmptyOk(t *testing.T) {
 	dmockempty.ExpectClose()
 	destempty := mockdatasource.MockDatasource{MockedDb: ddbempty, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
-	saverempty, err := database.NewSaver(context.Background(), &destempty, "dtable", "id", "onlyIfEmpty")
+	saverempty, err := database.NewSaver(context.Background(), log, &destempty, "dtable", "id", "onlyIfEmpty")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saverempty.Save(record); err != nil {
+		if err = saverempty.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
-		if err = saverfull.Save(record); err != nil {
+		if err = saverfull.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
 
-	err = saverfull.Close()
+	err = saverfull.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = saverempty.Close()
+	err = saverempty.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}
@@ -130,33 +134,35 @@ func TestInsertOk(t *testing.T) {
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "insert")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
 
-	err = saver.Close()
+	err = saver.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}
@@ -197,33 +203,35 @@ func TestTruncateOk(t *testing.T) {
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "truncate")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "truncate")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
 
-	err = saver.Close()
+	err = saver.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}
@@ -260,39 +268,42 @@ func TestTruncateTransactionOk(t *testing.T) {
 	dmock.ExpectBegin()
 	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
-	dmock.ExpectExec("RUNCATE TABLE dtable").WillReturnResult(sqlmock.NewResult(1, 1))
+	dmock.ExpectExec("TRUNCATE TABLE dtable").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectCommit()
 	dmock.ExpectClose()
+	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "truncate")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "truncate")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
 
-	err = saver.Close()
+	err = saver.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}
@@ -339,33 +350,35 @@ func TestUpdateOk(t *testing.T) {
 	dmock.ExpectExec("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "update")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "update")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
 
-	err = saver.Close()
+	err = saver.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}
@@ -411,33 +424,35 @@ func TestReplaceOk(t *testing.T) {
 	dmock.ExpectExec("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "replace")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "replace")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
 
-	err = saver.Close()
+	err = saver.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}
@@ -488,33 +503,35 @@ func TestExactCopyOk(t *testing.T) {
 	dmock.ExpectExec("DELETE from dtable WHERE id=.+").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "exactCopy")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "exactCopy")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
 
-	err = saver.Close()
+	err = saver.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}
@@ -567,33 +584,35 @@ func TestExactCopyTransactionOk(t *testing.T) {
 	dmock.ExpectCommit()
 	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "exactCopy")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "exactCopy")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
 
-	err = saver.Close()
+	err = saver.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}

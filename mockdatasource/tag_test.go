@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/mockdatasource"
 )
@@ -35,7 +36,10 @@ func teardownLookupDatastore(dss *mockdatasource.MockDatasources) {
 }
 
 func helperTestLookup(t *testing.T, dss *mockdatasource.MockDatasources, tags []string, dsTypes []datasource.Type, engines []datasource.Engine, awaited []string) {
-	result := dss.Lookup(tags, dsTypes, engines)
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+
+	result := dss.Lookup(log, tags, dsTypes, engines)
 
 	sort.Strings(awaited)
 	aw := strings.Join(awaited, " ")

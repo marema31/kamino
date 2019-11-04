@@ -3,8 +3,8 @@ package sync
 import (
 	"context"
 	"fmt"
-	"log"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
 
 	"github.com/marema31/kamino/datasource"
@@ -39,61 +39,68 @@ type FilterConfig struct {
 	Type        string
 }
 
-func getDatasource(dss datasource.Datasourcers, tags []string, engines []string, dsTypes []string) ([]datasource.Datasourcer, error) {
+func getDatasource(log *logrus.Entry, dss datasource.Datasourcers, tags []string, engines []string, dsTypes []string) ([]datasource.Datasourcer, error) {
 	if len(tags) == 0 {
 		tags = []string{""}
 	}
 
 	e, err := datasource.StringsToEngines(engines)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 
 	t, err := datasource.StringsToTypes(dsTypes)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
-	return dss.Lookup(tags, t, e), nil
+	return dss.Lookup(log, tags, t, e), nil
 }
 
-func getLoader(ctx context.Context, name string, objectType string, v *viper.Viper, dss datasource.Datasourcers, prov provider.Provider) (provider.Loader, error) {
+func getLoader(ctx context.Context, log *logrus.Entry, objectType string, v *viper.Viper, dss datasource.Datasourcers, prov provider.Provider) (provider.Loader, error) {
 	var source SourceConfig
 	err := v.Unmarshal(&source)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 
-	datasources, err := getDatasource(dss, source.Tags, source.Engines, source.Types)
+	datasources, err := getDatasource(log, dss, source.Tags, source.Engines, source.Types)
 	if err != nil {
 		return nil, err
 	}
 	if len(datasources) == 0 {
-		return nil, fmt.Errorf("no %s found for synchronization %s", objectType, name)
+		return nil, fmt.Errorf("no %s found", objectType)
 	}
 	if len(datasources) != 1 {
-		return nil, fmt.Errorf("too many %ss found for synchronization %s", objectType, name)
+		return nil, fmt.Errorf("too many %ss found", objectType)
 	}
-	return prov.NewLoader(ctx, datasources[0], source.Table, source.Where)
+	log.Debugf("Found 1 datasource for %s", objectType)
+
+	log.Debugf("Creating loader instance for %s", objectType)
+	return prov.NewLoader(ctx, log, datasources[0], source.Table, source.Where)
 }
 
-func getSavers(ctx context.Context, name string, objectType string, v *viper.Viper, dss datasource.Datasourcers, prov provider.Provider) ([]provider.Saver, error) {
+func getSavers(ctx context.Context, log *logrus.Entry, objectType string, v *viper.Viper, dss datasource.Datasourcers, prov provider.Provider) ([]provider.Saver, error) {
 	var dests []DestinationConfig
 	savers := make([]provider.Saver, 0)
 
 	err := v.UnmarshalKey(objectType, &dests)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 		return nil, err
 	}
 
 	for _, dest := range dests {
-		datasources, err := getDatasource(dss, dest.Tags, dest.Engines, dest.Types)
+		datasources, err := getDatasource(log, dss, dest.Tags, dest.Engines, dest.Types)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, datasource := range datasources {
-			saver, err := prov.NewSaver(ctx, datasource, dest.Table, dest.Key, dest.Mode)
+			log.Debugf("Creating saver instances for %s", objectType)
+			saver, err := prov.NewSaver(ctx, log, datasource, dest.Table, dest.Key, dest.Mode)
 			if err != nil {
 				return nil, err
 			}
@@ -101,64 +108,70 @@ func getSavers(ctx context.Context, name string, objectType string, v *viper.Vip
 		}
 	}
 	if len(savers) == 0 {
-		return nil, fmt.Errorf("no %s found for synchronization %s", objectType, name)
+		log.Errorf("No %s found", objectType)
+		return nil, fmt.Errorf("no %s found", objectType)
 	}
+	log.Debugf("Found %d %s", len(savers), objectType)
 	return savers, nil
 }
 
-func getFilters(ctx context.Context, v *viper.Viper, sync string) ([]filter.Filter, error) {
+func getFilters(ctx context.Context, log *logrus.Entry, v *viper.Viper) ([]filter.Filter, error) {
 	fcs := make([]FilterConfig, 0)
 	filters := make([]filter.Filter, 0)
 	err := v.UnmarshalKey("filters", &fcs)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 		return nil, err
 	}
 
 	for _, fc := range fcs {
-		f, err := filter.NewFilter(ctx, fc.Type, fc.Aparameters, fc.Mparameters)
+		f, err := filter.NewFilter(ctx, log, fc.Type, fc.Aparameters, fc.Mparameters)
 		if err != nil {
 			return nil, err
 		}
 		filters = append(filters, f)
 
 	}
+	log.Debugf("Found %d filters", len(filters))
 	return filters, nil
 }
 
 //Load data from step file using its viper representation a return priority and list of steps
-func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.Datasourcers, provider provider.Provider) (priority uint, steps []common.Steper, err error) {
+func Load(ctx context.Context, log *logrus.Entry, filename string, v *viper.Viper, dss datasource.Datasourcers, provider provider.Provider) (priority uint, steps []common.Steper, err error) {
 	var step Step
 
 	priority = v.GetUint("priority")
 
 	name := v.GetString("name")
+	logStep := log.WithField("name", name).WithField("type", "shell")
 	step.Name = name
 
 	if !v.IsSet("source") {
-		return 0, nil, fmt.Errorf("synchronization %s does not have a source definition", name)
+		logStep.Error("No source provided")
+		return 0, nil, fmt.Errorf("no source definition")
 	}
 	if !v.IsSet("destinations") {
-		return 0, nil, fmt.Errorf("synchronization %s does not have a destinations definition", name)
+		logStep.Error("No destinations provided")
+		return 0, nil, fmt.Errorf("no destinations definition")
 	}
 
-	//Lookup source
+	logStep.Debug("Lookup source")
 	sub := v.Sub("source")
 
-	step.source, err = getLoader(ctx, name, "source", sub, dss, provider)
+	step.source, err = getLoader(ctx, logStep, "source", sub, dss, provider)
 	if err != nil {
 		return 0, nil, err
 	}
 
-	//Lookup cache
+	logStep.Debug("Lookup cache")
 	if v.IsSet("cache") {
 		step.cacheTTL = v.GetDuration("cache.ttl")
 		sub = v.Sub("cache")
-		step.cacheLoader, err = getLoader(ctx, name, "cache", sub, dss, provider)
+		step.cacheLoader, err = getLoader(ctx, logStep, "cache", sub, dss, provider)
 		if err != nil {
 			return 0, nil, err
 		}
-		cs, err := getSavers(ctx, name, "cache", v, dss, provider)
+		cs, err := getSavers(ctx, logStep, "cache", v, dss, provider)
 		if err != nil {
 			return 0, nil, err
 		}
@@ -166,15 +179,15 @@ func Load(ctx context.Context, filename string, v *viper.Viper, dss datasource.D
 
 	}
 
-	//Lookup filters
+	log.Debug("Lookup filters")
 	if v.IsSet("filters") {
-		step.filters, err = getFilters(ctx, v, name)
+		step.filters, err = getFilters(ctx, logStep, v)
 		if err != nil {
 			return 0, nil, err
 		}
 	}
-	//Lookup destinations
-	step.destinations, err = getSavers(ctx, name, "destinations", v, dss, provider)
+	log.Debug("Lookup destinations")
+	step.destinations, err = getSavers(ctx, logStep, "destinations", v, dss, provider)
 	if err != nil {
 		return 0, nil, err
 	}

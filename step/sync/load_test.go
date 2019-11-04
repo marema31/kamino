@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/mockdatasource"
 	"github.com/marema31/kamino/mockprovider"
@@ -11,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func setupLoad(path string, filename string) (context.Context, datasource.Datasourcers, *viper.Viper, *mockprovider.MockProvider, error) {
+func setupLoad(path string, filename string) (context.Context, *logrus.Entry, datasource.Datasourcers, *viper.Viper, *mockprovider.MockProvider, error) {
 	dss := mockdatasource.New()
 	ds1 := mockdatasource.MockDatasource{Name: "ds1", Database: "db1", User: "user1", Tags: []string{"tag1", "tag2"}}
 	ds2 := mockdatasource.MockDatasource{Name: "ds2", Database: "db2", User: "user2", Tags: []string{"tag2"}}
@@ -28,17 +29,20 @@ func setupLoad(path string, filename string) (context.Context, datasource.Dataso
 	err := v.ReadInConfig()
 	ctx := context.Background()
 	prov := &mockprovider.MockProvider{}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel) //TODO: Modify this to ease issue 1 resolution
 
-	return ctx, dss, v, prov, err
+	return ctx, log, dss, v, prov, err
 }
 
 func TestSyncLoadOk(t *testing.T) {
-	ctx, dss, v, prov, err := setupLoad("testdata/good/steps/", "syncok")
+	ctx, log, dss, v, prov, err := setupLoad("testdata/good/steps/", "syncok")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := sync.Load(ctx, "syncok", v, dss, prov)
+	priority, steps, err := sync.Load(ctx, log, "syncok", v, dss, prov)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -68,12 +72,12 @@ func TestSyncLoadOk(t *testing.T) {
 }
 
 func TestSyncNoSource(t *testing.T) {
-	ctx, dss, v, prov, err := setupLoad("testdata/fail/steps/", "nosource")
+	ctx, log, dss, v, prov, err := setupLoad("testdata/fail/steps/", "nosource")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, "nosource", v, dss, prov)
+	_, _, err = sync.Load(ctx, log, "nosource", v, dss, prov)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -81,12 +85,12 @@ func TestSyncNoSource(t *testing.T) {
 }
 
 func TestSyncNoDestination(t *testing.T) {
-	ctx, dss, v, prov, err := setupLoad("testdata/fail/steps/", "nodestination")
+	ctx, log, dss, v, prov, err := setupLoad("testdata/fail/steps/", "nodestination")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, "nodestination", v, dss, prov)
+	_, _, err = sync.Load(ctx, log, "nodestination", v, dss, prov)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -94,12 +98,12 @@ func TestSyncNoDestination(t *testing.T) {
 }
 
 func TestSyncNoSourceDatasource(t *testing.T) {
-	ctx, dss, v, prov, err := setupLoad("testdata/fail/steps/", "nosourceds")
+	ctx, log, dss, v, prov, err := setupLoad("testdata/fail/steps/", "nosourceds")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, "nosourceds", v, dss, prov)
+	_, _, err = sync.Load(ctx, log, "nosourceds", v, dss, prov)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -107,12 +111,12 @@ func TestSyncNoSourceDatasource(t *testing.T) {
 }
 
 func TestSyncNoDestinationDatasource(t *testing.T) {
-	ctx, dss, v, prov, err := setupLoad("testdata/fail/steps/", "nodestinationds")
+	ctx, log, dss, v, prov, err := setupLoad("testdata/fail/steps/", "nodestinationds")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, "nodestinationds", v, dss, prov)
+	_, _, err = sync.Load(ctx, log, "nodestinationds", v, dss, prov)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -120,12 +124,12 @@ func TestSyncNoDestinationDatasource(t *testing.T) {
 }
 
 func TestSyncTooManySourceDatasource(t *testing.T) {
-	ctx, dss, v, prov, err := setupLoad("testdata/fail/steps/", "toomanysourceds")
+	ctx, log, dss, v, prov, err := setupLoad("testdata/fail/steps/", "toomanysourceds")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, "toomanysourceds", v, dss, prov)
+	_, _, err = sync.Load(ctx, log, "toomanysourceds", v, dss, prov)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

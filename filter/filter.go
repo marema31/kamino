@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/provider/types"
 )
 
@@ -13,13 +14,14 @@ type Filter interface {
 }
 
 //NewFilter analyze the config map and return object implemnting Filter of the asked type
-func NewFilter(ctx context.Context, filterType string, AParam []string, MParam map[string]string) (Filter, error) {
+func NewFilter(ctx context.Context, log *logrus.Entry, filterType string, AParam []string, MParam map[string]string) (Filter, error) {
 	switch filterType {
 	case "replace":
-		return newReplaceFilter(ctx, MParam)
+		return newReplaceFilter(ctx, log, MParam)
 	case "only":
-		return newOnlyFilter(ctx, AParam)
+		return newOnlyFilter(ctx, log, AParam)
 	default:
+		log.Errorf("Don't know how to filter %s", filterType)
 		return nil, fmt.Errorf("don't know how to filter %s", filterType)
 	}
 }

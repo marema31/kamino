@@ -3,7 +3,7 @@ priority: 5
 name: "initialSynchronization"
 type: "sync"
 source: 
-  tag: "pokemon.initial"
+  tags: "pokemon.initial"
 destinations:
   - tags:  
     - "pokemon.source"

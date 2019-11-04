@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 
 	"github.com/marema31/kamino/provider/csv"
@@ -16,24 +17,24 @@ import (
 //Loader provides way to load record by record
 type Loader interface {
 	Next() bool
-	Load() (types.Record, error)
-	Close() error
+	Load(*logrus.Entry) (types.Record, error)
+	Close(*logrus.Entry) error
 	Name() string
 }
 
 //NewLoader analyze the datasource and return object implementing Loader of the asked type
-func (p *KaminoProvider) NewLoader(ctx context.Context, ds datasource.Datasourcer, table string, where string) (Loader, error) {
+func (p *KaminoProvider) NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer, table string, where string) (Loader, error) {
 	engine := ds.GetEngine()
 
 	switch engine {
 	case datasource.Mysql, datasource.Postgres:
-		return database.NewLoader(ctx, ds, table, where)
+		return database.NewLoader(ctx, log, ds, table, where)
 	case datasource.CSV:
-		return csv.NewLoader(ctx, ds)
+		return csv.NewLoader(ctx, log, ds)
 	case datasource.JSON:
-		return json.NewLoader(ctx, ds)
+		return json.NewLoader(ctx, log, ds)
 	case datasource.YAML:
-		return yaml.NewLoader(ctx, ds)
+		return yaml.NewLoader(ctx, log, ds)
 	default:
 		return nil, fmt.Errorf("don't know how to manage this datasource engine")
 	}

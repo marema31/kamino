@@ -3,6 +3,7 @@ package mockprovider
 import (
 	"context"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider"
 )
@@ -16,7 +17,7 @@ type MockProvider struct {
 }
 
 //NewLoader analyze the datasource and return mock object implementing Loader
-func (p *MockProvider) NewLoader(ctx context.Context, ds datasource.Datasourcer, table string, where string) (provider.Loader, error) {
+func (p *MockProvider) NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer, table string, where string) (provider.Loader, error) {
 	if p.ErrorLoader != nil {
 		return nil, p.ErrorLoader
 	}
@@ -26,7 +27,7 @@ func (p *MockProvider) NewLoader(ctx context.Context, ds datasource.Datasourcer,
 }
 
 //NewSaver analyze the datasource and return mock object implementing Saver
-func (p *MockProvider) NewSaver(ctx context.Context, ds datasource.Datasourcer, table string, key string, mode string) (provider.Saver, error) {
+func (p *MockProvider) NewSaver(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer, table string, key string, mode string) (provider.Saver, error) {
 	if p.ErrorSaver != nil {
 		return nil, p.ErrorSaver
 	}

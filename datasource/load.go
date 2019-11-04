@@ -6,15 +6,17 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 //LoadAll Lookup the provided folder for datasource configuration files
-func (dss *Datasources) LoadAll(recipePath string) error {
+func (dss *Datasources) LoadAll(recipePath string, log *logrus.Entry) error {
 	dsfolder := filepath.Join(recipePath, "datasources")
 
 	files, err := ioutil.ReadDir(dsfolder)
 	if err != nil {
+		log.Errorf("Can not list datasources configuration folder: %v", err)
 		return err
 	}
 
@@ -23,8 +25,11 @@ func (dss *Datasources) LoadAll(recipePath string) error {
 			ext := filepath.Ext(file.Name())
 			if ext == ".yml" || ext == ".yaml" || ext == ".json" || ext == ".toml" {
 				name := strings.TrimSuffix(file.Name(), ext)
+				logDatasource := log.WithField("datasource", name)
+				logDatasource.Debug("Parsing datasource configuration")
 				ds, err := dss.load(recipePath, name)
 				if err != nil {
+					logDatasource.Errorf("Unable to parse configuration: %v", err)
 					return err
 				}
 				dss.datasources[name] = &ds

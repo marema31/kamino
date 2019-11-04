@@ -6,18 +6,18 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider"
 	"github.com/marema31/kamino/step/common"
 )
 
-//TODO: Implement limitation of tag/engine from the CLI, pass them to the step that should pass them to the datastore.Lookup
-
 // Load Lookup the provided folder for recipes folder and will return a Cookbook of the selected recipes/steps.
 // For each recipe, it will load all datasources and the selected steps
-func (ck *Cookbook) Load(ctx context.Context, configPath string, recipes []string, stepNames []string, stepTypes []string) error {
+func (ck *Cookbook) Load(ctx context.Context, log *logrus.Entry, configPath string, recipes []string, stepNames []string, stepTypes []string) error {
 	for _, rname := range recipes {
-		err := ck.loadOneRecipe(ctx, configPath, rname, stepNames, stepTypes)
+		logRecipe := log.WithField("recipe", rname)
+		err := ck.loadOneRecipe(ctx, logRecipe, configPath, rname, stepNames, stepTypes)
 		if err != nil {
 			return err
 		}
@@ -25,13 +25,16 @@ func (ck *Cookbook) Load(ctx context.Context, configPath string, recipes []strin
 	return nil
 }
 
-func (ck *Cookbook) loadOneRecipe(ctx context.Context, configPath string, rname string, stepNames []string, stepTypes []string) error {
+func (ck *Cookbook) loadOneRecipe(ctx context.Context, log *logrus.Entry, configPath string, rname string, stepNames []string, stepTypes []string) error {
 	prov := &provider.KaminoProvider{}
+	log.Info("Reading datasources")
 	dss := datasource.New()
 	recipePath := filepath.Join(configPath, rname)
-	if err := dss.LoadAll(recipePath); err != nil {
+	if err := dss.LoadAll(recipePath, log); err != nil {
 		return err
 	}
+
+	log.Info("Reading steps")
 	stepsFolder := filepath.Join(recipePath, "steps")
 	files, err := ioutil.ReadDir(stepsFolder)
 	if err != nil {
@@ -42,8 +45,9 @@ func (ck *Cookbook) loadOneRecipe(ctx context.Context, configPath string, rname 
 			ext := filepath.Ext(file.Name())
 			if ext == ".yml" || ext == ".yaml" || ext == ".json" || ext == ".toml" {
 				name := strings.TrimSuffix(file.Name(), ext)
-				//TODO: pass the stepNames and stepTypes to step.Load that should do the filtering
-				priority, steps, err := ck.stepFactory.Load(ctx, recipePath, name, dss, prov)
+				logRecipe := log.WithField("step", name)
+				logRecipe.Debug("Parsing step configuration")
+				priority, steps, err := ck.stepFactory.Load(ctx, logRecipe, recipePath, name, dss, prov, stepNames, stepTypes)
 				if err != nil {
 					return err
 				}

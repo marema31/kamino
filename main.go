@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 
@@ -10,6 +9,11 @@ import (
 )
 
 func main() {
+	log := cmd.GetLogger()
+
+	// Synchro beetween the main goroutin and the Execution goroutine
+	end := make(chan error, 1)
+
 	// Create the application context for correct sub-task abortion if CTRL+C
 	ctx := context.Background()
 	// trap Ctrl+C
@@ -18,8 +22,6 @@ func main() {
 	signal.Notify(sigChan, os.Interrupt)
 	// At end of function we remove signal trapping
 	defer signal.Stop(sigChan)
-
-	end := make(chan error, 1)
 
 	//This function will stop itself at context cancellation or at end of main goroutine
 	go func() {
@@ -30,34 +32,23 @@ func main() {
 	select {
 	case <-sigChan: //Received CTRL+C
 		cancel() // Cancellation of context, that will propagate to all function that listen ctx.Done
-		log.Println("Aborting ....")
-		log.Println("Waiting for all sub task abortion...")
-		<-end
-	case <-ctx.Done(): // the context has been cancelled
-		log.Println("Waiting for all sub task abortion...")
-		<-end
+		log.Warn("Aborting ....")
+		log.Info("Waiting for all sub task abortion...")
+		<-end // We wait for the main goroutine to end
+		log.Info("exiting on CTRL+C")
+		os.Exit(1)
+	case <-ctx.Done(): // the context has been cancelled (It should not happen since only the previous case fire a cancellation)
+		log.Info("Waiting for all sub task abortion...")
+		<-end // We wait for the main goroutine to end
+		log.Info("exiting on cancel")
+		os.Exit(1)
 	case executeError := <-end: //The goroutine executing the action is finished we can stop here
 		if executeError != nil {
+			log.Info("exiting on error")
 			os.Exit(1)
 		}
 	}
+	log.Info("bye")
+	log.Debug("Debug")
 	os.Exit(0)
 }
-
-/* func main() {
-
-/*
-	fmt.Printf("Will run the sync %s\n", strings.Join(os.Args[i:], ", "))
-
-	for _, syncName := range os.Args[i:] {
-		err := kaminoSync.Do(ctx, config, syncName, environment, instances)
-		if err != nil {
-			log.Println(err)
-			cancel()                    // Cancellation of context, that will propagate to all function that listen ct.Done
-			time.Sleep(5 * time.Second) // TODO:Wait on waitgroup ??
-			os.Exit(1)
-		}
-	}
-	time.Sleep(1 * time.Second) // TODO:Wait on waitgroup ??
-}
-*/

@@ -5,9 +5,9 @@ import (
 )
 
 func TestRecipeLoadOk(t *testing.T) {
-	ctx, _, ck := setupLoad()
+	ctx, log, _, ck := setupLoad()
 
-	err := ck.Load(ctx, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
+	err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -37,23 +37,23 @@ func TestRecipeLoadOk(t *testing.T) {
 }
 
 func TestRecipeLoadKo(t *testing.T) {
-	ctx, _, ck := setupLoad()
+	ctx, log, _, ck := setupLoad()
 
-	err := ck.Load(ctx, "testdata/fail", []string{"recipe1", "recipe2"}, nil, nil)
+	err := ck.Load(ctx, log, "testdata/fail", []string{"recipe1", "recipe2"}, nil, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 }
 
 func TestRecipeLoadNoFolder(t *testing.T) {
-	ctx, _, ck := setupLoad()
+	ctx, log, _, ck := setupLoad()
 
-	err := ck.Load(ctx, "testdata/fail", []string{"recipe1", "unknown"}, nil, nil)
+	err := ck.Load(ctx, log, "testdata/fail", []string{"recipe1", "unknown"}, nil, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 
-	err = ck.Load(ctx, "testdata/fail", []string{"recipe1", "nosteps"}, nil, nil)
+	err = ck.Load(ctx, log, "testdata/fail", []string{"recipe1", "nosteps"}, nil, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

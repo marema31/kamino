@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider"
 	"github.com/marema31/kamino/recipe"
@@ -13,11 +14,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-func setupLoad() (context.Context, *MockedStepFactory, *recipe.Cookbook) {
+func setupLoad() (context.Context, *logrus.Entry, *MockedStepFactory, *recipe.Cookbook) {
 	ctx := context.Background()
 	sf := &MockedStepFactory{}
 	ck := recipe.New(sf)
-	return ctx, sf, ck
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	return ctx, log, sf, ck
 }
 
 // ***** MOCK STEP and STEP CREATER
@@ -31,18 +34,22 @@ type mockedStep struct {
 }
 
 //Cancel manage the cancellation of the step
-func (st *mockedStep) Cancel() {
+func (st *mockedStep) Cancel(log *logrus.Entry) {
+	log.WithField("name", st.name).Info("Cancelling")
 	st.Canceled = true
 }
 
 //Do manage the runnning of the step
-func (st *mockedStep) Do(ctx context.Context) error {
+func (st *mockedStep) Do(ctx context.Context, log *logrus.Entry) error {
+	log.WithField("name", st.name).Info("Doing")
 	st.Called = true
 
 	time.Sleep(1 * time.Second) // It is moking we are doing nothing
 	if st.StepError != nil {
 		st.HasError = true
+		log.WithField("name", st.name).Info("Error")
 	}
+	log.WithField("name", st.name).Info("End doing")
 	return st.StepError
 }
 
@@ -52,7 +59,7 @@ type MockedStepFactory struct {
 }
 
 // Load the step file and returns the priority and a list of steper for this file
-func (sf *MockedStepFactory) Load(ctx context.Context, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider) (uint, []common.Steper, error) {
+func (sf *MockedStepFactory) Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider, stepNames []string, stepTypes []string) (uint, []common.Steper, error) {
 	v := viper.New()
 
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]

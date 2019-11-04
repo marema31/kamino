@@ -1,5 +1,7 @@
 package datasource
 
+import "github.com/Sirupsen/logrus"
+
 // Datasources is a collection of Datasource
 type Datasources struct {
 	//Dictionnary of datasource indexed by name
@@ -18,6 +20,6 @@ func New() *Datasources {
 
 // Datasourcers interface to allow switching the way of storing the datasources
 type Datasourcers interface {
-	LoadAll(string) error
-	Lookup([]string, []Type, []Engine) []Datasourcer
+	LoadAll(string, *logrus.Entry) error
+	Lookup(*logrus.Entry, []string, []Type, []Engine) []Datasourcer
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"io"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/types"
 )
@@ -21,15 +22,19 @@ type KaminoCsvLoader struct {
 }
 
 //NewLoader open the encoding process on provider file, read the header from the first line and return a Loader compatible object
-func NewLoader(ctx context.Context, ds datasource.Datasourcer) (*KaminoCsvLoader, error) {
-	file, err := ds.OpenReadFile()
+func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer) (*KaminoCsvLoader, error) {
+	logFile := log.WithField("datasource", ds.GetName())
+
+	file, err := ds.OpenReadFile(logFile)
 	if err != nil {
 		return nil, err
 	}
 	reader := csv.NewReader(file)
-	//Read the header to dertermine the column order
+	logFile.Debug("Reading the header to determine the column order")
 	row, err := reader.Read()
 	if err != nil {
+		logFile.Error("Reading CSV header failed")
+		logFile.Error(err)
 		return nil, err
 	}
 	tv := ds.FillTmplValues()
@@ -44,7 +49,7 @@ func (cl *KaminoCsvLoader) Next() bool {
 		cl.currentRow = nil
 		return false
 	} else if err != nil {
-		// To conserve the interface, we can return the error here but in Load call
+		// To conserve the interface, we can not return the error here but in Load call
 		cl.currentRow = nil
 		cl.currentError = err
 		return true
@@ -55,8 +60,11 @@ func (cl *KaminoCsvLoader) Next() bool {
 }
 
 //Load reads the next record and return it
-func (cl *KaminoCsvLoader) Load() (types.Record, error) {
+func (cl *KaminoCsvLoader) Load(log *logrus.Entry) (types.Record, error) {
+	logFile := log.WithField("datasource", cl.ds.GetName())
 	if cl.currentError != nil {
+		logFile.Error("Reading CSV next line failed")
+		logFile.Error(cl.currentError)
 		return nil, cl.currentError
 	}
 
@@ -70,8 +78,9 @@ func (cl *KaminoCsvLoader) Load() (types.Record, error) {
 }
 
 //Close closes the datasource
-func (cl *KaminoCsvLoader) Close() error {
-	return cl.ds.CloseFile()
+func (cl *KaminoCsvLoader) Close(log *logrus.Entry) error {
+	logFile := log.WithField("datasource", cl.ds.GetName())
+	return cl.ds.CloseFile(logFile)
 }
 
 //Name give the name of the destination

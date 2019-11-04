@@ -31,11 +31,12 @@ func init() {
 
 //Apply will run only the recipes with Apply type
 func Apply(cookbook recipe.Cooker, cfgFolder string, names []string, types []string, args []string) error {
-	err := cookbook.Load(ctx, cfgFolder, args, names, types)
+	log := logger.WithField("action", "apply")
+	err := cookbook.Load(ctx, log, cfgFolder, args, names, types)
 	if err != nil {
 		return fmt.Errorf("error while loading the recipes: %v", err)
 	}
-	if cookbook.Do(ctx) {
+	if cookbook.Do(ctx, log) {
 		return fmt.Errorf("a step had an error")
 	}
 	return nil

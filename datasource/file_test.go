@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/Sirupsen/logrus"
 )
 
 // We are using private function, we must be in same package
@@ -212,21 +214,23 @@ func TestLoadNoPath(t *testing.T) {
 
 func TestOpenStdio(t *testing.T) {
 	ds := Datasource{dstype: File, zip: false, gzip: false, filePath: "-"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	_, err := ds.OpenWriteFile()
+	_, err := ds.OpenWriteFile(log)
 	if err != nil {
 		t.Fatalf("Should not return error and returned '%v'", err)
 	}
-	err = ds.CloseFile()
+	err = ds.CloseFile(log)
 	if err != nil {
 		t.Errorf("Should not return error and returned '%v'", err)
 	}
 
-	_, err = ds.OpenReadFile()
+	_, err = ds.OpenReadFile(log)
 	if err != nil {
 		t.Fatalf("Should not return error and returned '%v'", err)
 	}
-	err = ds.CloseFile()
+	err = ds.CloseFile(log)
 	if err != nil {
 		t.Errorf("Should not return error and returned '%v'", err)
 	}
@@ -235,8 +239,10 @@ func TestOpenStdio(t *testing.T) {
 
 func TestOpenInline(t *testing.T) {
 	ds := Datasource{dstype: File, zip: false, gzip: false, inline: "testinline"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	reader, err := ds.OpenReadFile()
+	reader, err := ds.OpenReadFile(log)
 	if err != nil {
 		t.Fatalf("OpenReadFile Should not return error and returned '%v'", err)
 	}
@@ -248,7 +254,7 @@ func TestOpenInline(t *testing.T) {
 	if string(test) != "testinline" {
 		t.Errorf("The content of inline is not the one we waits for :%v", test)
 	}
-	err = ds.CloseFile()
+	err = ds.CloseFile(log)
 	if err != nil {
 		t.Errorf("Close Should not return error and returned '%v'", err)
 	}
@@ -262,19 +268,21 @@ func TestOpenFile(t *testing.T) {
 	test := []byte{1, 2, 3}
 
 	ds := Datasource{dstype: File, zip: false, gzip: false, filePath: "testdata/tmp/testfile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	_, err := ds.OpenWriteFile()
+	_, err := ds.OpenWriteFile(log)
 	if err != nil {
 		t.Errorf("OpenWriteFile Should not return error and returned '%v'", err)
 	}
 	//	writer.Write(test)
 
-	err = ds.CloseFile()
+	err = ds.CloseFile(log)
 	if err != nil {
 		t.Errorf("CloseFile Should not return error and returned '%v'", err)
 	}
 
-	reader, err := ds.OpenReadFile()
+	reader, err := ds.OpenReadFile(log)
 	if err != nil {
 		t.Fatalf("OpenReadFile Should not return error and returned '%v'", err)
 	}
@@ -282,7 +290,7 @@ func TestOpenFile(t *testing.T) {
 	if test[2] != 3 {
 		t.Errorf("The content of file is not the one we waits for :%v", test)
 	}
-	err = ds.CloseFile()
+	err = ds.CloseFile(log)
 	if err != nil {
 		t.Errorf("Close Should not return error and returned '%v'", err)
 	}
@@ -298,19 +306,21 @@ func TestOpenZipFile(t *testing.T) {
 	test := []byte{1, 2, 3}
 
 	ds := Datasource{dstype: File, zip: true, gzip: false, filePath: "testdata/tmp/testfile.zip"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	writer, err := ds.OpenWriteFile()
+	writer, err := ds.OpenWriteFile(log)
 	if err != nil {
 		t.Fatalf("OpenWriteFile Should not return error and returned '%v'", err)
 	}
 	writer.Write(test)
 
-	err = ds.CloseFile()
+	err = ds.CloseFile(log)
 	if err != nil {
 		t.Errorf("CloseFile Should not return error and returned '%v'", err)
 	}
 
-	reader, err := ds.OpenReadFile()
+	reader, err := ds.OpenReadFile(log)
 	if err != nil {
 		t.Fatalf("OpenReadFile Should not return error and returned '%v'", err)
 	}
@@ -318,7 +328,7 @@ func TestOpenZipFile(t *testing.T) {
 	if test[2] != 3 {
 		t.Errorf("The content of file is not the one we waits for :%v", test)
 	}
-	err = ds.CloseFile()
+	err = ds.CloseFile(log)
 	if err != nil {
 		t.Errorf("Close Should not return error and returned '%v'", err)
 	}
@@ -334,19 +344,21 @@ func TestOpenGzipFile(t *testing.T) {
 	test := []byte{1, 2, 3}
 
 	ds := Datasource{dstype: File, zip: false, gzip: true, filePath: "testdata/tmp/testfile.gz"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	writer, err := ds.OpenWriteFile()
+	writer, err := ds.OpenWriteFile(log)
 	if err != nil {
 		t.Fatalf("OpenWriteFile Should not return error and returned '%v'", err)
 	}
 	writer.Write(test)
 
-	err = ds.CloseFile()
+	err = ds.CloseFile(log)
 	if err != nil {
 		t.Errorf("CloseFile Should not return error and returned '%v'", err)
 	}
 
-	reader, err := ds.OpenReadFile()
+	reader, err := ds.OpenReadFile(log)
 	if err != nil {
 		t.Fatalf("OpenReadFile Should not return error and returned '%v'", err)
 	}
@@ -354,7 +366,7 @@ func TestOpenGzipFile(t *testing.T) {
 	if test[2] != 3 {
 		t.Errorf("The content of file is not the one we waits for :%v", test)
 	}
-	err = ds.CloseFile()
+	err = ds.CloseFile(log)
 	if err != nil {
 		t.Errorf("Close Should not return error and returned '%v'", err)
 	}
@@ -370,20 +382,22 @@ func TestReadWrongZip(t *testing.T) {
 	test := []byte{1, 2, 3}
 
 	ds := Datasource{dstype: File, zip: false, gzip: false, filePath: "testdata/tmp/testfile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	writer, err := ds.OpenWriteFile()
+	writer, err := ds.OpenWriteFile(log)
 	if err != nil {
 		t.Fatalf("OpenWriteFile Should not return error and returned '%v'", err)
 	}
 	writer.Write(test)
 
-	err = ds.CloseFile()
+	err = ds.CloseFile(log)
 	if err != nil {
 		t.Errorf("CloseFile Should not return error and returned '%v'", err)
 	}
 
 	ds.zip = true
-	_, err = ds.OpenReadFile()
+	_, err = ds.OpenReadFile(log)
 	if err == nil {
 		t.Errorf("OpenReadFile Should return error")
 	}
@@ -399,20 +413,22 @@ func TestReadWrongGzip(t *testing.T) {
 	test := []byte{1, 2, 3}
 
 	ds := Datasource{dstype: File, zip: false, gzip: false, filePath: "testdata/tmp/testfile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	writer, err := ds.OpenWriteFile()
+	writer, err := ds.OpenWriteFile(log)
 	if err != nil {
 		t.Fatalf("OpenWriteFile Should not return error and returned '%v'", err)
 	}
 	writer.Write(test)
 
-	err = ds.CloseFile()
+	err = ds.CloseFile(log)
 	if err != nil {
 		t.Errorf("CloseFile Should not return error and returned '%v'", err)
 	}
 
 	ds.gzip = true
-	_, err = ds.OpenReadFile()
+	_, err = ds.OpenReadFile(log)
 	if err == nil {
 		t.Errorf("OpenReadFile Should return error")
 	}
@@ -428,14 +444,16 @@ func TestResetFile(t *testing.T) {
 	test := []byte{1, 2, 3}
 
 	ds := Datasource{dstype: File, zip: false, gzip: false, filePath: "testdata/tmp/testfile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	writer, err := ds.OpenWriteFile()
+	writer, err := ds.OpenWriteFile(log)
 	if err != nil {
 		t.Fatalf("OpenWriteFile Should not return error and returned '%v'", err)
 	}
 	writer.Write(test)
 
-	err = ds.ResetFile()
+	err = ds.ResetFile(log)
 	if err != nil {
 		t.Errorf("ResetFile Should not return error and returned '%v'", err)
 	}

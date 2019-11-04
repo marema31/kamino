@@ -13,7 +13,7 @@ func setupLoadTest() *mockdatasource.MockDatasources {
 
 func TestLoadAllGood(t *testing.T) {
 	dss := setupLoadTest()
-	err := dss.LoadAll("testdata/good")
+	err := dss.LoadAll("testdata/good", nil)
 	if err != nil {
 		t.Errorf("Load should not returns an error, was : %v", err)
 	}
@@ -22,7 +22,7 @@ func TestLoadAllGood(t *testing.T) {
 
 func TestLoadAllWrong(t *testing.T) {
 	dss := setupLoadTest()
-	err := dss.LoadAll("")
+	err := dss.LoadAll("", nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

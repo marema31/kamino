@@ -2,6 +2,8 @@ package datasource
 
 import (
 	"testing"
+
+	"github.com/Sirupsen/logrus"
 )
 
 // We are using private function, we must be in same package
@@ -196,7 +198,10 @@ func TestLoadNoDatabase(t *testing.T) {
 func TestDatabaseOpenWrongType(t *testing.T) {
 
 	ds := Datasource{engine: JSON, dstype: File}
-	if _, err := ds.OpenDatabase(false, false); err == nil {
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+
+	if _, err := ds.OpenDatabase(log, false, false); err == nil {
 		t.Errorf("OpenDatabase should returns an error")
 	}
 }
@@ -204,7 +209,9 @@ func TestDatabaseOpenWrongType(t *testing.T) {
 func TestDatabaseOpenMysql(t *testing.T) {
 	mockingSQL = true
 	ds := Datasource{engine: Mysql, dstype: Database, url: "bob:123soleil@tcp(localhost:1234)/dbmc", urlAdmin: "urlAdmin", urlNoDb: "urlNoDb"}
-	if _, err := ds.OpenDatabase(false, false); err != nil {
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	if _, err := ds.OpenDatabase(log, false, false); err != nil {
 		t.Errorf("OpenDatabase should not returns an error, was: %v", err)
 	}
 }
@@ -212,22 +219,28 @@ func TestDatabaseOpenMysql(t *testing.T) {
 func TestDatabaseOpenPostgres(t *testing.T) {
 	mockingSQL = true
 	ds := Datasource{engine: Postgres, dstype: Database, url: "url", urlAdmin: "urlAdmin", urlNoDb: "urlNoDb"}
-	if _, err := ds.OpenDatabase(false, false); err != nil {
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	if _, err := ds.OpenDatabase(log, false, false); err != nil {
 		t.Errorf("OpenDatabase should not returns an error, was: %v", err)
 	}
 }
 
-func TestDatabaseOpenurlAdmin(t *testing.T) {
+func TestDatabaseOpenAdmin(t *testing.T) {
 	mockingSQL = true
 	ds := Datasource{engine: Mysql, dstype: Database, url: "url", urlAdmin: "bob:123soleil@tcp(localhost:1234)/dbmc", urlNoDb: "urlNoDb"}
-	if _, err := ds.OpenDatabase(true, false); err != nil {
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	if _, err := ds.OpenDatabase(log, true, false); err != nil {
 		t.Errorf("OpenDatabase should not returns an error, was: %v", err)
 	}
 }
-func TestDatabaseOpenurlNoDb(t *testing.T) {
+func TestDatabaseOpenNoDb(t *testing.T) {
 	mockingSQL = true
 	ds := Datasource{engine: Mysql, dstype: Database, url: "url", urlAdmin: "urlAdmin", urlNoDb: "bob:123soleil@tcp(localhost:1234)/dbmc"}
-	if _, err := ds.OpenDatabase(false, true); err != nil {
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	if _, err := ds.OpenDatabase(log, false, true); err != nil {
 		t.Errorf("OpenDatabase should not returns an error, was: %v", err)
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/types"
 )
@@ -43,7 +44,8 @@ type DbSaver struct {
 }
 
 //NewSaver open the database connection, prepare the insert statement and return a Saver compatible object
-func NewSaver(ctx context.Context, ds datasource.Datasourcer, table string, key string, mode string) (*DbSaver, error) {
+func NewSaver(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer, table string, key string, mode string) (*DbSaver, error) {
+	logDb := log.WithField("datasource", ds.GetName())
 	var saver DbSaver
 	tv := ds.FillTmplValues()
 
@@ -54,6 +56,7 @@ func NewSaver(ctx context.Context, ds datasource.Datasourcer, table string, key 
 	saver.engine, _ = datasource.StringToEngine(tv.Engine)
 
 	if table == "" {
+		logDb.Error("No destination table provided")
 		return nil, fmt.Errorf("destination of sync does not provided a table name")
 	}
 	if tv.Schema != "" {
@@ -61,7 +64,7 @@ func NewSaver(ctx context.Context, ds datasource.Datasourcer, table string, key 
 	}
 	saver.table = table
 
-	db, err := ds.OpenDatabase(false, false)
+	db, err := ds.OpenDatabase(logDb, false, false)
 	if err != nil {
 		return nil, fmt.Errorf("can't open %s database : %v", tv.Database, err)
 	}
@@ -73,10 +76,14 @@ func NewSaver(ctx context.Context, ds datasource.Datasourcer, table string, key 
 
 	if saver.mode == replace || saver.mode == exactCopy || saver.mode == update {
 		if saver.key == "" {
+			logDb.Errorf("Modes replace and exactCopy need a primary key for %s.%s", saver.database, saver.table)
 			return nil, fmt.Errorf("modes replace and exactCopy need a primary key for %s.%s", saver.database, saver.table)
 		}
-		err = saver.createIdsList()
+		logDb.Debug("Create current IDs list")
+		err = saver.createIdsList(logDb)
 		if err != nil {
+			logDb.Error("Getting current IDs in destination table failed")
+			logDb.Error(err)
 			return nil, err
 		}
 	}
@@ -84,37 +91,49 @@ func NewSaver(ctx context.Context, ds datasource.Datasourcer, table string, key 
 }
 
 //Save writes the record to the destination
-func (saver *DbSaver) Save(record types.Record) error {
+func (saver *DbSaver) Save(log *logrus.Entry, record types.Record) error {
+	logDb := log.WithField("datasource", saver.ds.GetName())
 	var err error
 
 	// Is this method is called for the first time
 	//If yes fix the column order in csv file
 	if saver.colNames == nil {
+		logDb.Debug("First Save action, preparing the needed informations")
 		if saver.transaction {
+			logDb.Debug("Starting transaction")
 			saver.tx, err = saver.db.Begin()
 			if err != nil {
+				logDb.Error("Beginning transaction failed")
+				logDb.Error(err)
 				return err
 			}
 		}
 
-		err := saver.createStatement(record)
+		logDb.Debug("Preparing the statements")
+		err := saver.createStatement(logDb, record)
 		if err != nil {
 			return err
 		}
 		// The truncate will be done at the first record save to avoid truncate a table if there is an error on config file
 		if saver.mode == truncate {
+			logDb.Debug("Truncating the destination table")
 			if saver.transaction {
 				_, err = saver.tx.Exec(fmt.Sprintf("TRUNCATE TABLE %s", saver.table))
 			} else {
 				_, err = saver.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", saver.table))
 			}
 			if err != nil {
+				logDb.Error("Truncating the destination table failed")
+				logDb.Error(err)
 				return err
 			}
 			saver.wasEmpty = true // Avoid truncate after inserting the first record
 		}
 	}
 	if saver.mode == onlyIfEmpty && !saver.wasEmpty {
+		if saver.colNames == nil {
+			logDb.Warn("Destination table is not empty, we will do nothing")
+		}
 		return nil
 	}
 
@@ -124,48 +143,48 @@ func (saver *DbSaver) Save(record types.Record) error {
 	}
 	switch saver.mode {
 	case onlyIfEmpty:
-		_, err := saver.insertStmt.Exec(row...)
-		return err
+		_, err = saver.insertStmt.Exec(row...)
 
 	case insert:
-		_, err := saver.insertStmt.Exec(row...)
-		return err
+		_, err = saver.insertStmt.Exec(row...)
 
 	case truncate:
-		_, err := saver.insertStmt.Exec(row...)
-		return err
+		_, err = saver.insertStmt.Exec(row...)
 
 	case update:
-		_, err := saver.updateStmt.Exec(row...)
-		return err
+		_, err = saver.updateStmt.Exec(row...)
 
 	case replace:
 		_, ok := saver.ids[record[saver.key]]
 		saver.ids[record[saver.key]] = true
 		if ok {
-			_, err := saver.updateStmt.Exec(row...)
-			return err
+			_, err = saver.updateStmt.Exec(row...)
+		} else {
+
+			_, err = saver.insertStmt.Exec(row...)
 		}
-		_, err := saver.insertStmt.Exec(row...)
-		return err
 
 	case exactCopy:
 		_, ok := saver.ids[record[saver.key]]
 		saver.ids[record[saver.key]] = true
 		if ok {
-			_, err := saver.updateStmt.Exec(row...)
-			return err
+			_, err = saver.updateStmt.Exec(row...)
+		} else {
+			_, err = saver.insertStmt.Exec(row...)
 		}
-		_, err := saver.insertStmt.Exec(row...)
-		return err
-
 	}
-	return nil
+	if err != nil {
+		logDb.Error("Saving row failed")
+		logDb.Error(err)
+	}
+	return err
 }
 
 //Close closes the destination
-func (saver *DbSaver) Close() error {
+func (saver *DbSaver) Close(log *logrus.Entry) error {
+	logDb := log.WithField("datasource", saver.ds.GetName())
 	if saver.mode == exactCopy {
+		logDb.Debug("Deleting non synchronized rows")
 		for id, modified := range saver.ids {
 			if !modified {
 				var err error
@@ -175,27 +194,47 @@ func (saver *DbSaver) Close() error {
 					_, err = saver.db.Exec(fmt.Sprintf("DELETE from %s WHERE %s=%s", saver.table, saver.key, id))
 				}
 				if err != nil {
+					logDb.Error("Deleting non synchronized rows failed")
+					logDb.Error(err)
 					return err
 				}
 			}
 		}
 	}
 	if saver.transaction {
-		saver.tx.Commit()
+		logDb.Debug("Committing transaction")
+		err := saver.tx.Commit()
+		if err != nil {
+			logDb.Error("Committing transaction failed")
+			logDb.Error(err)
+		}
 	}
 
-	saver.db.Close()
-	return nil
+	logDb.Debug("Closing database")
+	err := saver.db.Close()
+	if err != nil {
+		logDb.Error("Close database failed")
+		logDb.Error(err)
+	}
+	return err
 }
 
 //Reset reinitialize the destination (if possible)
-func (saver *DbSaver) Reset() error {
+func (saver *DbSaver) Reset(log *logrus.Entry) (err error) {
+	logDb := log.WithField("datasource", saver.ds.GetName())
 	saver.colNames = nil
 
 	if saver.transaction && saver.tx != nil {
-		saver.tx.Rollback()
+		logDb.Debug("Rollbacking transaction")
+		err = saver.tx.Rollback()
+		if err != nil {
+			logDb.Error("Rollbacking transaction failed")
+			logDb.Error(err)
+		}
+	} else {
+		logDb.Debug("Reset needed but without transaction we can not do anything")
 	}
-	return nil
+	return err
 }
 
 //Name give the name of the destination
