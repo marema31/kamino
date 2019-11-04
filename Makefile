@@ -103,7 +103,7 @@ test-coverage-travis: test-coverage-tools ; $(info $(M) running coverage testsâ€
 
 .PHONY: cyclo
 cyclo: | $(GOCYCLO) ; $(info $(M) running gocycloâ€¦) @ ## Run gocyclo
-	$Q $(GOCYCLO) -over 19 $(GO_FILES)
+	$Q $(GOCYCLO) -over 22 $(GO_FILES)
 
 .PHONY: staticheck
 staticcheck: | $(STATICCHECK) ; $(info $(M) running staticcheck_) @ ## Run staticcheck

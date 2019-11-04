@@ -4,13 +4,14 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/mockdatasource"
 	"github.com/marema31/kamino/step/sqlscript"
 	"github.com/spf13/viper"
 )
 
-func setupLoad(path string, filename string) (context.Context, datasource.Datasourcers, *viper.Viper, error) {
+func setupLoad(path string, filename string) (context.Context, *logrus.Entry, datasource.Datasourcers, *viper.Viper, error) {
 	dss := mockdatasource.New()
 	ds1 := mockdatasource.MockDatasource{Name: "ds1", Database: "db1", User: "user1", Tags: []string{"tag1a", "tag1b"}}
 	ds2 := mockdatasource.MockDatasource{Name: "ds2", Database: "db2", User: "user2", Tags: []string{"tag2"}}
@@ -22,16 +23,20 @@ func setupLoad(path string, filename string) (context.Context, datasource.Dataso
 	v.AddConfigPath(path)
 	err := v.ReadInConfig()
 	ctx := context.Background()
-	return ctx, dss, v, err
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	return ctx, log, dss, v, err
 }
 
 func TestSqlscriptLoadOk(t *testing.T) {
-	ctx, dss, v, err := setupLoad("testdata/good/steps/", "sqlscriptok")
+	ctx, log, dss, v, err := setupLoad("testdata/good/steps/", "sqlscriptok")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := sqlscript.Load(ctx, "sqlscriptok", v, dss)
+	priority, steps, err := sqlscript.Load(ctx, log, "sqlscriptok", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -53,20 +58,20 @@ func TestSqlscriptLoadOk(t *testing.T) {
 		t.Fatalf("The first step should be a sqlscript step")
 	}
 
-	if s.Name != "namesqlscriptok" {
-		t.Errorf("The name of the first step should be namesqlscriptok, it was: %v", s.Name)
+	if s.Name != "namesqlscriptok:0" {
+		t.Errorf("The name of the first step should be namesqlscriptok:0, it was: %v", s.Name)
 	}
 
 	//Using black box strategy, we cannot test the others field members, they could be tested only via the Do test
 }
 
 func TestSqlscriptLoadNoTag(t *testing.T) {
-	ctx, dss, v, err := setupLoad("testdata/good/steps/", "notags")
+	ctx, log, dss, v, err := setupLoad("testdata/good/steps/", "notags")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := sqlscript.Load(ctx, "notags", v, dss)
+	priority, steps, err := sqlscript.Load(ctx, log, "notags", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -81,12 +86,12 @@ func TestSqlscriptLoadNoTag(t *testing.T) {
 }
 
 func TestSqlscriptLoadNoBool(t *testing.T) {
-	ctx, dss, v, err := setupLoad("testdata/good/steps/", "nobool")
+	ctx, log, dss, v, err := setupLoad("testdata/good/steps/", "nobool")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := sqlscript.Load(ctx, "nobool", v, dss)
+	priority, steps, err := sqlscript.Load(ctx, log, "nobool", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -101,66 +106,66 @@ func TestSqlscriptLoadNoBool(t *testing.T) {
 }
 
 func TestSqlscriptLoadNoTemplate(t *testing.T) {
-	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "notemplate")
+	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "notemplate")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = sqlscript.Load(ctx, "notemplate", v, dss)
+	_, _, err = sqlscript.Load(ctx, log, "notemplate", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 }
 
 func TestSqlscriptLoadNoTemplateFile(t *testing.T) {
-	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "notemplatefile")
+	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "notemplatefile")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = sqlscript.Load(ctx, "notemplatefile", v, dss)
+	_, _, err = sqlscript.Load(ctx, log, "notemplatefile", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 }
 
 func TestSqlscriptLoadNoQuery(t *testing.T) {
-	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "noquery")
+	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "noquery")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = sqlscript.Load(ctx, "noquery", v, dss)
+	_, _, err = sqlscript.Load(ctx, log, "noquery", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 }
 
 func TestSqlscriptLoadTemplateWrong(t *testing.T) {
-	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "wrongtemplate")
+	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "wrongtemplate")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = sqlscript.Load(ctx, "wrongtemplate", v, dss)
+	_, _, err = sqlscript.Load(ctx, log, "wrongtemplate", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 }
 
 func TestSqlscriptLoadQueryTemplateWrong(t *testing.T) {
-	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "wrongquery")
+	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "wrongquery")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = sqlscript.Load(ctx, "wrongquery", v, dss)
+	_, _, err = sqlscript.Load(ctx, log, "wrongquery", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 }
 
 func TestSqlscriptLoadWrongEngine(t *testing.T) {
-	ctx, dss, v, err := setupLoad("testdata/fail/steps/", "wrongengine")
+	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "wrongengine")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = sqlscript.Load(ctx, "wrongengine", v, dss)
+	_, _, err = sqlscript.Load(ctx, log, "wrongengine", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

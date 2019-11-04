@@ -2,16 +2,14 @@ package recipe_test
 
 import (
 	"context"
-	"os"
-	"runtime/trace"
 	"testing"
 	"time"
 )
 
 func TestRecipeDoOk(t *testing.T) {
-	ctx, sf, ck := setupLoad()
+	ctx, log, sf, ck := setupLoad()
 
-	err := ck.Load(ctx, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
+	err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -31,7 +29,7 @@ func TestRecipeDoOk(t *testing.T) {
 		}
 	}
 
-	hadError := ck.Do(ctx)
+	hadError := ck.Do(ctx, log)
 	if hadError {
 		t.Errorf("Do should return false")
 	}
@@ -51,9 +49,9 @@ func TestRecipeDoOk(t *testing.T) {
 }
 
 func TestRecipeDoAllCancel(t *testing.T) {
-	ctx, sf, ck := setupLoad()
+	ctx, log, sf, ck := setupLoad()
 
-	err := ck.Load(ctx, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
+	err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -62,7 +60,7 @@ func TestRecipeDoAllCancel(t *testing.T) {
 	ctx, cancel := context.WithDeadline(ctx, time.Now().Add(-7*time.Hour))
 	cancel()
 
-	hadError := ck.Do(ctx)
+	hadError := ck.Do(ctx, log)
 	if !hadError {
 		t.Errorf("Do should return true")
 	}
@@ -86,15 +84,14 @@ func TestRecipeDoAllCancel(t *testing.T) {
 }
 
 func TestRecipeDoStepError(t *testing.T) {
-	trace.Start(os.Stderr)
-	ctx, sf, ck := setupLoad()
+	ctx, log, sf, ck := setupLoad()
 
-	err := ck.Load(ctx, "testdata/good", []string{"recipe1ok", "steperror"}, nil, nil)
+	err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "steperror"}, nil, nil)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
 
-	hadError := ck.Do(ctx)
+	hadError := ck.Do(ctx, log)
 	if !hadError {
 		t.Errorf("Do should return true")
 	}

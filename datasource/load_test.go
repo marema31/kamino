@@ -1,6 +1,10 @@
 package datasource
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/Sirupsen/logrus"
+)
 
 // We are using private function, we must be in same package
 func setupLoadTest() *Datasources {
@@ -32,7 +36,9 @@ func TestLoadWrongEngine(t *testing.T) {
 
 func TestLoadAllGood(t *testing.T) {
 	dss := setupLoadTest()
-	err := dss.LoadAll("testdata/good")
+	logger := logrus.New()
+	log := logger.WithField("a", 1)
+	err := dss.LoadAll("testdata/good", log)
 	if err != nil {
 		t.Errorf("Load should not returns an error, was : %v", err)
 	}
@@ -41,7 +47,9 @@ func TestLoadAllGood(t *testing.T) {
 
 func TestLoadAllWrong(t *testing.T) {
 	dss := setupLoadTest()
-	err := dss.LoadAll("testdata/fail")
+	logger := logrus.New()
+	log := logger.WithField("a", 1)
+	err := dss.LoadAll("testdata/fail", log)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

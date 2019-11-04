@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/mockdatasource"
 	"github.com/marema31/kamino/provider/database"
@@ -24,13 +25,15 @@ func TestOpenError(t *testing.T) {
 
 	source := mockdatasource.MockDatasource{ErrorOpenDb: fmt.Errorf("fake error"), Type: datasource.Database, Engine: datasource.Mysql, Database: "source", MockedDb: sdb}
 	dest := mockdatasource.MockDatasource{ErrorOpenDb: fmt.Errorf("fake error"), Type: datasource.Database, Engine: datasource.Mysql, Database: "dest", MockedDb: ddb}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	_, err = database.NewSaver(context.Background(), &dest, "dtable", "id", "replace")
+	_, err = database.NewSaver(context.Background(), log, &dest, "dtable", "id", "replace")
 	if err == nil {
 		t.Fatalf("NewSaver should return error")
 	}
 
-	_, err = database.NewLoader(context.Background(), &source, "stable", "")
+	_, err = database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err == nil {
 		t.Fatalf("NewLoader should return error")
 	}
@@ -62,12 +65,14 @@ func TestResetOk(t *testing.T) {
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "insert")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "title like '%'")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "title like '%'")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
@@ -82,27 +87,27 @@ func TestResetOk(t *testing.T) {
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
 
-	_, err = loader.Load()
+	_, err = loader.Load(log)
 	if err == nil {
 		t.Errorf("Load should return error ")
 	}
 
-	err = saver.Reset()
+	err = saver.Reset(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}
@@ -143,12 +148,14 @@ func TestResetTransactionOk(t *testing.T) {
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectRollback()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "insert")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
@@ -163,27 +170,27 @@ func TestResetTransactionOk(t *testing.T) {
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
 
-	_, err = loader.Load()
+	_, err = loader.Load(log)
 	if err == nil {
 		t.Errorf("Load should return error ")
 	}
 
-	err = saver.Reset()
+	err = saver.Reset(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}

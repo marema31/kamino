@@ -1,6 +1,7 @@
 package mockprovider
 
 import (
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/provider/types"
 )
 
@@ -13,13 +14,13 @@ type MockSaver struct {
 }
 
 //Save writes the record to the destination
-func (ms *MockSaver) Save(record types.Record) error {
+func (ms *MockSaver) Save(log *logrus.Entry, record types.Record) error {
 	ms.Content = append(ms.Content, record)
 	return nil
 }
 
 //Close closes the destination
-func (ms *MockSaver) Close() error {
+func (ms *MockSaver) Close(log *logrus.Entry) error {
 	return ms.ErrorClose
 }
 
@@ -29,6 +30,6 @@ func (ms *MockSaver) Name() string {
 }
 
 //Reset reinitialize the destination (if possible)
-func (ms *MockSaver) Reset() error {
+func (ms *MockSaver) Reset(log *logrus.Entry) error {
 	return ms.ErrorReset
 }

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/types"
 )
@@ -22,8 +23,10 @@ type DbLoader struct {
 }
 
 //NewLoader open the database connection, make the data query and return a Loader compatible object
-func NewLoader(ctx context.Context, ds datasource.Datasourcer, table string, where string) (*DbLoader, error) {
+func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer, table string, where string) (*DbLoader, error) {
+	logDb := log.WithField("datasource", ds.GetName())
 	if table == "" {
+		logDb.Error("No source table provided")
 		return nil, fmt.Errorf("source of sync does not provided a table name")
 	}
 
@@ -37,18 +40,23 @@ func NewLoader(ctx context.Context, ds datasource.Datasourcer, table string, whe
 		where = fmt.Sprintf("WHERE %s", where)
 	}
 
-	db, err := ds.OpenDatabase(false, false)
+	db, err := ds.OpenDatabase(logDb, false, false)
 	if err != nil {
 		return nil, fmt.Errorf("can't open %s database : %v", tv.Database, err)
 	}
 
+	logDb.Debugf("Load query: SELECT * from %s %s", table, where)
 	rows, err := db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s %s", table, where))
 	if err != nil {
+		logDb.Error("Source query failed")
+		logDb.Error(err)
 		return nil, err
 	}
 
 	columns, err := rows.ColumnTypes()
 	if err != nil {
+		logDb.Error("Determining column names failed")
+		logDb.Error(err)
 		return nil, err
 	}
 	columnsname := make([]string, len(columns))
@@ -79,14 +87,19 @@ func (dl *DbLoader) Next() bool {
 }
 
 //Load reads the next record and return it
-func (dl *DbLoader) Load() (types.Record, error) {
+func (dl *DbLoader) Load(log *logrus.Entry) (types.Record, error) {
+	logDb := log.WithField("datasource", dl.ds.GetName())
 	err := dl.rows.Scan(dl.scanned...)
 	if err != nil {
+		logDb.Error("Getting next row failed")
+		logDb.Error(err)
 		return nil, err
 	}
 
 	// Rows.Err will report the last error encountered by Rows.Scan.
 	if err = dl.rows.Err(); err != nil {
+		logDb.Error("Getting next row failed")
+		logDb.Error(err)
 		return nil, err
 	}
 
@@ -100,9 +113,17 @@ func (dl *DbLoader) Load() (types.Record, error) {
 }
 
 //Close closes the datasource
-func (dl *DbLoader) Close() error {
+func (dl *DbLoader) Close(log *logrus.Entry) error {
+	logDb := log.WithField("datasource", dl.ds.GetName())
+	logDb.Debug("Closing database")
+
 	dl.rows.Close()
-	return dl.db.Close()
+	err := dl.db.Close()
+	if err != nil {
+		logDb.Error("Close database failed")
+		logDb.Error(err)
+	}
+	return err
 }
 
 //Name give the name of the destination

@@ -4,6 +4,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/Sirupsen/logrus"
 )
 
 // We are providing the private datastore, we must be in same package
@@ -113,7 +115,10 @@ func TestLookupOneTag(t *testing.T) {
 }
 
 func helperTestLookup(t *testing.T, dss *Datasources, tags []string, dsTypes []Type, engines []Engine, awaited []*Datasource) {
-	result := dss.Lookup(tags, dsTypes, engines)
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+
+	result := dss.Lookup(log, tags, dsTypes, engines)
 
 	anames := []string{}
 	for _, ds := range awaited {

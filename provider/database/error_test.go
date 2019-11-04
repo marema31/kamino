@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/mockdatasource"
 	"github.com/marema31/kamino/provider/database"
@@ -24,13 +25,16 @@ func TestNoTableError(t *testing.T) {
 
 	source := mockdatasource.MockDatasource{Type: datasource.Database, Engine: datasource.Mysql, Database: "source", MockedDb: sdb}
 	dest := mockdatasource.MockDatasource{Type: datasource.Database, Engine: datasource.Mysql, Database: "dest", MockedDb: ddb}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
 
-	_, err = database.NewSaver(context.Background(), &dest, "", "id", "replace")
+	_, err = database.NewSaver(context.Background(), log, &dest, "", "id", "replace")
 	if err == nil {
 		t.Fatalf("NewSaver should return error")
 	}
 
-	_, err = database.NewLoader(context.Background(), &source, "", "")
+	_, err = database.NewLoader(context.Background(), log, &source, "", "")
 	if err == nil {
 		t.Fatalf("NewLoader should return error")
 	}
@@ -44,8 +48,11 @@ func TestNoKeyError(t *testing.T) {
 	}
 
 	dest := mockdatasource.MockDatasource{Type: datasource.Database, Engine: datasource.Mysql, Database: "dest", MockedDb: ddb}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
 
-	_, err = database.NewSaver(context.Background(), &dest, "dtable", "", "exactCopy")
+	_, err = database.NewSaver(context.Background(), log, &dest, "dtable", "", "exactCopy")
 	if err == nil {
 		t.Fatalf("NewSaver should return error")
 	}
@@ -59,8 +66,11 @@ func TestCreateIdsListError(t *testing.T) {
 
 	dmock.ExpectQuery("SELECT id from dtable").WillReturnError(fmt.Errorf("fake error"))
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
 
-	_, err = database.NewSaver(context.Background(), &dest, "dtable", "id", "exactCopy")
+	_, err = database.NewSaver(context.Background(), log, &dest, "dtable", "id", "exactCopy")
 	if err == nil {
 		t.Fatalf("NewSaver should return error")
 	}
@@ -83,6 +93,9 @@ func TestGetColNamesError(t *testing.T) {
 	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
 	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
 
 	ddb, dmock, err := sqlmock.New()
 	if err != nil {
@@ -93,22 +106,22 @@ func TestGetColNamesError(t *testing.T) {
 
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "", "insert")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "", "insert")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err == nil {
+		if err = saver.Save(log, record); err == nil {
 			t.Fatalf("Save should return error")
 		}
 	}
@@ -131,6 +144,9 @@ func TestDestHasMoreColsOk(t *testing.T) {
 	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
 	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
 
 	ddb, dmock, err := sqlmock.New()
 	if err != nil {
@@ -145,22 +161,22 @@ func TestDestHasMoreColsOk(t *testing.T) {
 	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "insert")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
@@ -179,6 +195,9 @@ func TestDestHasLessColsOk(t *testing.T) {
 	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
 	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
 
 	ddb, dmock, err := sqlmock.New()
 	if err != nil {
@@ -193,22 +212,22 @@ func TestDestHasLessColsOk(t *testing.T) {
 	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "insert")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
@@ -224,8 +243,11 @@ func TestKeyNotExistsDestError(t *testing.T) {
 	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
 
-	_, err = database.NewSaver(context.Background(), &dest, "dtable", "id", "update")
+	_, err = database.NewSaver(context.Background(), log, &dest, "dtable", "id", "update")
 	if err == nil {
 		t.Fatalf("NewSaver should return error")
 	}
@@ -261,23 +283,26 @@ func TestKeyNotExistsSourceError(t *testing.T) {
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
 
-	saver, err := database.NewSaver(context.Background(), &dest, "dtable", "id", "update")
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "update")
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := database.NewLoader(context.Background(), &source, "stable", "")
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
 
 	loader.Next()
-	record, err := loader.Load()
+	record, err := loader.Load(log)
 	if err != nil {
 		t.Fatalf("Load should not return error and returned '%v'", err)
 	}
 
-	err = saver.Save(record)
+	err = saver.Save(log, record)
 	if err == nil {
 		t.Fatalf("Save should return error")
 	}

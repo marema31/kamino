@@ -3,6 +3,7 @@ package mockprovider
 import (
 	"fmt"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/provider/types"
 )
 
@@ -20,7 +21,7 @@ func (ml *MockLoader) Next() bool {
 }
 
 //Load reads the next record and return it
-func (ml *MockLoader) Load() (types.Record, error) {
+func (ml *MockLoader) Load(log *logrus.Entry) (types.Record, error) {
 	if ml.CurrentRow >= len(ml.Content) {
 		return nil, fmt.Errorf("no more data to read")
 	}
@@ -31,7 +32,7 @@ func (ml *MockLoader) Load() (types.Record, error) {
 }
 
 //Close closes the datasource
-func (ml *MockLoader) Close() error {
+func (ml *MockLoader) Close(log *logrus.Entry) error {
 	return ml.ErrorClose
 }
 

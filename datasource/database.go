@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql" // Mysql library dynamically called by database/sql
 	_ "github.com/lib/pq"              //Postgres library dynamically called by database/sql
 	"github.com/spf13/viper"
@@ -18,7 +19,7 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine) (Dat
 	ds.name = filename
 	ds.database = v.GetString("database")
 	if ds.database == "" {
-		return Datasource{}, fmt.Errorf("the datasource %s does not provide the database name", ds.name)
+		return Datasource{}, fmt.Errorf("no database name provided")
 	}
 
 	ds.tags = v.GetStringSlice("tags")
@@ -85,9 +86,11 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine) (Dat
 }
 
 //OpenDatabase open connection to the corresponding database
-func (ds *Datasource) OpenDatabase(admin bool, nodb bool) (*sql.DB, error) {
+func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*sql.DB, error) {
+	logDb := log.WithField("engine", EngineToString(ds.engine))
 	if ds.dstype != Database {
-		return nil, fmt.Errorf("the datasource %s is not a database cannot open it", ds.name)
+		logDb.Error("Can not open as a database")
+		return nil, fmt.Errorf("can not open %s as a database", ds.name)
 	}
 	URL := ds.url
 	if admin {
@@ -107,12 +110,16 @@ func (ds *Datasource) OpenDatabase(admin bool, nodb bool) (*sql.DB, error) {
 
 	db, err := sqlOpen(driver, URL)
 	if err != nil {
+		log.Error("Opening database failed")
+		log.Error(err)
 		return nil, err
 	}
 
 	// Open does not really do a connection and therefore does not test for url is correct, ping will do
 	err = db.Ping()
 	if err != nil {
+		log.Error("Ping database failed")
+		log.Error(err)
 		return nil, err
 	}
 	return db, nil

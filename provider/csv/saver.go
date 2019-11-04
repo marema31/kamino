@@ -6,6 +6,7 @@ import (
 	"io"
 	"sort"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/types"
 )
@@ -20,8 +21,9 @@ type KaminoCsvSaver struct {
 }
 
 //NewSaver open the encoding process on provider file and return a Saver compatible object
-func NewSaver(ctx context.Context, ds datasource.Datasourcer) (*KaminoCsvSaver, error) {
-	file, err := ds.OpenWriteFile()
+func NewSaver(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer) (*KaminoCsvSaver, error) {
+	logFile := log.WithField("datasource", ds.GetName())
+	file, err := ds.OpenWriteFile(logFile)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +33,8 @@ func NewSaver(ctx context.Context, ds datasource.Datasourcer) (*KaminoCsvSaver, 
 }
 
 //Save writes the record to the destination
-func (cs *KaminoCsvSaver) Save(record types.Record) error {
+func (cs *KaminoCsvSaver) Save(log *logrus.Entry, record types.Record) error {
+	logFile := log.WithField("datasource", cs.ds.GetName())
 	// Is this method is called for the first time
 	//If yes fix the column order in csv file
 	if cs.colNames == nil {
@@ -45,6 +48,8 @@ func (cs *KaminoCsvSaver) Save(record types.Record) error {
 		cs.colNames = keys
 		err := cs.writer.Write(cs.colNames)
 		if err != nil {
+			logFile.Error("Writing file failed")
+			logFile.Error(err)
 			return nil
 		}
 	}
@@ -59,9 +64,10 @@ func (cs *KaminoCsvSaver) Save(record types.Record) error {
 }
 
 //Close closes the destination
-func (cs *KaminoCsvSaver) Close() error {
+func (cs *KaminoCsvSaver) Close(log *logrus.Entry) error {
+	logFile := log.WithField("datasource", cs.ds.GetName())
 	cs.writer.Flush()
-	return cs.ds.CloseFile()
+	return cs.ds.CloseFile(logFile)
 }
 
 //Name give the name of the destination
@@ -70,6 +76,7 @@ func (cs *KaminoCsvSaver) Name() string {
 }
 
 //Reset reinitialize the destination (if possible)
-func (cs *KaminoCsvSaver) Reset() error {
-	return cs.ds.ResetFile()
+func (cs *KaminoCsvSaver) Reset(log *logrus.Entry) error {
+	logFile := log.WithField("datasource", cs.ds.GetName())
+	return cs.ds.ResetFile(logFile)
 }

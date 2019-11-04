@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/mockdatasource"
 	"github.com/marema31/kamino/provider/json"
@@ -14,6 +15,8 @@ import (
 func TestOk(t *testing.T) {
 	source := mockdatasource.MockDatasource{Type: datasource.File, Engine: datasource.JSON, Zip: false, Gzip: false, FilePath: "sourcefile"}
 	dest := mockdatasource.MockDatasource{Type: datasource.File, Engine: datasource.JSON, Zip: false, Gzip: false, FilePath: "destfile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
 	testString := []byte("[\n    {\n        \"id\": \"1\",\n        \"name\": \"Alice\"\n    },\n    {\n        \"id\": \"2\",\n        \"name\": \"Bob\"\n    }\n]")
 	_, err := source.WriteBuf.Write(testString)
@@ -21,11 +24,11 @@ func TestOk(t *testing.T) {
 		t.Fatalf("Writing to the mocked source file should not return error and returned '%v'", err)
 	}
 
-	saver, err := json.NewSaver(context.Background(), &dest)
+	saver, err := json.NewSaver(context.Background(), log, &dest)
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := json.NewLoader(context.Background(), &source)
+	loader, err := json.NewLoader(context.Background(), log, &source)
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
@@ -40,27 +43,27 @@ func TestOk(t *testing.T) {
 	}
 
 	for loader.Next() {
-		record, err := loader.Load()
+		record, err := loader.Load(log)
 		if err != nil {
 			t.Fatalf("Load should not return error and returned '%v'", err)
 		}
 
-		if err = saver.Save(record); err != nil {
+		if err = saver.Save(log, record); err != nil {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
 
-	_, err = loader.Load()
+	_, err = loader.Load(log)
 	if err == nil {
 		t.Errorf("Load should return error ")
 	}
 
-	err = saver.Close()
+	err = saver.Close(log)
 	if err != nil {
 		t.Errorf("Saver close should not return error and returned '%v'", err)
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err != nil {
 		t.Errorf("Loader close should not return error and returned '%v'", err)
 	}
@@ -79,13 +82,15 @@ func TestOk(t *testing.T) {
 func TestOpenError(t *testing.T) {
 	source := mockdatasource.MockDatasource{ErrorOpenFile: fmt.Errorf("fake error"), Type: datasource.File, Engine: datasource.JSON, Zip: false, Gzip: false, FilePath: "sourcefile"}
 	dest := mockdatasource.MockDatasource{ErrorOpenFile: fmt.Errorf("fake error"), Type: datasource.File, Engine: datasource.JSON, Zip: false, Gzip: false, FilePath: "destfile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	_, err := json.NewSaver(context.Background(), &dest)
+	_, err := json.NewSaver(context.Background(), log, &dest)
 	if err == nil {
 		t.Fatalf("NewSaver should return error")
 	}
 
-	_, err = json.NewLoader(context.Background(), &source)
+	_, err = json.NewLoader(context.Background(), log, &source)
 	if err == nil {
 		t.Fatalf("NewLoader should return error")
 	}
@@ -95,6 +100,8 @@ func TestOpenError(t *testing.T) {
 func TestCloseError(t *testing.T) {
 	source := mockdatasource.MockDatasource{ErrorClose: fmt.Errorf("fake error"), Type: datasource.File, Engine: datasource.JSON, Zip: false, Gzip: false, FilePath: "sourcefile"}
 	dest := mockdatasource.MockDatasource{ErrorClose: fmt.Errorf("fake error"), Type: datasource.File, Engine: datasource.JSON, Zip: false, Gzip: false, FilePath: "destfile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
 	testString := []byte("[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"2\",\"name\":\"Bob\"}]")
 	_, err := source.WriteBuf.Write(testString)
@@ -102,21 +109,21 @@ func TestCloseError(t *testing.T) {
 		t.Fatalf("Writing to the mocked source file should not return error and returned '%v'", err)
 	}
 
-	saver, err := json.NewSaver(context.Background(), &dest)
+	saver, err := json.NewSaver(context.Background(), log, &dest)
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
-	loader, err := json.NewLoader(context.Background(), &source)
+	loader, err := json.NewLoader(context.Background(), log, &source)
 	if err != nil {
 		t.Fatalf("NewLoader should not return error and returned '%v'", err)
 	}
 
-	err = saver.Close()
+	err = saver.Close(log)
 	if err == nil {
 		t.Fatalf("Saver close should return error")
 	}
 
-	err = loader.Close()
+	err = loader.Close(log)
 	if err == nil {
 		t.Fatalf("Loader close should return error")
 	}
@@ -124,13 +131,15 @@ func TestCloseError(t *testing.T) {
 
 func TestResetOK(t *testing.T) {
 	dest := mockdatasource.MockDatasource{Type: datasource.File, Engine: datasource.JSON, Zip: false, Gzip: false, FilePath: "destfile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	saver, err := json.NewSaver(context.Background(), &dest)
+	saver, err := json.NewSaver(context.Background(), log, &dest)
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
 
-	err = saver.Reset()
+	err = saver.Reset(log)
 	if err != nil {
 		t.Fatalf("Saver Resetshould not return error and returned '%v'", err)
 	}
@@ -139,13 +148,15 @@ func TestResetOK(t *testing.T) {
 
 func TestResetError(t *testing.T) {
 	dest := mockdatasource.MockDatasource{ErrorReset: fmt.Errorf("fake error"), Type: datasource.File, Engine: datasource.JSON, Zip: false, Gzip: false, FilePath: "destfile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
 
-	saver, err := json.NewSaver(context.Background(), &dest)
+	saver, err := json.NewSaver(context.Background(), log, &dest)
 	if err != nil {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
 
-	err = saver.Reset()
+	err = saver.Reset(log)
 	if err == nil {
 		t.Fatalf("Saver Reset should return error")
 	}
@@ -153,13 +164,16 @@ func TestResetError(t *testing.T) {
 
 func TestWrongFormat(t *testing.T) {
 	source := mockdatasource.MockDatasource{ErrorOpenFile: fmt.Errorf("fake error"), Type: datasource.File, Engine: datasource.JSON, Zip: false, Gzip: false, FilePath: "sourcefile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+
 	testString := []byte("{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"2\",\"name\":\"Bob\"}]")
 	_, err := source.WriteBuf.Write(testString)
 	if err != nil {
 		t.Fatalf("Writing to the mocked source file should not return error and returned '%v'", err)
 	}
 
-	_, err = json.NewLoader(context.Background(), &source)
+	_, err = json.NewLoader(context.Background(), log, &source)
 	if err == nil {
 		t.Fatalf("NewLoader should return error")
 	}

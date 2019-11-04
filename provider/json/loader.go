@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/types"
 )
@@ -21,13 +22,16 @@ type KaminoJSONLoader struct {
 }
 
 //NewLoader open the encoding process on provider file, read the whole file, unMarshal it and return a Loader compatible object
-func NewLoader(ctx context.Context, ds datasource.Datasourcer) (*KaminoJSONLoader, error) {
-	file, err := ds.OpenReadFile()
+func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer) (*KaminoJSONLoader, error) {
+	logFile := log.WithField("datasource", ds.GetName())
+	file, err := ds.OpenReadFile(logFile)
 	if err != nil {
 		return nil, err
 	}
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
+		logFile.Error("Reading the JSON file failed")
+		logFile.Error(err)
 		return nil, err
 	}
 
@@ -36,6 +40,8 @@ func NewLoader(ctx context.Context, ds datasource.Datasourcer) (*KaminoJSONLoade
 	k.content = make([]map[string]string, 0)
 	err = json.Unmarshal([]byte(byteValue), &k.content)
 	if err != nil {
+		logFile.Error("Parsing the JSON file failed")
+		logFile.Error(err)
 		return nil, err
 	}
 
@@ -49,8 +55,10 @@ func (jl *KaminoJSONLoader) Next() bool {
 }
 
 //Load reads the next record and return it
-func (jl *KaminoJSONLoader) Load() (types.Record, error) {
+func (jl *KaminoJSONLoader) Load(log *logrus.Entry) (types.Record, error) {
+	logFile := log.WithField("datasource", jl.ds.GetName())
 	if jl.currentRow >= len(jl.content) {
+		logFile.Error("no more data to read")
 		return nil, fmt.Errorf("no more data to read")
 	}
 
@@ -61,9 +69,9 @@ func (jl *KaminoJSONLoader) Load() (types.Record, error) {
 }
 
 //Close closes the datasource
-func (jl *KaminoJSONLoader) Close() error {
-	//TODO: replace the following by the datasource.CloseFile()
-	return jl.ds.CloseFile()
+func (jl *KaminoJSONLoader) Close(log *logrus.Entry) error {
+	logFile := log.WithField("datasource", jl.ds.GetName())
+	return jl.ds.CloseFile(logFile)
 }
 
 //Name give the name of the destination

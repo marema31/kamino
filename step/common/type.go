@@ -3,10 +3,12 @@ package common
 
 import (
 	"context"
+
+	"github.com/Sirupsen/logrus"
 )
 
 // Steper Interface that will be used to run the steps
 type Steper interface {
-	Do(context.Context) error
-	Cancel()
+	Do(context.Context, *logrus.Entry) error
+	Cancel(*logrus.Entry)
 }

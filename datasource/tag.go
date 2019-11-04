@@ -1,6 +1,10 @@
 package datasource
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/Sirupsen/logrus"
+)
 
 func (ds *Datasource) isSelectedEngine(engines []Engine) bool {
 	if len(engines) == 0 {
@@ -53,37 +57,46 @@ func (dss *Datasources) lookupWithoutTag(dsTypes []Type, engines []Engine) (sele
 
 //Lookup return a list of *Datasource that correspond to the
 // list of tag expression
-func (dss *Datasources) Lookup(tagList []string, dsTypes []Type, engines []Engine) []Datasourcer {
+func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, dsTypes []Type, engines []Engine) []Datasourcer {
+	logLookup := log.WithField("lookup", "tags")
 	selected := make(map[string]*Datasource) // Use map to emulate a "set" to avoid duplicates
 	if len(tagList) == 0 {
+		logLookup.Debug("No tag provided, will only lookup on type and engines")
 		// The selection is not based on tag, lookup for all of them
 		for _, name := range dss.lookupWithoutTag(dsTypes, engines) {
+			logLookup.Debugf("Found : %s", name)
 			selected[name] = dss.datasources[name]
 		}
 	} else {
 		for _, tagElement := range tagList {
+			logLookup.Debugf("Lookup %s", tagElement)
 			if !strings.Contains(tagElement, ".") {
-				// Simple tag, all corresponding datasource are selected
-
+				logLookup.Debug("Simple tag")
 				for _, name := range dss.lookupOneTag(tagElement, dsTypes, engines) {
 					selected[name] = dss.datasources[name]
 				}
 			} else {
-				// Composite tag, only datasource corresponding to all tags are selected
+				logLookup.Debug("Composite tag")
 				candidates := make(map[string]bool)
 				for i, tag := range strings.Split(tagElement, ".") {
+					logLookup.Debugf("Lookup for sub-tag %s", tag)
 					for _, name := range dss.lookupOneTag(tag, dsTypes, engines) {
 						if i == 0 {
+							logLookup.Debugf("Found: %s", name)
 							candidates[name] = true
 						} else {
 							if _, ok := candidates[name]; ok {
+								logLookup.Debugf("Found: %s, present fro previous sub-ag", name)
 								candidates[name] = true
+							} else {
+								logLookup.Debugf("Skipped: %s, not present for previous sub-tag", name)
 							}
 						}
 					}
+					logLookup.Debug("Removing datasource not found for this sub-tag")
 					for name, viewed := range candidates {
 						if !viewed {
-							// This name as not be found for this tag part, remove it
+							logLookup.Debugf("Removing: %s", name)
 							delete(candidates, name)
 						} else {
 							// Prepare the map for the next tag
@@ -91,15 +104,20 @@ func (dss *Datasources) Lookup(tagList []string, dsTypes []Type, engines []Engin
 						}
 					}
 				}
+				logLookup.Debugf("Final list for %s", tagElement)
 				for name := range candidates {
+					logLookup.Debugf("  - %s", name)
 					selected[name] = dss.datasources[name]
 				}
 			}
 		}
 	}
 
+	logLookup.Debug("Final datasources list:")
+
 	selectedDs := make([]Datasourcer, 0, len(selected))
 	for _, ds := range selected {
+		logLookup.Debugf("  - %s", ds.name)
 		selectedDs = append(selectedDs, ds)
 	}
 	return selectedDs

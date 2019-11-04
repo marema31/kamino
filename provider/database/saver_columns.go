@@ -2,9 +2,9 @@ package database
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/types"
 )
@@ -20,30 +20,36 @@ func (saver *DbSaver) questionMarkByEngine(qm *[]string) string {
 	return ""
 }
 
-func (saver *DbSaver) getColNames(record types.Record) ([]string, []string, error) {
+func (saver *DbSaver) getColNames(log *logrus.Entry, record types.Record) ([]string, []string, error) {
 
 	var updateSet []string
 	var questionmark []string
+	log.Debug("Retrieving the column names")
+	log.Debugf("SELECT * from %s LIMIT 1", saver.table)
 	rows, err := saver.db.QueryContext(saver.ctx, fmt.Sprintf("SELECT * from %s LIMIT 1", saver.table)) // We don't need data, we only neesaver the column names
 	if err != nil {
+		log.Error("Querying for retrieving column names failed")
+		log.Error(err)
 		return nil, nil, err
 	}
 
 	columns, err := rows.ColumnTypes()
 	if err != nil {
+		log.Error("Retrieving column names failed")
+		log.Error(err)
 		return nil, nil, err
 	}
 
 	saver.wasEmpty = !rows.Next()
 	if saver.mode == onlyIfEmpty && !saver.wasEmpty {
-		log.Printf("Warning: the table %s of database %s is not empty, I will do nothing on it", saver.table, saver.database)
+		log.Warnf("Table %s not empty, I will do nothing on it", saver.table)
 	}
 
 	keyseen := false
 	for _, col := range columns {
 		_, ok := record[col.Name()]
 		if !ok {
-			log.Printf("Warning: the colum %s does not exist in source, for table %s of %s using table default value", col.Name(), saver.table, saver.database)
+			log.Warnf("Colum %s does not exist in source, using table default value", col.Name())
 			continue
 		}
 		if strings.EqualFold(col.Name(), saver.key) {
@@ -61,6 +67,8 @@ func (saver *DbSaver) getColNames(record types.Record) ([]string, []string, erro
 		questionmark = append(questionmark, saver.questionMarkByEngine(&questionmark))
 
 		if !keyseen {
+			log.Errorf("Provided key %s is not a column of %s", saver.key, saver.table)
+			log.Error(err)
 			return nil, nil, fmt.Errorf("provided key %s is not a column of %s.%s ", saver.key, saver.database, saver.table)
 		}
 	}
@@ -77,11 +85,13 @@ func (saver *DbSaver) getColNames(record types.Record) ([]string, []string, erro
 			}
 		}
 		if !seen {
-			log.Printf("Warning: the colum %s does not exist in destination table %s of %s", colr, saver.table, saver.database)
+			log.Warnf("Colum %s does not exist in %s", colr, saver.table)
 		}
 	}
 
 	if saver.key != "" && !keyseen {
+		log.Errorf("Provided key %s is not a column of %s", saver.key, saver.table)
+		log.Error(err)
 		return nil, nil, fmt.Errorf("provided key %s is not available in destination table for %s.%s ", saver.key, saver.database, saver.table)
 	}
 
@@ -89,8 +99,8 @@ func (saver *DbSaver) getColNames(record types.Record) ([]string, []string, erro
 }
 
 // createStatement Query the destination table to determine the available colums, create the corresponding insert/update statement and save them in the dbSaver instance
-func (saver *DbSaver) createStatement(record types.Record) error {
-	questionmark, updateSet, err := saver.getColNames(record)
+func (saver *DbSaver) createStatement(log *logrus.Entry, record types.Record) error {
+	questionmark, updateSet, err := saver.getColNames(log, record)
 	if err != nil {
 		return err
 	}
@@ -98,21 +108,31 @@ func (saver *DbSaver) createStatement(record types.Record) error {
 	saver.insertString = fmt.Sprintf("INSERT INTO %s ( %s) VALUES ( %s )", saver.table, strings.Join(saver.colNames[:], ","), strings.Join(questionmark[:], ","))
 	saver.updateString = fmt.Sprintf("UPDATE %s SET  %s WHERE %s = %s", saver.table, strings.Join(updateSet[:], ","), saver.key, saver.questionMarkByEngine(&updateSet))
 
+	log.Debug("Preparing Insert statement")
+	log.Debug(saver.insertString)
 	if saver.transaction {
 		saver.insertStmt, err = saver.tx.Prepare(saver.insertString)
 	} else {
 		saver.insertStmt, err = saver.db.Prepare(saver.insertString)
 	}
 	if err != nil {
+		log.Error("Preparing Insert statement failed")
+		log.Error(saver.insertString)
+		log.Error(err)
 		return err
 	}
 	if saver.mode == replace || saver.mode == update || saver.mode == exactCopy {
+		log.Debug("Preparing Update statement")
+		log.Debug(saver.updateString)
 		if saver.transaction {
 			saver.updateStmt, err = saver.tx.Prepare(saver.updateString)
 		} else {
 			saver.updateStmt, err = saver.db.Prepare(saver.updateString)
 		}
 		if err != nil {
+			log.Error("Preparing Update statement failed")
+			log.Error(saver.updateString)
+			log.Error(err)
 			return err
 		}
 	}

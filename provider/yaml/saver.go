@@ -6,6 +6,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/provider/types"
 )
@@ -19,8 +20,9 @@ type KaminoYAMLSaver struct {
 }
 
 //NewSaver open the encoding process on provider file and return a Saver compatible object
-func NewSaver(ctx context.Context, ds datasource.Datasourcer) (*KaminoYAMLSaver, error) {
-	file, err := ds.OpenWriteFile()
+func NewSaver(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer) (*KaminoYAMLSaver, error) {
+	logFile := log.WithField("datasource", ds.GetName())
+	file, err := ds.OpenWriteFile(logFile)
 	if err != nil {
 		return nil, err
 	}
@@ -30,22 +32,27 @@ func NewSaver(ctx context.Context, ds datasource.Datasourcer) (*KaminoYAMLSaver,
 }
 
 //Save writes the record to the destination
-func (ys *KaminoYAMLSaver) Save(record types.Record) error {
+func (ys *KaminoYAMLSaver) Save(log *logrus.Entry, record types.Record) error {
 	ys.content = append(ys.content, record)
 	return nil
 }
 
 //Close closes the destination
-func (ys *KaminoYAMLSaver) Close() error {
+func (ys *KaminoYAMLSaver) Close(log *logrus.Entry) error {
+	logFile := log.WithField("datasource", ys.ds.GetName())
 	yamlStr, err := yaml.Marshal(ys.content)
 	if err != nil {
+		logFile.Error("Converting to YAML failed")
+		logFile.Error(err)
 		return err
 	}
 	_, err = ys.file.Write(yamlStr)
 	if err != nil {
+		logFile.Error("Writing file failed")
+		logFile.Error(err)
 		return err
 	}
-	return ys.ds.CloseFile()
+	return ys.ds.CloseFile(logFile)
 }
 
 //Name give the name of the destination
@@ -54,6 +61,7 @@ func (ys *KaminoYAMLSaver) Name() string {
 }
 
 //Reset reinitialize the destination (if possible)
-func (ys *KaminoYAMLSaver) Reset() error {
-	return ys.ds.ResetFile()
+func (ys *KaminoYAMLSaver) Reset(log *logrus.Entry) error {
+	logFile := log.WithField("datasource", ys.ds.GetName())
+	return ys.ds.ResetFile(logFile)
 }

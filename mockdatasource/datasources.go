@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 )
 
@@ -22,7 +23,7 @@ func New() *MockDatasources {
 }
 
 //LoadAll do nothing, return an error if path is empty
-func (dss *MockDatasources) LoadAll(path string) error {
+func (dss *MockDatasources) LoadAll(path string, log *logrus.Entry) error {
 	if path == "" {
 		return fmt.Errorf("empty path")
 	}
@@ -44,7 +45,7 @@ func getIndex(tags []string, dsTypes []datasource.Type, engines []datasource.Eng
 
 //Lookup : return the corresponding array of Mocked datasources
 //WARNING: the algorithm of lookup is much simpler than the one from the object, all the parameters must be exactly the same !
-func (dss *MockDatasources) Lookup(tags []string, dsTypes []datasource.Type, engines []datasource.Engine) []datasource.Datasourcer {
+func (dss *MockDatasources) Lookup(log *logrus.Entry, tags []string, dsTypes []datasource.Type, engines []datasource.Engine) []datasource.Datasourcer {
 	index := getIndex(tags, dsTypes, engines)
 	dsr := make([]datasource.Datasourcer, 0, len(dss.precordedAnswers[index]))
 	for _, ds := range dss.precordedAnswers[index] {

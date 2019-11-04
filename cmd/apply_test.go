@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/cmd"
 )
 
@@ -15,13 +16,13 @@ type mockedCookbook struct {
 }
 
 //Do manage the runnning of the cookbook
-func (ck *mockedCookbook) Do(ctx context.Context) bool {
+func (ck *mockedCookbook) Do(ctx context.Context, log *logrus.Entry) bool {
 	ck.called = true
 	return ck.doReturnValue
 }
 
 // Load the step file and returns the priority and a list of steper for this file
-func (ck *mockedCookbook) Load(ctx context.Context, path string, recipes []string, stepNames []string, stepTypes []string) error {
+func (ck *mockedCookbook) Load(ctx context.Context, log *logrus.Entry, path string, recipes []string, stepNames []string, stepTypes []string) error {
 	ck.called = false
 	return ck.errorLoad
 }

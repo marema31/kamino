@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/filter"
 	"github.com/marema31/kamino/provider/types"
 )
@@ -11,16 +12,23 @@ import (
 func TestFilterUnknown(t *testing.T) {
 	aParams := []string{}
 	mParams := make(map[string]string)
-	_, err := filter.NewFilter(context.Background(), "unknown", aParams, mParams)
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	_, err := filter.NewFilter(context.Background(), log, "unknown", aParams, mParams)
 	if err == nil {
 		t.Errorf("NewFilter should returns an error")
 	}
 }
 
 func TestFilterOnlyOk(t *testing.T) {
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
 	aParams := []string{"id", "name", "sex"}
 	mParams := make(map[string]string)
-	f, err := filter.NewFilter(context.Background(), "only", aParams, mParams)
+	f, err := filter.NewFilter(context.Background(), log, "only", aParams, mParams)
 	if err != nil {
 		t.Errorf("NewFilter should not returns an error, returned: %v", err)
 	}
@@ -60,26 +68,32 @@ func TestFilterOnlyOk(t *testing.T) {
 }
 
 func TestFilterOnlyFail(t *testing.T) {
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
 	aParams := []string{}
 	mParams := make(map[string]string)
-	_, err := filter.NewFilter(context.Background(), "only", nil, mParams)
+	_, err := filter.NewFilter(context.Background(), log, "only", nil, mParams)
 	if err == nil {
 		t.Errorf("NewFilter only without parameters should returns an error")
 	}
-	_, err = filter.NewFilter(context.Background(), "only", aParams, mParams)
+	_, err = filter.NewFilter(context.Background(), log, "only", aParams, mParams)
 	if err == nil {
 		t.Errorf("NewFilter only without parameters should returns an error")
 	}
 }
 
 func TestFilterReplaceOk(t *testing.T) {
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
 	aParams := []string{}
 	mParams := make(map[string]string)
 	mParams["id"] = "42"
 	mParams["firstname"] = "Jane"
 	mParams["sex"] = "female"
 
-	f, err := filter.NewFilter(context.Background(), "replace", aParams, mParams)
+	f, err := filter.NewFilter(context.Background(), log, "replace", aParams, mParams)
 	if err != nil {
 		t.Errorf("NewFilter should not returns an error, returned: %v", err)
 	}
@@ -127,13 +141,16 @@ func TestFilterReplaceOk(t *testing.T) {
 }
 
 func TestFilterReplaceFail(t *testing.T) {
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
 	aParams := []string{}
 	mParams := make(map[string]string)
-	_, err := filter.NewFilter(context.Background(), "replace", aParams, nil)
+	_, err := filter.NewFilter(context.Background(), log, "replace", aParams, nil)
 	if err == nil {
 		t.Errorf("NewFilter replace without parameters should returns an error")
 	}
-	_, err = filter.NewFilter(context.Background(), "replace", aParams, mParams)
+	_, err = filter.NewFilter(context.Background(), log, "replace", aParams, mParams)
 	if err == nil {
 		t.Errorf("NewFilter replace without parameters should returns an error")
 	}
