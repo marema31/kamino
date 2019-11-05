@@ -25,12 +25,21 @@ func setupLoad() (context.Context, *logrus.Entry, *MockedStepFactory, *recipe.Co
 
 // ***** MOCK STEP and STEP CREATER
 type mockedStep struct {
-	name      string
-	Called    bool
-	Canceled  bool
-	HasError  bool
-	StepError error
-	Priority  uint
+	name        string
+	Initialized bool
+	Called      bool
+	Canceled    bool
+	HasError    bool
+	InitError   error
+	StepError   error
+	Priority    uint
+}
+
+//Init manage the initialization of the step
+func (st *mockedStep) Init(ctx context.Context, log *logrus.Entry) error {
+	log.WithField("name", st.name).WithField("error", st.InitError).Info("Initializing")
+	st.Initialized = true
+	return st.InitError
 }
 
 //Cancel manage the cancellation of the step
@@ -41,7 +50,7 @@ func (st *mockedStep) Cancel(log *logrus.Entry) {
 
 //Do manage the runnning of the step
 func (st *mockedStep) Do(ctx context.Context, log *logrus.Entry) error {
-	log.WithField("name", st.name).Info("Doing")
+	log.WithField("name", st.name).WithField("error", st.StepError).Info("Doing")
 	st.Called = true
 
 	time.Sleep(1 * time.Second) // It is moking we are doing nothing
@@ -73,6 +82,7 @@ func (sf *MockedStepFactory) Load(ctx context.Context, log *logrus.Entry, recipe
 	nbSteps := v.GetInt("steps")
 	generateError := v.GetBool("generateerror")
 	stepError := v.GetBool("steperror")
+	stepInitError := v.GetBool("stepiniterror")
 
 	if generateError {
 		return 0, nil, fmt.Errorf("fake error")
@@ -92,6 +102,10 @@ func (sf *MockedStepFactory) Load(ctx context.Context, log *logrus.Entry, recipe
 		if stepError {
 			m.StepError = fmt.Errorf("fake error")
 		}
+		if stepInitError {
+			m.InitError = fmt.Errorf("fake error")
+		}
+
 		steps = append(steps, m)
 		sf.Steps[rname] = append(sf.Steps[rname], m)
 	}

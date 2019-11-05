@@ -39,8 +39,9 @@ func TestRecipeDoOk(t *testing.T) {
 			if !step.Called {
 				t.Fatalf("One step was not executed")
 			}
-		}
-		for _, step := range sf.Steps[rname] {
+			if !step.Initialized {
+				t.Fatalf("One step was not initalized")
+			}
 			if step.Canceled {
 				t.Fatalf("One step was canceled")
 			}
@@ -128,7 +129,47 @@ func TestRecipeDoStepError(t *testing.T) {
 			t.Errorf("A step with priority more than 5 of steperror was cancelled")
 		}
 		if step.Priority > 5 && step.Called {
-			t.Errorf("A step with priority more than 5 of steperror was cancelled")
+			t.Errorf("A step with priority more than 5 of steperror was called")
+		}
+	}
+
+	//t.Fatal(strings.Join(debug, "\n"))
+}
+
+func TestRecipeInitStepError(t *testing.T) {
+	ctx, log, sf, ck := setupLoad()
+
+	err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "stepiniterror"}, nil, nil)
+	if err != nil {
+		t.Errorf("Load should not returns an error, returned: %v", err)
+	}
+
+	hadError := ck.Do(ctx, log)
+	if !hadError {
+		t.Errorf("Do should return true")
+	}
+
+	for _, step := range sf.Steps["recipe1ok"] {
+		if step.Canceled {
+			t.Errorf("A step of recipe1ok was cancelled")
+		}
+	}
+
+	for _, step := range sf.Steps["steperror"] {
+		if step.Priority < 5 && !step.Initialized {
+			t.Errorf("A step with priority less than 5 of steperror was not initialized")
+		}
+		if step.Priority < 5 && !step.Called {
+			t.Errorf("A step with priority less than 5 of steperror was not called")
+		}
+		if step.Priority == 5 && step.Called {
+			t.Errorf("A step with priority 5 of steperror was called")
+		}
+		if step.Priority > 5 && step.Initialized {
+			t.Errorf("A step with priority more than 5 of steperror was initialized")
+		}
+		if step.Priority > 5 && step.Called {
+			t.Errorf("A step with priority more than 5 of steperror was called")
 		}
 	}
 

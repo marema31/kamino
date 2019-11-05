@@ -64,7 +64,21 @@ func (ck *Cookbook) doOneRecipe(ctx context.Context, log *logrus.Entry, wgRecipe
 		log.Debugf("Executing step of priority: %d", priority)
 		nbSteps := len(ck.Recipes[rname].steps[uint(priority)])
 
-		//Waitgroup for steps of this priority level
+		for _, step := range ck.Recipes[rname].steps[uint(priority)] {
+			err := step.Init(ctxRecipe, log)
+			if err != nil {
+				//we set the flag for the cookbook, does not execute following priorities for this recipe
+				mu.Lock()
+				{
+					hadError = true
+				}
+				mu.Unlock()
+				log.Errorf("One step of priority %d had error at initialization, skipping the following steps", priority)
+				return //We won't execute the following priorities
+			}
+		}
+
+		//Waitgroup for steps do of this priority level
 		var wgStep sync.WaitGroup
 
 		//Waitgroup for watchdog of this priority level

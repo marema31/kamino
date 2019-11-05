@@ -25,7 +25,7 @@ func Load(ctx context.Context, log *logrus.Entry, filename string, v *viper.Vipe
 	}
 
 	name := v.GetString("name")
-	logStep := log.WithField("name", name).WithField("type", "shell")
+	logStep := log.WithField("name", name).WithField("type", "sql")
 
 	templateFile := v.GetString("template")
 	if templateFile == "" {
