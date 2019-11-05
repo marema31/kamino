@@ -41,7 +41,6 @@ func stepExecutor(ctxRecipe context.Context, log *logrus.Entry, step common.Step
 	} else {
 		hadError <- false
 	}
-
 }
 func (ck *Cookbook) doOneRecipe(ctx context.Context, log *logrus.Entry, wgRecipe *sync.WaitGroup, rname string) {
 	defer wgRecipe.Done()

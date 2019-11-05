@@ -53,7 +53,7 @@ func (st *mockedStep) Do(ctx context.Context, log *logrus.Entry) error {
 	log.WithField("name", st.name).WithField("error", st.StepError).Info("Doing")
 	st.Called = true
 
-	time.Sleep(1 * time.Second) // It is moking we are doing nothing
+	time.Sleep(5 * time.Millisecond) // It is moking we are doing nothing
 	if st.StepError != nil {
 		st.HasError = true
 		log.WithField("name", st.name).Info("Error")

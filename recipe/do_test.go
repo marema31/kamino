@@ -84,7 +84,7 @@ func TestRecipeDoAllCancel(t *testing.T) {
 	}
 }
 
-func TestRecipeDoStepError(t *testing.T) {
+func TestRecipeDoCancelRecipeOnly(t *testing.T) {
 	ctx, log, sf, ck := setupLoad()
 
 	err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "steperror"}, nil, nil)
@@ -96,16 +96,34 @@ func TestRecipeDoStepError(t *testing.T) {
 	if !hadError {
 		t.Errorf("Do should return true")
 	}
-
 	for _, step := range sf.Steps["recipe1ok"] {
 		if step.Canceled {
 			t.Errorf("A step of recipe1ok was cancelled")
 		}
 	}
+	seen := make(map[bool]int)
+	for _, step := range sf.Steps["steperror"] {
+		seen[step.Canceled] += 1
+	}
+	if seen[true] == 0 {
+		t.Errorf("No step of %s was canceled", "steperror")
+	}
+}
 
+func TestRecipeDoStepError(t *testing.T) {
+	ctx, log, sf, ck := setupLoad()
+
+	err := ck.Load(ctx, log, "testdata/good", []string{"steperror"}, nil, nil)
+	if err != nil {
+		t.Errorf("Load should not returns an error, returned: %v", err)
+	}
+
+	hadError := ck.Do(ctx, log)
+	if !hadError {
+		t.Errorf("Do should return true")
+	}
 	// Way to verify the status of all steps in synthetic way (only for debug)
-	//debug := make([]string, 0, 5)
-	//debug = append(debug, fmt.Sprintf("\n%11v | %6v | %10v | %6v", "name", "Called", "Cancelled", "Error"))
+	log.Warnf("%11v | %6v | %10v | %6v", "name", "Called", "Cancelled", "Error")
 	for _, step := range sf.Steps["steperror"] {
 		if step.Priority < 5 && step.Canceled {
 			t.Errorf("A step with priority less than 5 of steperror was cancelled")
@@ -113,15 +131,17 @@ func TestRecipeDoStepError(t *testing.T) {
 		if step.Priority < 5 && !step.Called {
 			t.Errorf("A step with priority less than 5 of steperror was not called")
 		}
-		/*		if step.Priority == 5 {
-					debug = append(debug, fmt.Sprintf("%11v | %6v | %10v | %6v", step.name, step.Called, step.Canceled, step.HasError))
-				}
-		*/
-		/* TODO: Non blocking issue (#1), for the moment will will go to MVP, come to back after
-		if step.Priority == 5 && !step.Canceled {
-			t.Errorf("A step with priority 5 of steperror was not cancelled")
+		if step.Priority == 5 {
+			log.Warnf("%11v | %6v | %10v | %6v", step.name, step.Called, step.Canceled, step.HasError)
 		}
+
+		// TODO: Non blocking issue (#1), for the moment will will go to MVP, come to back after
+		/*
+			if step.Priority == 5 && !step.Canceled {
+				t.Errorf("A step with priority 5 of steperror was not cancelled")
+			}
 		*/
+
 		if step.Priority == 5 && !step.Called {
 			t.Errorf("A step with priority 5 of steperror was not called")
 		}
@@ -132,8 +152,6 @@ func TestRecipeDoStepError(t *testing.T) {
 			t.Errorf("A step with priority more than 5 of steperror was called")
 		}
 	}
-
-	//t.Fatal(strings.Join(debug, "\n"))
 }
 
 func TestRecipeInitStepError(t *testing.T) {
@@ -172,6 +190,4 @@ func TestRecipeInitStepError(t *testing.T) {
 			t.Errorf("A step with priority more than 5 of steperror was called")
 		}
 	}
-
-	//t.Fatal(strings.Join(debug, "\n"))
 }
