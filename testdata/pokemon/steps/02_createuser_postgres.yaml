@@ -2,7 +2,7 @@
 priority: 2
 name: "createuser"
 type: "sql"
-script: "templates/createuser_postgres.sql.tmpl"
+template: "templates/createuser_postgres.sql.tmpl"
 tags: 
   - "pokemon"
 admin: "true"

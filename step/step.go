@@ -50,7 +50,7 @@ func (sf Factory) Load(ctx context.Context, log *logrus.Entry, recipePath string
 	logStep := log.WithField("type", stepType)
 	//by sending stepNames and  stepTypes to the Load functions
 	switch stepType {
-	case "sql":
+	case "shell":
 		priority, stepList, err = shell.Load(ctx, logStep, filename, v, dss)
 	case "migration":
 		priority, stepList, err = migration.Load(ctx, logStep, filename, v, dss)
@@ -58,7 +58,7 @@ func (sf Factory) Load(ctx context.Context, log *logrus.Entry, recipePath string
 		priority, stepList, err = sync.Load(ctx, logStep, filename, v, dss, prov)
 	case "template":
 		priority, stepList, err = tmpl.Load(ctx, logStep, filename, v, dss)
-	case "shell":
+	case "sql", "sqlscript":
 		priority, stepList, err = sqlscript.Load(ctx, logStep, filename, v, dss)
 	default:
 		log.Errorf("Do not know how to manage %s step type", stepType)

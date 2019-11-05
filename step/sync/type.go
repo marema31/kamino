@@ -4,9 +4,24 @@ package sync
 import (
 	"time"
 
+	"github.com/marema31/kamino/datasource"
+
 	"github.com/marema31/kamino/filter"
 	"github.com/marema31/kamino/provider"
 )
+
+type parsedSourceConfig struct {
+	ds    datasource.Datasourcer
+	table string
+	where string
+}
+
+type parsedDestConfig struct {
+	ds    datasource.Datasourcer
+	table string
+	key   string
+	mode  string
+}
 
 // Step informations
 type Step struct {
@@ -17,4 +32,8 @@ type Step struct {
 	cacheTTL     time.Duration
 	destinations []provider.Saver
 	filters      []filter.Filter
+	sourceCfg    parsedSourceConfig
+	cacheCfg     parsedSourceConfig
+	destsCfg     []parsedDestConfig
+	prov         provider.Provider
 }

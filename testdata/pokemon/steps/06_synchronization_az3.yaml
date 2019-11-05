@@ -3,7 +3,7 @@ priority: 6
 name: "synchronization"
 type: "sync"
 source: 
-  tag: "pokemon.source"
+  tags: "pokemon.source"
   table: "pokemon"
   where: "type1 ='Grass' AND name LIKE 'B%'"
 destinations:

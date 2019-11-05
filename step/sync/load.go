@@ -39,7 +39,7 @@ type FilterConfig struct {
 	Type        string
 }
 
-func getDatasource(log *logrus.Entry, dss datasource.Datasourcers, tags []string, engines []string, dsTypes []string) ([]datasource.Datasourcer, error) {
+func getDatasources(log *logrus.Entry, dss datasource.Datasourcers, tags []string, engines []string, dsTypes []string, objectType string, unique bool) ([]datasource.Datasourcer, error) {
 	if len(tags) == 0 {
 		tags = []string{""}
 	}
@@ -55,64 +55,65 @@ func getDatasource(log *logrus.Entry, dss datasource.Datasourcers, tags []string
 		log.Error(err)
 		return nil, err
 	}
-	return dss.Lookup(log, tags, t, e), nil
+	datasources := dss.Lookup(log, tags, t, e)
+	log.Debugf("Found %d %s", len(datasources), objectType)
+	if len(datasources) == 0 {
+		log.Errorf("no %s found", objectType)
+		return nil, fmt.Errorf("no %s found", objectType)
+	}
+	if unique && len(datasources) != 1 {
+		log.Errorf("too many %ss found", objectType)
+		return nil, fmt.Errorf("too many %ss found", objectType)
+	}
+
+	return datasources, nil
 }
 
-func getLoader(ctx context.Context, log *logrus.Entry, objectType string, v *viper.Viper, dss datasource.Datasourcers, prov provider.Provider) (provider.Loader, error) {
+func parseSourceConfig(ctx context.Context, log *logrus.Entry, objectType string, v *viper.Viper, dss datasource.Datasourcers) (parsedSourceConfig, error) {
+	var parsedSource parsedSourceConfig
 	var source SourceConfig
 	err := v.Unmarshal(&source)
 	if err != nil {
 		log.Error(err)
-		return nil, err
+		return parsedSource, err
 	}
 
-	datasources, err := getDatasource(log, dss, source.Tags, source.Engines, source.Types)
+	datasources, err := getDatasources(log, dss, source.Tags, source.Engines, source.Types, objectType, true)
 	if err != nil {
-		return nil, err
+		return parsedSource, err
 	}
-	if len(datasources) == 0 {
-		return nil, fmt.Errorf("no %s found", objectType)
-	}
-	if len(datasources) != 1 {
-		return nil, fmt.Errorf("too many %ss found", objectType)
-	}
-	log.Debugf("Found 1 datasource for %s", objectType)
-
-	log.Debugf("Creating loader instance for %s", objectType)
-	return prov.NewLoader(ctx, log, datasources[0], source.Table, source.Where)
+	parsedSource.ds = datasources[0]
+	parsedSource.table = source.Table
+	parsedSource.where = source.Where
+	return parsedSource, nil
 }
 
-func getSavers(ctx context.Context, log *logrus.Entry, objectType string, v *viper.Viper, dss datasource.Datasourcers, prov provider.Provider) ([]provider.Saver, error) {
+func parseDestConfig(ctx context.Context, log *logrus.Entry, v *viper.Viper, dss datasource.Datasourcers) ([]parsedDestConfig, error) {
 	var dests []DestinationConfig
-	savers := make([]provider.Saver, 0)
+	parsedDests := make([]parsedDestConfig, 0)
 
-	err := v.UnmarshalKey(objectType, &dests)
+	err := v.UnmarshalKey("destinations", &dests)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
 
 	for _, dest := range dests {
-		datasources, err := getDatasource(log, dss, dest.Tags, dest.Engines, dest.Types)
+		datasources, err := getDatasources(log, dss, dest.Tags, dest.Engines, dest.Types, "destination", false)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, datasource := range datasources {
-			log.Debugf("Creating saver instances for %s", objectType)
-			saver, err := prov.NewSaver(ctx, log, datasource, dest.Table, dest.Key, dest.Mode)
-			if err != nil {
-				return nil, err
-			}
-			savers = append(savers, saver)
+			var p parsedDestConfig
+			p.ds = datasource
+			p.table = dest.Table
+			p.key = dest.Key
+			p.mode = dest.Mode
+			parsedDests = append(parsedDests, p)
 		}
 	}
-	if len(savers) == 0 {
-		log.Errorf("No %s found", objectType)
-		return nil, fmt.Errorf("no %s found", objectType)
-	}
-	log.Debugf("Found %d %s", len(savers), objectType)
-	return savers, nil
+	return parsedDests, nil
 }
 
 func getFilters(ctx context.Context, log *logrus.Entry, v *viper.Viper) ([]filter.Filter, error) {
@@ -140,6 +141,7 @@ func getFilters(ctx context.Context, log *logrus.Entry, v *viper.Viper) ([]filte
 func Load(ctx context.Context, log *logrus.Entry, filename string, v *viper.Viper, dss datasource.Datasourcers, provider provider.Provider) (priority uint, steps []common.Steper, err error) {
 	var step Step
 
+	step.prov = provider
 	priority = v.GetUint("priority")
 
 	name := v.GetString("name")
@@ -158,7 +160,7 @@ func Load(ctx context.Context, log *logrus.Entry, filename string, v *viper.Vipe
 	logStep.Debug("Lookup source")
 	sub := v.Sub("source")
 
-	step.source, err = getLoader(ctx, logStep, "source", sub, dss, provider)
+	step.sourceCfg, err = parseSourceConfig(ctx, logStep, "source", sub, dss)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -167,15 +169,10 @@ func Load(ctx context.Context, log *logrus.Entry, filename string, v *viper.Vipe
 	if v.IsSet("cache") {
 		step.cacheTTL = v.GetDuration("cache.ttl")
 		sub = v.Sub("cache")
-		step.cacheLoader, err = getLoader(ctx, logStep, "cache", sub, dss, provider)
+		step.cacheCfg, err = parseSourceConfig(ctx, logStep, "cache", sub, dss)
 		if err != nil {
 			return 0, nil, err
 		}
-		cs, err := getSavers(ctx, logStep, "cache", v, dss, provider)
-		if err != nil {
-			return 0, nil, err
-		}
-		step.cacheSaver = cs[0]
 
 	}
 
@@ -187,7 +184,7 @@ func Load(ctx context.Context, log *logrus.Entry, filename string, v *viper.Vipe
 		}
 	}
 	log.Debug("Lookup destinations")
-	step.destinations, err = getSavers(ctx, logStep, "destinations", v, dss, provider)
+	step.destsCfg, err = parseDestConfig(ctx, logStep, v, dss)
 	if err != nil {
 		return 0, nil, err
 	}

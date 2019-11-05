@@ -10,7 +10,7 @@ cache:
   ttl: "3m"
 filters:
   - type: "only"
-    parameters: 
+    aparameters: 
       - "id"
       - "pokedex_id"
       - "name"
@@ -23,7 +23,7 @@ filters:
       - "generation"
       - "legendary"
   - type: "replace"
-    parameters:
+    mparameters:
       - "type2": "ninja"
       - "hp": "100"
 destinations:
