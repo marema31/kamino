@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"path/filepath"
 
 	"github.com/Masterminds/sprig"
 	"github.com/Sirupsen/logrus"
@@ -15,7 +16,7 @@ import (
 )
 
 //Load data from step file using its viper representation a return priority and list of steps
-func Load(ctx context.Context, log *logrus.Entry, filename string, v *viper.Viper, dss datasource.Datasourcers) (priority uint, steps []common.Steper, err error) {
+func Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, v *viper.Viper, dss datasource.Datasourcers) (priority uint, steps []common.Steper, err error) {
 	steps = make([]common.Steper, 0, 1)
 
 	priority = v.GetUint("priority")
@@ -32,6 +33,11 @@ func Load(ctx context.Context, log *logrus.Entry, filename string, v *viper.Vipe
 		logStep.Error("No SQL script template filename provided")
 		return 0, nil, fmt.Errorf("the step %s must have a SQL script template to render", name)
 	}
+
+	if !filepath.IsAbs(templateFile) {
+		templateFile = filepath.Join(recipePath, templateFile)
+	}
+
 	template, err := template.New("template").Funcs(sprig.FuncMap()).ParseFiles(templateFile)
 	if err != nil {
 		logStep.Error("Parsing the SQL script template failed:")

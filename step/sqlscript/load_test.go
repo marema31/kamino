@@ -36,7 +36,7 @@ func TestSqlscriptLoadOk(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := sqlscript.Load(ctx, log, "sqlscriptok", v, dss)
+	priority, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -71,7 +71,7 @@ func TestSqlscriptLoadNoTag(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := sqlscript.Load(ctx, log, "notags", v, dss)
+	priority, steps, err := sqlscript.Load(ctx, log, "testdata/good", "notags", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -91,7 +91,7 @@ func TestSqlscriptLoadNoBool(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := sqlscript.Load(ctx, log, "nobool", v, dss)
+	priority, steps, err := sqlscript.Load(ctx, log, "testdata/good", "nobool", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -110,7 +110,7 @@ func TestSqlscriptLoadNoTemplate(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = sqlscript.Load(ctx, log, "notemplate", v, dss)
+	_, _, err = sqlscript.Load(ctx, log, "testdata/fail", "notemplate", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -121,7 +121,7 @@ func TestSqlscriptLoadNoTemplateFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = sqlscript.Load(ctx, log, "notemplatefile", v, dss)
+	_, _, err = sqlscript.Load(ctx, log, "testdata/fail", "notemplatefile", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -132,7 +132,7 @@ func TestSqlscriptLoadNoQuery(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = sqlscript.Load(ctx, log, "noquery", v, dss)
+	_, _, err = sqlscript.Load(ctx, log, "testdata/fail", "noquery", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -143,7 +143,7 @@ func TestSqlscriptLoadTemplateWrong(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = sqlscript.Load(ctx, log, "wrongtemplate", v, dss)
+	_, _, err = sqlscript.Load(ctx, log, "testdata/fail", "wrongtemplate", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -154,7 +154,7 @@ func TestSqlscriptLoadQueryTemplateWrong(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = sqlscript.Load(ctx, log, "wrongquery", v, dss)
+	_, _, err = sqlscript.Load(ctx, log, "testdata/fail", "wrongquery", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -165,7 +165,7 @@ func TestSqlscriptLoadWrongEngine(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = sqlscript.Load(ctx, log, "wrongengine", v, dss)
+	_, _, err = sqlscript.Load(ctx, log, "testdata/fail", "wrongengine", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

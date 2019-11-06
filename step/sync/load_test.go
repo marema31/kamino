@@ -42,7 +42,7 @@ func TestSyncLoadOk(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := sync.Load(ctx, log, "syncok", v, dss, prov)
+	priority, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", v, dss, prov)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -77,7 +77,7 @@ func TestSyncNoSource(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, log, "nosource", v, dss, prov)
+	_, _, err = sync.Load(ctx, log, "testdata/fail", "nosource", v, dss, prov)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -90,7 +90,7 @@ func TestSyncNoDestination(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, log, "nodestination", v, dss, prov)
+	_, _, err = sync.Load(ctx, log, "testdata/fail", "nodestination", v, dss, prov)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -103,7 +103,7 @@ func TestSyncNoSourceDatasource(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, log, "nosourceds", v, dss, prov)
+	_, _, err = sync.Load(ctx, log, "testdata/fail", "nosourceds", v, dss, prov)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -116,7 +116,7 @@ func TestSyncNoDestinationDatasource(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, log, "nodestinationds", v, dss, prov)
+	_, _, err = sync.Load(ctx, log, "testdata/fail", "nodestinationds", v, dss, prov)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -129,7 +129,7 @@ func TestSyncTooManySourceDatasource(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, log, "toomanysourceds", v, dss, prov)
+	_, _, err = sync.Load(ctx, log, "testdata/fail", "toomanysourceds", v, dss, prov)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

@@ -19,16 +19,17 @@ func (st *Step) Init(ctx context.Context, log *logrus.Entry) error {
 		return err
 	}
 
-	logStep.Debug("Creating loader instance for cache")
-	st.cacheLoader, err = st.prov.NewLoader(ctx, log, st.cacheCfg.ds, st.cacheCfg.table, "")
-	if err != nil {
-		return err
-	}
-
-	logStep.Debug("Creating saver instance for cache")
-	st.cacheSaver, err = st.prov.NewSaver(ctx, log, st.cacheCfg.ds, st.cacheCfg.table, "", "")
-	if err != nil {
-		return err
+	if st.cacheCfg.ds != nil {
+		logStep.Debug("Creating loader instance for cache")
+		st.cacheLoader, err = st.prov.NewLoader(ctx, log, st.cacheCfg.ds, st.cacheCfg.table, "")
+		if err != nil {
+			return err
+		}
+		logStep.Debug("Creating saver instance for cache")
+		st.cacheSaver, err = st.prov.NewSaver(ctx, log, st.cacheCfg.ds, st.cacheCfg.table, "", "")
+		if err != nil {
+			return err
+		}
 	}
 
 	log.Debug("Creating saver instances for destinations")

@@ -36,7 +36,7 @@ func TestShellLoadOk(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := shell.Load(ctx, log, "shellok", v, dss)
+	priority, steps, err := shell.Load(ctx, log, "testdata/good/", "shellok", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -71,7 +71,7 @@ func TestShellLoadNoTag(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := shell.Load(ctx, log, "notags", v, dss)
+	priority, steps, err := shell.Load(ctx, log, "testdata/good/", "notags", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestShellLoadNoScript(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = shell.Load(ctx, log, "noscript", v, dss)
+	_, _, err = shell.Load(ctx, log, "testdata/fail", "noscript", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -101,7 +101,7 @@ func TestShellLoadTemplateWrong(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = shell.Load(ctx, log, "wrongtemplate", v, dss)
+	_, _, err = shell.Load(ctx, log, "testdata/fail", "wrongtemplate", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -112,7 +112,7 @@ func TestShellLoadWrongEngine(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = shell.Load(ctx, log, "wrongengine", v, dss)
+	_, _, err = shell.Load(ctx, log, "testdata/fail", "wrongengine", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

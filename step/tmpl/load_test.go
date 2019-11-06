@@ -36,7 +36,7 @@ func TestTmplLoadOk(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := tmpl.Load(ctx, log, "tmplok", v, dss)
+	priority, steps, err := tmpl.Load(ctx, log, "testdata/good", "tmplok", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -71,7 +71,7 @@ func TestTmplLoadNoTag(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := tmpl.Load(ctx, log, "notags", v, dss)
+	priority, steps, err := tmpl.Load(ctx, log, "testdata/good", "notags", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -91,7 +91,7 @@ func TestTmplLoadReplace(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := tmpl.Load(ctx, log, "replace", v, dss)
+	priority, steps, err := tmpl.Load(ctx, log, "testdata/good", "replace", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -110,7 +110,7 @@ func TestTmplLoadNoMode(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := tmpl.Load(ctx, log, "nomode", v, dss)
+	priority, steps, err := tmpl.Load(ctx, log, "testdata/good", "nomode", v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -129,7 +129,7 @@ func TestTmplLoadNoTemplate(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = tmpl.Load(ctx, log, "notemplate", v, dss)
+	_, _, err = tmpl.Load(ctx, log, "testdata/fail", "notemplate", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -140,7 +140,7 @@ func TestTmplLoadNoTemplateFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = tmpl.Load(ctx, log, "notemplatefile", v, dss)
+	_, _, err = tmpl.Load(ctx, log, "testdata/fail", "notemplatefile", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -151,7 +151,7 @@ func TestTmplLoadNoDestination(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = tmpl.Load(ctx, log, "nodestination", v, dss)
+	_, _, err = tmpl.Load(ctx, log, "testdata/fail", "nodestination", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -162,7 +162,7 @@ func TestTmplLoadTemplateWrong(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = tmpl.Load(ctx, log, "wrongtemplate", v, dss)
+	_, _, err = tmpl.Load(ctx, log, "testdata/fail", "wrongtemplate", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -173,7 +173,7 @@ func TestTmplLoadDestinationTemplateWrong(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = tmpl.Load(ctx, log, "wrongdestination", v, dss)
+	_, _, err = tmpl.Load(ctx, log, "testdata/fail", "wrongdestination", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -184,7 +184,7 @@ func TestTmplLoadWrongEngine(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = tmpl.Load(ctx, log, "wrongengine", v, dss)
+	_, _, err = tmpl.Load(ctx, log, "testdata/fail", "wrongengine", v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
