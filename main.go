@@ -49,6 +49,5 @@ func main() {
 		}
 	}
 	log.Info("bye")
-	log.Debug("Debug")
 	os.Exit(0)
 }
