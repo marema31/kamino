@@ -106,20 +106,3 @@ func TestStringsToEnginesFail(t *testing.T) {
 		t.Fatalf("StringsToEngines should return error")
 	}
 }
-
-/*
-func TestGetNamedTags(t *testing.T) {
-	ds := datasource.Datasource{}
-
-	ds.tags = []string{"az1", "environment:production", "instance:fr"}
-	value := ds.GetNamedTag("environment")
-	if value != "production" {
-		t.Errorf("Should return 'production' and returned '%s'", value)
-	}
-
-	value = ds.GetNamedTag("country")
-	if value != "" {
-		t.Errorf("Should return '' and returned '%s'", value)
-	}
-}
-*/

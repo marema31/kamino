@@ -464,3 +464,149 @@ func TestResetFile(t *testing.T) {
 	}
 
 }
+
+func TestOpenFileError(t *testing.T) {
+	if _, err := os.Stat("testdata/tmp"); os.IsNotExist(err) {
+		os.Mkdir("testdata/tmp", 0777)
+	}
+
+	ds := Datasource{dstype: File, zip: false, gzip: false, filePath: "testdata/tmp/nofile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	_, err := ds.OpenReadFile(log)
+	if err == nil {
+		t.Fatalf("OpenReadFile Should return an error")
+	}
+}
+
+func TestOpenUrlError(t *testing.T) {
+
+	ds := Datasource{dstype: File, zip: false, gzip: false, url: "http://1.2.3.4.5"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	_, err := ds.OpenReadFile(log)
+	if err == nil {
+		t.Fatalf("OpenReadFile Should return an error")
+	}
+}
+
+func TestOpenNoFileNoUrlError(t *testing.T) {
+
+	ds := Datasource{dstype: File, zip: false, gzip: false}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	_, err := ds.OpenReadFile(log)
+	if err == nil {
+		t.Fatalf("OpenReadFile Should return an error")
+	}
+}
+
+func TestOpenTmpFileError(t *testing.T) {
+	if _, err := os.Stat("testdata/tmp"); os.IsNotExist(err) {
+		os.Mkdir("testdata/tmp", 0777)
+	}
+
+	ds := Datasource{dstype: File, zip: false, gzip: false, filePath: "testdata/tmp/nodir/nofile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	_, err := ds.OpenWriteFile(log)
+	if err == nil {
+		t.Fatalf("OpenWriteFile Should return an error")
+	}
+}
+
+func TestResetTmpFileError(t *testing.T) {
+	if _, err := os.Stat("testdata/tmp"); os.IsNotExist(err) {
+		os.Mkdir("testdata/tmp", 0777)
+	}
+
+	ds := Datasource{dstype: File, zip: false, gzip: false, tmpFilePath: "testdata/tmp/nodir/nofile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	tmpFile, err := ioutil.TempFile("testdata/tmp", "reset.")
+	if err != nil {
+		t.Fatalf("Should not return error and returned '%v'", err)
+	}
+	ds.fileHandle = tmpFile
+	ds.filewriter = true
+	err = ds.ResetFile(log)
+	if err == nil {
+		t.Fatalf("ResetFile Should return an error")
+	}
+}
+
+func TestCloseFileError(t *testing.T) {
+	if _, err := os.Stat("testdata/tmp"); os.IsNotExist(err) {
+		os.Mkdir("testdata/tmp", 0777)
+	}
+
+	ds := Datasource{dstype: File, zip: false, gzip: false, tmpFilePath: "testdata/tmp/nodir/nofile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	tmpFile, err := ioutil.TempFile("testdata/tmp", "reset.")
+	if err != nil {
+		t.Fatalf("Should not return error and returned '%v'", err)
+	}
+	ds.fileHandle = tmpFile
+	ds.filewriter = true
+	err = ds.CloseFile(log)
+	if err == nil {
+		t.Fatalf("ResetFile Should return an error")
+	}
+}
+
+func TestCloseFileZipError(t *testing.T) {
+	if _, err := os.Stat("testdata/tmp"); os.IsNotExist(err) {
+		os.Mkdir("testdata/tmp", 0777)
+	}
+
+	ds := Datasource{dstype: File, zip: true, gzip: false, tmpFilePath: "testdata/tmp/nodir/nofile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	tmpFile, err := ioutil.TempFile("testdata/tmp", "reset.")
+	if err != nil {
+		t.Fatalf("Should not return error and returned '%v'", err)
+	}
+	ds.fileHandle = tmpFile
+	ds.filewriter = true
+	err = ds.CloseFile(log)
+	if err == nil {
+		t.Fatalf("ResetFile Should return an error")
+	}
+}
+
+func TestCloseFileZipNoDataError(t *testing.T) {
+	if _, err := os.Stat("testdata/tmp"); os.IsNotExist(err) {
+		os.Mkdir("testdata/tmp", 0777)
+	}
+
+	ds := Datasource{dstype: File, zip: true, gzip: false, filePath: "testdata/tmp/nodata.zip", tmpFilePath: "testdata/tmp/nodir/nofile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	tmpFile, err := ioutil.TempFile("testdata/tmp", "reset.")
+	if err != nil {
+		t.Fatalf("Should not return error and returned '%v'", err)
+	}
+	ds.fileHandle = tmpFile
+	ds.filewriter = true
+	err = ds.CloseFile(log)
+	if err == nil {
+		t.Fatalf("ResetFile Should return an error")
+	}
+}

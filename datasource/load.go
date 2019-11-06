@@ -39,6 +39,7 @@ func (dss *Datasources) LoadAll(recipePath string, log *logrus.Entry) error {
 	}
 
 	if len(dss.datasources) == 0 {
+		log.Errorf("no datasources configuration files found in %s", dsfolder)
 		return fmt.Errorf("no datasources configuration files found in %s", dsfolder)
 	}
 	// Insert the datasource name in all entry of the dictionnary

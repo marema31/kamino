@@ -1,0 +1,11 @@
+{
+    "engine":        "mysql",
+    "database":      "dbmc",
+    "host":          "hmc",
+    "port":          "1234",
+    "admin":         "super",
+    "adminpassword": "adminpw",
+    "user":          "bob",
+    "password":      "123soleil",
+    "transaction":   true
+}
