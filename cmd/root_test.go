@@ -8,17 +8,17 @@ import (
 
 func TestGetLoggerOk(t *testing.T) {
 	cmd.InitConfig()
-	cmd.GetLogger()
+	_ = cmd.GetLogger()
 }
 
 func TestVerboseOk(t *testing.T) {
 	cmd.Verbose = true
 	cmd.InitConfig()
-	cmd.GetLogger()
+	_ = cmd.GetLogger()
 }
 
 func TestQuietOk(t *testing.T) {
 	cmd.Quiet = true
 	cmd.InitConfig()
-	cmd.GetLogger()
+	_ = cmd.GetLogger()
 }
