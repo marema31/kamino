@@ -3,6 +3,7 @@ package csv
 import (
 	"context"
 	"encoding/csv"
+	"fmt"
 	"io"
 
 	"github.com/Sirupsen/logrus"
@@ -68,6 +69,10 @@ func (cl *KaminoCsvLoader) Load(log *logrus.Entry) (types.Record, error) {
 		return nil, cl.currentError
 	}
 
+	if cl.currentRow == nil {
+		logFile.Error("EOF reached")
+		return nil, fmt.Errorf("EOF reached")
+	}
 	record := make(types.Record, len(cl.colNames))
 	for i, col := range cl.colNames {
 		record[col] = string(cl.currentRow[i])

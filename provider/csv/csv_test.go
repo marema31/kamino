@@ -52,6 +52,10 @@ func TestOk(t *testing.T) {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
+	_, err = loader.Load(log)
+	if err == nil {
+		t.Fatalf("Load should return error")
+	}
 
 	err = saver.Close(log)
 	if err != nil {
@@ -86,6 +90,18 @@ func TestOpenError(t *testing.T) {
 	}
 
 	_, err = csv.NewLoader(context.Background(), log, &source)
+	if err == nil {
+		t.Fatalf("NewLoader should return error")
+	}
+
+}
+
+func TestOpenCsvError(t *testing.T) {
+	source := mockdatasource.MockDatasource{Type: datasource.File, Engine: datasource.CSV, Zip: false, Gzip: false, FilePath: "sourcefile"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+
+	_, err := csv.NewLoader(context.Background(), log, &source)
 	if err == nil {
 		t.Fatalf("NewLoader should return error")
 	}
