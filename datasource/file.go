@@ -125,11 +125,6 @@ func (ds *Datasource) OpenWriteFile(log *logrus.Entry) (io.WriteCloser, error) {
 		logFile.Debugf("Opened temporary file %s", ds.tmpFilePath)
 	}
 
-	if writer == nil {
-		logFile.Error("Do not know which file to open for writing")
-		return nil, fmt.Errorf("do not known what file to open for datasource: %s", ds.name)
-	}
-
 	if ds.gzip {
 		logFile.Debug("Opening as gzip")
 		writer = gzip.NewWriter(writer)
@@ -177,7 +172,6 @@ func (ds *Datasource) CloseFile(log *logrus.Entry) error {
 			logFile.Error(err)
 			return err
 		}
-
 	}
 
 	if ds.zip {

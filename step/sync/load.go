@@ -138,9 +138,10 @@ func getFilters(ctx context.Context, log *logrus.Entry, v *viper.Viper) ([]filte
 }
 
 //Load data from step file using its viper representation a return priority and list of steps
-func Load(ctx context.Context, log *logrus.Entry, filename string, v *viper.Viper, dss datasource.Datasourcers, provider provider.Provider) (priority uint, steps []common.Steper, err error) {
+func Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, v *viper.Viper, dss datasource.Datasourcers, provider provider.Provider) (priority uint, steps []common.Steper, err error) {
 	var step Step
 
+	step.baseFolder = recipePath
 	step.prov = provider
 	priority = v.GetUint("priority")
 

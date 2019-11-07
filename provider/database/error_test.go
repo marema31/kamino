@@ -56,6 +56,10 @@ func TestNoKeyError(t *testing.T) {
 	if err == nil {
 		t.Fatalf("NewSaver should return error")
 	}
+	_, err = database.NewSaver(context.Background(), log, &dest, "dtable", "mykey", "replace")
+	if err == nil {
+		t.Fatalf("NewSaver should return error")
+	}
 }
 
 func TestCreateIdsListError(t *testing.T) {
@@ -232,6 +236,7 @@ func TestDestHasLessColsOk(t *testing.T) {
 		}
 	}
 }
+
 func TestKeyNotExistsDestError(t *testing.T) {
 	ddb, dmock, err := sqlmock.New()
 	if err != nil {
@@ -305,5 +310,501 @@ func TestKeyNotExistsSourceError(t *testing.T) {
 	err = saver.Save(log, record)
 	if err == nil {
 		t.Fatalf("Save should return error")
+	}
+}
+func TestPrepareInsertError(t *testing.T) {
+	sdb, smock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows := sqlmock.NewRows([]string{"id", "title", "body"}).
+		AddRow(2, "post 2", "world")
+
+	smock.ExpectQuery("SELECT (.+) from stable WHERE title like '%'").WillReturnRows(rows)
+	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+
+	ddb, dmock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows = sqlmock.NewRows([]string{"id", "title", "body"})
+	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)").WillReturnError(fmt.Errorf("fake error"))
+	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
+	if err != nil {
+		t.Fatalf("NewSaver should not return error and returned '%v'", err)
+	}
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "title like '%'")
+	if err != nil {
+		t.Fatalf("NewLoader should not return error and returned '%v'", err)
+	}
+
+	for loader.Next() {
+		record, err := loader.Load(log)
+		if err != nil {
+			t.Fatalf("Load should not return error and returned '%v'", err)
+		}
+
+		if err = saver.Save(log, record); err == nil {
+			t.Fatalf("Save should return error")
+		}
+	}
+}
+
+func TestPrepareUpdateError(t *testing.T) {
+	sdb, smock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows := sqlmock.NewRows([]string{"id", "title", "body"}).
+		AddRow(2, "post 2", "world")
+
+	smock.ExpectQuery("SELECT (.+) from stable WHERE title like '%'").WillReturnRows(rows)
+	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+
+	ddb, dmock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows = sqlmock.NewRows([]string{"id"}).
+		AddRow(1).
+		AddRow(2)
+	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
+	rows = sqlmock.NewRows([]string{"id", "title", "body"})
+	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
+	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WillReturnError(fmt.Errorf("fake error"))
+	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "replace")
+	if err != nil {
+		t.Fatalf("NewSaver should not return error and returned '%v'", err)
+	}
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "title like '%'")
+	if err != nil {
+		t.Fatalf("NewLoader should not return error and returned '%v'", err)
+	}
+
+	for loader.Next() {
+		record, err := loader.Load(log)
+		if err != nil {
+			t.Fatalf("Load should not return error and returned '%v'", err)
+		}
+
+		if err = saver.Save(log, record); err == nil {
+			t.Fatalf("Save should return error")
+		}
+	}
+}
+
+func TestBeginTransactionError(t *testing.T) {
+	sdb, smock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows := sqlmock.NewRows([]string{"id", "title", "body"}).
+		AddRow(2, "post 2", "world")
+
+	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
+	smock.ExpectClose()
+	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
+
+	ddb, dmock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	dmock.ExpectBegin().WillReturnError(fmt.Errorf("fake error"))
+	rows = sqlmock.NewRows([]string{"id", "title", "body"})
+	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
+	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
+	dmock.ExpectCommit()
+	dmock.ExpectClose()
+	dmock.ExpectClose() // sqlmock and close/defer have erratic behavior
+	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
+	if err != nil {
+		t.Fatalf("NewSaver should not return error and returned '%v'", err)
+	}
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
+	if err != nil {
+		t.Fatalf("NewLoader should not return error and returned '%v'", err)
+	}
+
+	for loader.Next() {
+		record, err := loader.Load(log)
+		if err != nil {
+			t.Fatalf("Load should not return error and returned '%v'", err)
+		}
+
+		if err = saver.Save(log, record); err == nil {
+			t.Fatalf("Save should return error")
+		}
+	}
+}
+
+func TestEndTransactionError(t *testing.T) {
+	sdb, smock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows := sqlmock.NewRows([]string{"id", "title", "body"}).
+		AddRow(1, "post 1", "hello").
+		AddRow(2, "post 2", "world")
+
+	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
+	smock.ExpectClose()
+	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
+
+	ddb, dmock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows = sqlmock.NewRows([]string{"id", "title", "body"})
+	dmock.ExpectBegin()
+	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
+	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
+	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
+	dmock.ExpectCommit().WillReturnError(fmt.Errorf("fake error"))
+	dmock.ExpectCommit().WillReturnError(fmt.Errorf("fake error"))
+	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
+	if err != nil {
+		t.Fatalf("NewSaver should not return error and returned '%v'", err)
+	}
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
+	if err != nil {
+		t.Fatalf("NewLoader should not return error and returned '%v'", err)
+	}
+
+	for loader.Next() {
+		record, err := loader.Load(log)
+		if err != nil {
+			t.Fatalf("Load should not return error and returned '%v'", err)
+		}
+
+		if err = saver.Save(log, record); err != nil {
+			t.Fatalf("Save should not return error and returned '%v'", err)
+		}
+	}
+	err = saver.Close(log)
+	if err == nil {
+		t.Errorf("Saver close should return error")
+	}
+}
+
+func TestRollbackTransactionError(t *testing.T) {
+	sdb, smock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows := sqlmock.NewRows([]string{"id", "title", "body"}).
+		AddRow(1, "post 1", "hello").
+		AddRow(2, "post 2", "world")
+
+	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
+	smock.ExpectClose()
+	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
+
+	ddb, dmock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows = sqlmock.NewRows([]string{"id", "title", "body"})
+	dmock.ExpectBegin()
+	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
+	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
+	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
+	dmock.ExpectRollback().WillReturnError(fmt.Errorf("fake error"))
+	dmock.ExpectClose()
+	dmock.ExpectClose() // sqlmock and close/defer have erratic behavior
+	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
+	if err != nil {
+		t.Fatalf("NewSaver should not return error and returned '%v'", err)
+	}
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
+	if err != nil {
+		t.Fatalf("NewLoader should not return error and returned '%v'", err)
+	}
+
+	for loader.Next() {
+		record, err := loader.Load(log)
+		if err != nil {
+			t.Fatalf("Load should not return error and returned '%v'", err)
+		}
+
+		if err = saver.Save(log, record); err != nil {
+			t.Fatalf("Save should not return error and returned '%v'", err)
+		}
+	}
+	err = saver.Reset(log)
+	if err == nil {
+		t.Errorf("Saver close should return error")
+	}
+
+	err = loader.Close(log)
+	if err != nil {
+		t.Errorf("Loader close should not return error and returned '%v'", err)
+	}
+}
+
+func TestTruncateError(t *testing.T) {
+	sdb, smock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows := sqlmock.NewRows([]string{"id", "title", "body"}).
+		AddRow(2, "post 2", "world")
+
+	smock.ExpectQuery("SELECT (.+) from stable WHERE title like '%'").WillReturnRows(rows)
+	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+
+	ddb, dmock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows = sqlmock.NewRows([]string{"id", "title", "body"})
+	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
+	//	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WillReturnError(fmt.Errorf("fake error"))
+	dmock.ExpectQuery("TRUNCATE TABLE dtable").WillReturnError(fmt.Errorf("fake error"))
+	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "truncate")
+	if err != nil {
+		t.Fatalf("NewSaver should not return error and returned '%v'", err)
+	}
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "title like '%'")
+	if err != nil {
+		t.Fatalf("NewLoader should not return error and returned '%v'", err)
+	}
+
+	for loader.Next() {
+		record, err := loader.Load(log)
+		if err != nil {
+			t.Fatalf("Load should not return error and returned '%v'", err)
+		}
+
+		if err = saver.Save(log, record); err == nil {
+			t.Fatalf("Save should return error")
+		}
+	}
+}
+
+func TestCloseError(t *testing.T) {
+	sdb, smock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows := sqlmock.NewRows([]string{"id", "title", "body"}).
+		AddRow(1, "post 1", "hello").
+		AddRow(2, "post 2", "world")
+
+	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
+	smock.ExpectClose().WillReturnError(fmt.Errorf("fake error"))
+	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+
+	ddb, dmock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	dmock.ExpectClose().WillReturnError(fmt.Errorf("fake error"))
+	dmock.ExpectClose().WillReturnError(fmt.Errorf("fake error")) // sqlmock and close/defer have erratic behavior
+	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
+	if err != nil {
+		t.Fatalf("NewSaver should not return error and returned '%v'", err)
+	}
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
+	if err != nil {
+		t.Fatalf("NewLoader should not return error and returned '%v'", err)
+	}
+	err = saver.Close(log)
+	if err == nil {
+		t.Errorf("Saver close should return error")
+	}
+
+	err = loader.Close(log)
+	if err == nil {
+		t.Errorf("Loader close should return error")
+	}
+}
+
+func TestColsListError(t *testing.T) {
+	sdb, smock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	smock.ExpectQuery("SELECT (.+) from stable").WillReturnError(fmt.Errorf("fake error"))
+	smock.ExpectClose()
+	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+
+	ddb, dmock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnError(fmt.Errorf("fake error"))
+	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+
+	_, err = database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
+	if err != nil {
+		t.Fatalf("NewSaver should not return error and returned '%v'", err)
+	}
+	_, err = database.NewLoader(context.Background(), log, &source, "stable", "")
+	if err == nil {
+		t.Fatalf("NewLoader should return error")
+	}
+}
+
+func TestInsertError(t *testing.T) {
+	sdb, smock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows := sqlmock.NewRows([]string{"id", "title", "body"}).
+		AddRow(2, "post 2", "world")
+
+	smock.ExpectQuery("SELECT (.+) from stable WHERE title like '%'").WillReturnRows(rows)
+	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+
+	ddb, dmock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows = sqlmock.NewRows([]string{"id"}).
+		AddRow(1).
+		AddRow(2)
+	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
+	rows = sqlmock.NewRows([]string{"id", "title", "body"})
+	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
+	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?")
+	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnError(fmt.Errorf("fake error"))
+	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "replace")
+	if err != nil {
+		t.Fatalf("NewSaver should not return error and returned '%v'", err)
+	}
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "title like '%'")
+	if err != nil {
+		t.Fatalf("NewLoader should not return error and returned '%v'", err)
+	}
+
+	for loader.Next() {
+		record, err := loader.Load(log)
+		if err != nil {
+			t.Fatalf("Load should not return error and returned '%v'", err)
+		}
+
+		if err = saver.Save(log, record); err == nil {
+			t.Fatalf("Save should return error")
+		}
+	}
+}
+
+func TestDeleteError(t *testing.T) {
+	sdb, smock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows := sqlmock.NewRows([]string{"id", "title", "body"}).
+		AddRow(2, "post 2", "world")
+
+	smock.ExpectQuery("SELECT (.+) from stable WHERE title like '%'").WillReturnRows(rows)
+	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+
+	ddb, dmock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	rows = sqlmock.NewRows([]string{"id"}).
+		AddRow(1).
+		AddRow(2)
+	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
+	rows = sqlmock.NewRows([]string{"id", "title", "body"})
+	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
+	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?")
+	dmock.ExpectExec("UPDATE dtable SET title=\\?,body=\\? WHERE id = \\?").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
+	dmock.ExpectExec("DELETE from dtable WHERE id=1").WillReturnError(fmt.Errorf("fake error"))
+	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+
+	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "exactCopy")
+	if err != nil {
+		t.Fatalf("NewSaver should not return error and returned '%v'", err)
+	}
+	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "title like '%'")
+	if err != nil {
+		t.Fatalf("NewLoader should not return error and returned '%v'", err)
+	}
+
+	for loader.Next() {
+		record, err := loader.Load(log)
+		if err != nil {
+			t.Fatalf("Load should not return error and returned '%v'", err)
+		}
+
+		if err = saver.Save(log, record); err != nil {
+			t.Fatalf("Load should not return error and returned '%v'", err)
+		}
+	}
+	err = saver.Close(log)
+	if err == nil {
+		t.Errorf("Saver close should return error")
 	}
 }

@@ -16,7 +16,7 @@ var (
 		DisableFlagsInUseLine: true,
 		RunE: func(_ *cobra.Command, args []string) error {
 			cookbook := recipe.New(step.Factory{})
-			return Apply(cookbook, cfgFolder, names, types, args)
+			return Apply(cookbook, CfgFolder, names, types, args)
 		},
 	}
 	names = []string{}

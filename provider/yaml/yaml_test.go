@@ -163,7 +163,7 @@ func TestResetError(t *testing.T) {
 }
 
 func TestWrongFormat(t *testing.T) {
-	source := mockdatasource.MockDatasource{ErrorOpenFile: fmt.Errorf("fake error"), Type: datasource.File, Engine: datasource.YAML, Zip: false, Gzip: false, FilePath: "sourcefile"}
+	source := mockdatasource.MockDatasource{Type: datasource.File, Engine: datasource.YAML, Zip: false, Gzip: false, FilePath: "sourcefile"}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
 

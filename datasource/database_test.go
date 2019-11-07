@@ -244,3 +244,11 @@ func TestDatabaseOpenNoDb(t *testing.T) {
 		t.Errorf("OpenDatabase should not returns an error, was: %v", err)
 	}
 }
+
+func TestLoadNoTags(t *testing.T) {
+	dss := setupDatabaseTest()
+	_, err := dss.load("testdata/good", "mysqlnotag")
+	if err != nil {
+		t.Errorf("Load should not returns an error")
+	}
+}

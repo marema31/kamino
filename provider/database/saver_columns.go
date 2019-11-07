@@ -88,13 +88,6 @@ func (saver *DbSaver) getColNames(log *logrus.Entry, record types.Record) ([]str
 			log.Warnf("Colum %s does not exist in %s", colr, saver.table)
 		}
 	}
-
-	if saver.key != "" && !keyseen {
-		log.Errorf("Provided key %s is not a column of %s", saver.key, saver.table)
-		log.Error(err)
-		return nil, nil, fmt.Errorf("provided key %s is not available in destination table for %s.%s ", saver.key, saver.database, saver.table)
-	}
-
 	return questionmark, updateSet, nil
 }
 

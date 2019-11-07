@@ -26,6 +26,7 @@ type parsedDestConfig struct {
 // Step informations
 type Step struct {
 	Name         string
+	baseFolder   string
 	source       provider.Loader
 	cacheLoader  provider.Loader
 	cacheSaver   provider.Saver

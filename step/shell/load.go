@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"os"
+	"path/filepath"
 
 	"github.com/Masterminds/sprig"
 	"github.com/Sirupsen/logrus"
@@ -15,7 +17,7 @@ import (
 )
 
 //Load data from step file using its viper representation a return priority and list of steps
-func Load(ctx context.Context, log *logrus.Entry, filename string, v *viper.Viper, dss datasource.Datasourcers) (priority uint, steps []common.Steper, err error) {
+func Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, v *viper.Viper, dss datasource.Datasourcers) (priority uint, steps []common.Steper, err error) {
 	steps = make([]common.Steper, 0, 1)
 
 	priority = v.GetUint("priority")
@@ -32,8 +34,15 @@ func Load(ctx context.Context, log *logrus.Entry, filename string, v *viper.Vipe
 		logStep.Error("No script provided")
 		return 0, nil, fmt.Errorf("the step %s must have a script to call", name)
 	}
+	if !filepath.IsAbs(script) {
+		script = filepath.Join(recipePath, script)
+	}
 
-	//TODO: script not found
+	if _, err := os.Stat(script); err != nil {
+		if os.IsNotExist(err) {
+			log.Warningf("The script %s does not exists at load phase, I will recheck at execution if it has not been created by a previous step execution", script)
+		}
+	}
 
 	arguments := v.GetString("arguments")
 

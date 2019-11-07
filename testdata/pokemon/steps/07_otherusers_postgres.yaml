@@ -2,7 +2,7 @@
 priority: 7
 name: "otherusers"
 type: "sql"
-script: "templates/otherusers_postgres.sql.tmpl"
+template: "templates/otherusers_postgres.sql.tmpl"
 tags: 
   - "pokemon"
 admin: "true"

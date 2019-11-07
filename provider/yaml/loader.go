@@ -33,7 +33,7 @@ func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer
 	logFile.Debug("Reading the YAML file to be able to parse it")
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
-		logFile.Error("Reading the JSON file failed")
+		logFile.Error("Reading the YAML file failed")
 		logFile.Error(err)
 		return nil, err
 	}
