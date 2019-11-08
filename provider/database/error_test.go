@@ -510,10 +510,6 @@ func TestEndTransactionError(t *testing.T) {
 			t.Fatalf("Save should not return error and returned '%v'", err)
 		}
 	}
-	err = saver.Close(log)
-	if err == nil {
-		t.Errorf("Saver close should return error")
-	}
 }
 
 func TestRollbackTransactionError(t *testing.T) {
@@ -623,51 +619,6 @@ func TestTruncateError(t *testing.T) {
 		if err = saver.Save(log, record); err == nil {
 			t.Fatalf("Save should return error")
 		}
-	}
-}
-
-func TestCloseError(t *testing.T) {
-	sdb, smock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-
-	rows := sqlmock.NewRows([]string{"id", "title", "body"}).
-		AddRow(1, "post 1", "hello").
-		AddRow(2, "post 2", "world")
-
-	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
-	smock.ExpectClose().WillReturnError(fmt.Errorf("fake error"))
-	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
-
-	ddb, dmock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-
-	dmock.ExpectClose().WillReturnError(fmt.Errorf("fake error"))
-	dmock.ExpectClose().WillReturnError(fmt.Errorf("fake error")) // sqlmock and close/defer have erratic behavior
-	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
-	logger := logrus.New()
-	log := logger.WithField("appname", "kamino")
-	logger.SetLevel(logrus.PanicLevel)
-
-	saver, err := database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
-	if err != nil {
-		t.Fatalf("NewSaver should not return error and returned '%v'", err)
-	}
-	loader, err := database.NewLoader(context.Background(), log, &source, "stable", "")
-	if err != nil {
-		t.Fatalf("NewLoader should not return error and returned '%v'", err)
-	}
-	err = saver.Close(log)
-	if err == nil {
-		t.Errorf("Saver close should return error")
-	}
-
-	err = loader.Close(log)
-	if err == nil {
-		t.Errorf("Loader close should return error")
 	}
 }
 

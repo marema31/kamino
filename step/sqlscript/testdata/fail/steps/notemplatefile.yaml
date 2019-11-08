@@ -2,7 +2,7 @@
 priority: 42
 name: "namesqlscriptok"
 type: "sqlscript"
-template: "testdata/templates/delete_user.sql.tmpl"
+template: "templates/delete_user.sql.tmpl"
 query: "SELECT * FROM USER WHERE user = '{{.User}}';"
 admin: false
 noDb: false

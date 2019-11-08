@@ -22,7 +22,6 @@ func TestOnlyIfEmptyOk(t *testing.T) {
 		AddRow(2, "post 2", "world")
 
 	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
-	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
 	ddbfull, dmockfull, err := sqlmock.New()
@@ -35,7 +34,6 @@ func TestOnlyIfEmptyOk(t *testing.T) {
 		AddRow(2, "post 2", "world")
 	dmockfull.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
 	dmockfull.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
-	dmockfull.ExpectClose()
 	destfull := mockdatasource.MockDatasource{MockedDb: ddbfull, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
@@ -55,7 +53,6 @@ func TestOnlyIfEmptyOk(t *testing.T) {
 	dmockempty.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmockempty.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmockempty.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
-	dmockempty.ExpectClose()
 	destempty := mockdatasource.MockDatasource{MockedDb: ddbempty, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
 	saverempty, err := database.NewSaver(context.Background(), log, &destempty, "dtable", "id", "onlyIfEmpty")
@@ -119,7 +116,6 @@ func TestInsertOk(t *testing.T) {
 		AddRow(2, "post 2", "world")
 
 	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
-	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
 	ddb, dmock, err := sqlmock.New()
@@ -132,7 +128,6 @@ func TestInsertOk(t *testing.T) {
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
-	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
@@ -187,7 +182,6 @@ func TestTruncateOk(t *testing.T) {
 		AddRow(2, "post 2", "world")
 
 	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
-	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
 	ddb, dmock, err := sqlmock.New()
@@ -201,7 +195,6 @@ func TestTruncateOk(t *testing.T) {
 	dmock.ExpectExec("RUNCATE TABLE dtable").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
-	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
@@ -256,7 +249,6 @@ func TestTruncateTransactionOk(t *testing.T) {
 		AddRow(2, "post 2", "world")
 
 	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
-	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
 	ddb, dmock, err := sqlmock.New()
@@ -272,8 +264,6 @@ func TestTruncateTransactionOk(t *testing.T) {
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectCommit()
-	dmock.ExpectClose()
-	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
@@ -328,7 +318,6 @@ func TestUpdateOk(t *testing.T) {
 		AddRow(2, "post 2", "world")
 
 	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
-	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
 	ddb, dmock, err := sqlmock.New()
@@ -348,7 +337,6 @@ func TestUpdateOk(t *testing.T) {
 	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?")
 	dmock.ExpectExec("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
-	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
@@ -403,7 +391,6 @@ func TestReplaceOk(t *testing.T) {
 		AddRow(2, "post 2", "world")
 
 	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
-	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
 	ddb, dmock, err := sqlmock.New()
@@ -422,7 +409,6 @@ func TestReplaceOk(t *testing.T) {
 	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
-	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
@@ -477,7 +463,6 @@ func TestExactCopyOk(t *testing.T) {
 		AddRow(2, "post 2", "world")
 
 	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
-	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
 	ddb, dmock, err := sqlmock.New()
@@ -501,7 +486,6 @@ func TestExactCopyOk(t *testing.T) {
 	dmock.ExpectExec("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("DELETE from dtable WHERE id=.+").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("DELETE from dtable WHERE id=.+").WillReturnResult(sqlmock.NewResult(1, 1))
-	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
@@ -556,7 +540,6 @@ func TestExactCopyTransactionOk(t *testing.T) {
 		AddRow(2, "post 2", "world")
 
 	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
-	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
 	ddb, dmock, err := sqlmock.New()
@@ -582,7 +565,6 @@ func TestExactCopyTransactionOk(t *testing.T) {
 	dmock.ExpectExec("DELETE from dtable WHERE id=.+").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("DELETE from dtable WHERE id=.+").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectCommit()
-	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")

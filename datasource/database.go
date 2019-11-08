@@ -93,11 +93,22 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 		return nil, fmt.Errorf("can not open %s as a database", ds.name)
 	}
 	URL := ds.url
-	if admin {
-		URL = ds.urlAdmin
-	}
+	db := ds.db
 	if nodb {
+		logDb.Debug("Openning connection to database engine in Admin")
 		URL = ds.urlNoDb
+		db = ds.dbNoDb
+	} else if admin {
+		logDb.Debugf("Openning database %s in Admin", ds.database)
+		URL = ds.urlAdmin
+		db = ds.dbAdmin
+	} else {
+		logDb.Debugf("Openning database %s in User", ds.database)
+	}
+
+	if db != nil {
+		logDb.Debug("The database is already opened, returning the current handler")
+		return db, nil
 	}
 
 	var driver string
@@ -121,6 +132,13 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 		log.Error("Ping database failed")
 		log.Error(err)
 		return nil, err
+	}
+	if nodb {
+		ds.dbNoDb = db
+	} else if admin {
+		ds.dbAdmin = db
+	} else {
+		ds.db = db
 	}
 	return db, nil
 }

@@ -30,6 +30,10 @@ func (dss *MockDatasources) LoadAll(path string, log *logrus.Entry) error {
 	return nil
 }
 
+//CloseAll do nothing, return an error if path is empty
+func (dss *MockDatasources) CloseAll(log *logrus.Entry) {
+}
+
 func getIndex(tags []string, dsTypes []datasource.Type, engines []datasource.Engine) string {
 	index := strings.Join(tags, "@")
 	index = index + "&"

@@ -65,6 +65,9 @@ type Datasource struct {
 	url         string
 	urlAdmin    string
 	urlNoDb     string
+	db          *sql.DB
+	dbAdmin     *sql.DB
+	dbNoDb      *sql.DB
 	transaction bool
 	schema      string
 	filePath    string

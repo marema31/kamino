@@ -33,6 +33,8 @@ type mockedStep struct {
 	InitError   error
 	StepError   error
 	Priority    uint
+	ToBeSkipped bool
+	ToSkipError error
 }
 
 //Init manage the initialization of the step
@@ -46,6 +48,12 @@ func (st *mockedStep) Init(ctx context.Context, log *logrus.Entry) error {
 func (st *mockedStep) Cancel(log *logrus.Entry) {
 	log.WithField("name", st.name).Info("Cancelling")
 	st.Canceled = true
+}
+
+// ToSkip return true if the step must be skipped
+func (st *mockedStep) ToSkip(ctx context.Context, log *logrus.Entry) (bool, error) {
+	log.WithField("name", st.name).Info("Do we need to skip the step ?")
+	return st.ToBeSkipped, st.ToSkipError
 }
 
 //Do manage the runnning of the step
@@ -84,6 +92,9 @@ func (sf *MockedStepFactory) Load(ctx context.Context, log *logrus.Entry, recipe
 	stepError := v.GetBool("steperror")
 	stepInitError := v.GetBool("stepiniterror")
 
+	ToBeSkipped := v.GetBool("tobeskipped")
+	ToSkipError := v.GetBool("toskiperror")
+
 	if generateError {
 		return 0, nil, fmt.Errorf("fake error")
 	}
@@ -105,6 +116,12 @@ func (sf *MockedStepFactory) Load(ctx context.Context, log *logrus.Entry, recipe
 		if stepInitError {
 			m.InitError = fmt.Errorf("fake error")
 		}
+
+		if ToSkipError {
+			m.ToSkipError = fmt.Errorf("fake error")
+		}
+
+		m.ToBeSkipped = ToBeSkipped
 
 		steps = append(steps, m)
 		sf.Steps[rname] = append(sf.Steps[rname], m)

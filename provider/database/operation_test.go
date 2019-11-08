@@ -51,7 +51,6 @@ func TestResetOk(t *testing.T) {
 		AddRow(2, "post 2", "world")
 
 	smock.ExpectQuery("SELECT (.+) from stable WHERE title like '%'").WillReturnRows(rows)
-	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
 	ddb, dmock, err := sqlmock.New()
@@ -132,7 +131,6 @@ func TestResetTransactionOk(t *testing.T) {
 		AddRow(2, "post 2", "world")
 
 	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
-	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
 
 	ddb, dmock, err := sqlmock.New()

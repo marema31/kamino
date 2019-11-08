@@ -15,6 +15,7 @@ import (
 	"sort"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/marema31/kamino/datasource"
 	"github.com/marema31/kamino/step"
 	"github.com/marema31/kamino/step/common"
 )
@@ -30,6 +31,7 @@ type recipe struct {
 	name            string
 	steps           map[uint][]common.Steper
 	currentPriority uint
+	dss             datasource.Datasourcers
 }
 
 // Cookbook is a map of recipe indexed by recipe's name
