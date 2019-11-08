@@ -3,7 +3,7 @@
     "database":      "pokemon_src",
     "host":          "localhost",
     "port":          "12340",
-    "admin":         "postgres",
+    "admin":         "root",
     "adminpassword": "adminpw",
     "user":          "bob",
     "password":      "123soleil",

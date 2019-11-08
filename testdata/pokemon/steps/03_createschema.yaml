@@ -6,5 +6,5 @@ template: "templates/createschema_postgres.sql.tmpl"
 tags: 
   - "pokemon"
 admin: "true"
-engine: "postgres"
+engines: "postgres"
 query: "SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{{.Schema}}';" 
