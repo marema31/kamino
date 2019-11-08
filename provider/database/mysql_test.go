@@ -22,7 +22,6 @@ func TestMySqlOk(t *testing.T) {
 		AddRow(2, "post 2", "world")
 
 	smock.ExpectQuery("SELECT (.+) from stable WHERE title like '%'").WillReturnRows(rows)
-	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
 	ddb, dmock, err := sqlmock.New()
@@ -35,7 +34,6 @@ func TestMySqlOk(t *testing.T) {
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
-	dmock.ExpectClose()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
@@ -104,7 +102,6 @@ func TestMySqlTransactionOk(t *testing.T) {
 		AddRow(2, "post 2", "world")
 
 	smock.ExpectQuery("SELECT (.+) from stable").WillReturnRows(rows)
-	smock.ExpectClose()
 	source := mockdatasource.MockDatasource{MockedDb: sdb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
 
 	ddb, dmock, err := sqlmock.New()
@@ -119,8 +116,6 @@ func TestMySqlTransactionOk(t *testing.T) {
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectCommit()
-	dmock.ExpectClose()
-	dmock.ExpectClose() // sqlmock and close/defer have erratic behavior
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")

@@ -61,9 +61,26 @@ func (ck *Cookbook) doOneRecipe(ctx context.Context, log *logrus.Entry, wgRecipe
 
 	for _, priority := range priorities {
 		log.Debugf("Executing step of priority: %d", priority)
-		nbSteps := len(ck.Recipes[rname].steps[uint(priority)])
 
+		stepsToBeDone := make([]common.Steper, 0, len(ck.Recipes[rname].steps[uint(priority)]))
 		for _, step := range ck.Recipes[rname].steps[uint(priority)] {
+			yes, err := step.ToSkip(ctx, log)
+			if err != nil {
+				log.Error("Can not determine if the step a step can be skipped")
+				mu.Lock()
+				{
+					hadError = true
+				}
+				mu.Unlock()
+				return
+			}
+			if !yes {
+				stepsToBeDone = append(stepsToBeDone, step)
+			}
+		}
+		nbSteps := len(stepsToBeDone)
+
+		for _, step := range stepsToBeDone {
 			err := step.Init(ctxRecipe, log)
 			if err != nil {
 				//we set the flag for the cookbook, does not execute following priorities for this recipe
@@ -88,7 +105,7 @@ func (ck *Cookbook) doOneRecipe(ctx context.Context, log *logrus.Entry, wgRecipe
 		defer close(recipeHadError)
 		//List of end channel for this priority level
 		ends := make([]chan bool, 0, nbSteps)
-		for _, step := range ck.Recipes[rname].steps[uint(priority)] {
+		for _, step := range stepsToBeDone {
 			//Prepare waitgroup and end channel for this step
 			wgStep.Add(1)
 			end := make(chan bool, 1)
@@ -113,7 +130,7 @@ func (ck *Cookbook) doOneRecipe(ctx context.Context, log *logrus.Entry, wgRecipe
 
 		//Since there is one end channel by stepExecutor
 		//Each stepExecutor will send only one boolean to the recipeHadError channel
-		for i := 0; i < nbSteps; i++ {
+		for i := 0; i < len(stepsToBeDone); i++ {
 			wasNotOk := <-recipeHadError
 			if wasNotOk {
 				// One step of this priority finished in error and stepExecutor noticed us
@@ -144,9 +161,11 @@ func (ck *Cookbook) Do(ctx context.Context, log *logrus.Entry) bool {
 	// Waitgroup for the recipes
 	var wgRecipe sync.WaitGroup
 
+	hadError = false
 	for rname := range ck.Recipes {
 		wgRecipe.Add(1)
 		logRecipe := log.WithField("recipe", rname)
+		defer ck.Recipes[rname].dss.CloseAll(logRecipe)
 		go ck.doOneRecipe(ctx, logRecipe, &wgRecipe, rname)
 	}
 	wgRecipe.Wait()

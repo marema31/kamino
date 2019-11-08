@@ -12,4 +12,5 @@ type Steper interface {
 	Do(context.Context, *logrus.Entry) error
 	Cancel(*logrus.Entry)
 	Init(context.Context, *logrus.Entry) error
+	ToSkip(context.Context, *logrus.Entry) (bool, error)
 }

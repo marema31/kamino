@@ -2,7 +2,7 @@
 priority: 42
 name: "namesqlscriptok"
 type: "sqlscript"
-template: "testdata/templates/broken.sql.tmpl"
+template: "templates/broken.sql.tmpl"
 admin: false
 noDb: false
 query: "SELECT * FROM USER WHERE user = '{{.User}}';"

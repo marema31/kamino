@@ -1,0 +1,3 @@
+CREATE USER '{{.User'@'%';
+GRANT ALL PRIVILEGES ON '{{.Database}}'.* TO '{{.User}}'@'%' IDENTIFIED BY '{{.Password}}';
+FLUSH PRIVILEGES;

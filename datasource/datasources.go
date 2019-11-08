@@ -21,5 +21,26 @@ func New() *Datasources {
 // Datasourcers interface to allow switching the way of storing the datasources
 type Datasourcers interface {
 	LoadAll(string, *logrus.Entry) error
+	CloseAll(*logrus.Entry)
 	Lookup(*logrus.Entry, []string, []Type, []Engine) []Datasourcer
+}
+
+// CloseAll close all filehandle and database connection still openned
+func (dss *Datasources) CloseAll(log *logrus.Entry) {
+	for _, ds := range dss.datasources {
+		log.Debugf("Closing %s", ds.name)
+		if ds.fileHandle != nil {
+			ds.fileHandle.Close()
+		}
+		if ds.db != nil {
+			ds.db.Close()
+		}
+		if ds.dbAdmin != nil {
+			ds.dbAdmin.Close()
+		}
+		if ds.dbNoDb != nil {
+			ds.dbNoDb.Close()
+		}
+
+	}
 }

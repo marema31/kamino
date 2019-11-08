@@ -109,7 +109,6 @@ func (dl *DbLoader) Load(log *logrus.Entry) (types.Record, error) {
 	}
 
 	return record, nil
-
 }
 
 //Close closes the datasource
@@ -117,12 +116,14 @@ func (dl *DbLoader) Close(log *logrus.Entry) error {
 	logDb := log.WithField("datasource", dl.ds.GetName())
 	logDb.Debug("Closing database")
 
-	dl.rows.Close()
-	err := dl.db.Close()
-	if err != nil {
-		logDb.Error("Close database failed")
-		logDb.Error(err)
-	}
+	err := dl.rows.Close()
+	/*	We do not close the database to take advantage of pool connection pool of sql package
+		err := dl.ds.CloseDatabase(logDb, false, false)
+		if err != nil {
+			logDb.Error("Close database failed")
+			logDb.Error(err)
+		}
+	*/
 	return err
 }
 

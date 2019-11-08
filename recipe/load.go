@@ -54,7 +54,7 @@ func (ck *Cookbook) loadOneRecipe(ctx context.Context, log *logrus.Entry, config
 				if _, ok := ck.Recipes[rname]; !ok {
 					s := make(map[uint][]common.Steper)
 					s[priority] = make([]common.Steper, 0)
-					ck.Recipes[rname] = recipe{name: rname, steps: s, currentPriority: 0}
+					ck.Recipes[rname] = recipe{name: rname, steps: s, currentPriority: 0, dss: dss}
 				}
 				ck.Recipes[rname].steps[priority] = append(ck.Recipes[rname].steps[priority], steps...)
 			}
