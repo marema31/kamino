@@ -7,5 +7,5 @@ tags:
   - "pokemon"
 admin: "true"
 nodb: "true"
-engine: "mysql"
+engines: "mysql"
 query: "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '{{.User}}')" 

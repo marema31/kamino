@@ -7,5 +7,5 @@ tags:
   - "pokemon"
 admin: "true"
 nodb: "true"
-engine: "mysql"
+engines: "mysql"
 query: "SELECT COUNT(schema_name) FROM information_schema.schemata WHERE schema_name='{{.Database}}';" 

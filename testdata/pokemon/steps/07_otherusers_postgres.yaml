@@ -6,5 +6,5 @@ template: "templates/otherusers_postgres.sql.tmpl"
 tags: 
   - "pokemon"
 admin: "true"
-engine: "postgres"
+engines: "postgres"
 query: "SELECT 1 FROM pg_roles WHERE rolname='sacha'" 

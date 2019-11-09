@@ -7,5 +7,5 @@ tags:
   - "pokemon"
 admin: "true"
 nodb: "true"
-engine: "postgres"
+engines: "postgres"
 query: "SELECT 1 FROM pg_roles WHERE rolname='{{.User}}'" 
