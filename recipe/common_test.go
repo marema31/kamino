@@ -19,6 +19,7 @@ func setupLoad() (context.Context, *logrus.Entry, *MockedStepFactory, *recipe.Co
 	sf := &MockedStepFactory{}
 	ck := recipe.New(sf)
 	logger := logrus.New()
+	logger.SetLevel(logrus.DebugLevel)
 	log := logger.WithField("appname", "kamino")
 	return ctx, log, sf, ck
 }
@@ -29,6 +30,7 @@ type mockedStep struct {
 	Initialized bool
 	Called      bool
 	Canceled    bool
+	Finished    bool
 	HasError    bool
 	InitError   error
 	StepError   error
@@ -42,6 +44,12 @@ func (st *mockedStep) Init(ctx context.Context, log *logrus.Entry) error {
 	log.WithField("name", st.name).WithField("error", st.InitError).Info("Initializing")
 	st.Initialized = true
 	return st.InitError
+}
+
+//Finish manage the finish of the step (called after all other step of the same priority has ended their Do)
+func (st *mockedStep) Finish(log *logrus.Entry) {
+	log.WithField("name", st.name).WithField("error", st.InitError).Info("Finishing")
+	st.Finished = true
 }
 
 //Cancel manage the cancellation of the step

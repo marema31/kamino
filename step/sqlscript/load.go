@@ -1,11 +1,15 @@
 package sqlscript
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
 	"html/template"
+	"io"
+	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/Masterminds/sprig"
 	"github.com/Sirupsen/logrus"
@@ -38,7 +42,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, filename st
 		templateFile = filepath.Join(recipePath, templateFile)
 	}
 
-	template, err := template.New("template").Funcs(sprig.FuncMap()).ParseFiles(templateFile)
+	tsqlscript, err := template.New(path.Base(templateFile)).Funcs(sprig.FuncMap()).ParseFiles(templateFile)
 	if err != nil {
 		logStep.Error("Parsing the SQL script template failed:")
 		logStep.Error(err)
@@ -56,10 +60,11 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, filename st
 		logStep.Error(err)
 		return 0, nil, fmt.Errorf("error parsing the query of %s step: %v", name, err)
 	}
-	renderedQuery := bytes.NewBuffer(make([]byte, 0, 1024))
 
 	admin := v.GetBool("admin")
 	noDb := v.GetBool("noDb")
+	v.SetDefault("transaction", true)
+	wantTransaction := v.GetBool("transaction")
 
 	engines := v.GetStringSlice("engines")
 	e, err := datasource.StringsToEngines(engines)
@@ -68,22 +73,129 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, filename st
 		return 0, nil, err
 	}
 
+	renderedQuery := bytes.NewBuffer(make([]byte, 0, 1024))
+	renderedSQLScript := bytes.NewBuffer(make([]byte, 0, 8192))
+
 	for index, datasource := range dss.Lookup(log, tags, []datasource.Type{datasource.Database}, e) {
 		var step Step
 
 		step.Name = fmt.Sprintf("%s:%d", name, index)
 		step.templateFile = templateFile
-		step.template = template
 		step.datasource = datasource
 		step.admin = admin
 		step.noDb = noDb
+		if datasource.IsTransaction() {
+			step.transaction = wantTransaction
+		}
 
-		tquery.Execute(renderedQuery, datasource.FillTmplValues())
+		tmplValue := datasource.FillTmplValues()
+		tquery.Execute(renderedQuery, tmplValue)
 		step.query = renderedQuery.String()
+		renderedQuery.Reset()
+		err = tsqlscript.Execute(renderedSQLScript, tmplValue)
+		if err != nil {
+			logStep.Error("Rendering the sql script template failed")
+			logStep.Error(err)
+			return 0, nil, err
+		}
 
+		step.sqlCmds, err = splitSQLStatements(logStep, renderedSQLScript)
+		if err != nil {
+			return 0, nil, err
+		}
+		renderedSQLScript.Reset()
 		steps = append(steps, &step)
+	}
+	return priority, steps, nil
+}
 
+// Checks the line to see if the line has a statement-ending semicolon
+// or if the line contains a double-dash comment.
+func endsWithSemicolon(line string) bool {
+
+	prev := ""
+	scanner := bufio.NewScanner(strings.NewReader(line))
+	scanner.Split(bufio.ScanWords)
+
+	for scanner.Scan() {
+		word := scanner.Text()
+		if strings.HasPrefix(word, "--") {
+			break
+		}
+		prev = word
 	}
 
-	return priority, steps, nil
+	return strings.HasSuffix(prev, ";")
+}
+
+// Split the given sql script into individual statements.
+//
+// The base case is to simply split on semicolons, as these
+// naturally terminate a statement.
+//
+// However, more complex cases like pl/pgsql can have semicolons
+// within a statement. For these cases, we provide the explicit annotations
+// 'StatementBegin' and 'StatementEnd' to allow the script to
+// tell us to ignore semicolons.
+func splitSQLStatements(log *logrus.Entry, r io.Reader) (stmts []string, err error) {
+	// buffer for the current statement that can be in multiple lines
+	var buf bytes.Buffer
+	scanner := bufio.NewScanner(r)
+
+	statementEnded := false
+	ignoreSemicolons := false
+
+	for scanner.Scan() {
+
+		line := scanner.Text()
+
+		// handle any goose-specific commands
+		if strings.HasPrefix(line, "--") {
+			cmd := strings.TrimSpace(line[2:])
+			switch cmd {
+			case "StatementBegin":
+				ignoreSemicolons = true
+			case "StatementEnd":
+				if ignoreSemicolons {
+					statementEnded = true
+				} else {
+					statementEnded = false
+				}
+			}
+		} else {
+			// Add the line to the current statement
+			if _, err := buf.WriteString(line + "\n"); err != nil {
+				log.Error("Splitting SQL script failed")
+				log.Error(err)
+				return nil, err
+			}
+		}
+
+		// Wrap up the two supported cases: 1) basic with semicolon; 2) psql statement
+		// Lines that end with semicolon that are in a statement block
+		// do not conclude statement.
+		// add the statement to the slice, and empty the buffer
+		if (!ignoreSemicolons && endsWithSemicolon(line)) || statementEnded {
+			statementEnded = false
+			stmts = append(stmts, buf.String())
+			buf.Reset()
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Error("Splitting SQL script failed")
+		log.Error(err)
+		return nil, err
+	}
+
+	// diagnose likely SQL script errors
+	if ignoreSemicolons {
+		log.Warn("Saw '-- StatementBegin' with no matching '-- StatementEnd'")
+	}
+
+	if bufferRemaining := strings.TrimSpace(buf.String()); len(bufferRemaining) > 0 {
+		log.Warnf("Unexpected unfinished SQL query: %s. Missing a semicolon?", bufferRemaining)
+	}
+
+	return stmts, err
 }

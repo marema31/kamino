@@ -17,7 +17,7 @@ func setupLoad(path string, filename string) (context.Context, *logrus.Entry, da
 	ds2 := mockdatasource.MockDatasource{Name: "ds2", Database: "db2", User: "user2", Tags: []string{"tag2"}}
 	ds3 := mockdatasource.MockDatasource{Name: "ds3", Database: "db3", User: "user3", Tags: []string{"tag2"}}
 
-	dss.Insert([]string{"tag1", "tag2"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds1, &ds2, &ds3})
+	dss.Insert([]string{"tag1"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds1, &ds2, &ds3})
 	v := viper.New()
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
 	v.AddConfigPath(path)

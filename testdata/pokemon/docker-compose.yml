@@ -7,31 +7,48 @@ services:
       MYSQL_ROOT_PASSWORD: "adminpw"
     ports:
       - 12340:3306
+    volumes:
+      - datamysrc:/var/lib/mysql
   mysql_fr:
     image: mariadb:10
     environment: 
       MYSQL_ROOT_PASSWORD: "adminpw"
     ports:
       - 12341:3306
+    volumes:
+      - datamyfr:/var/lib/mysql
   mysql_us:
     image: mariadb:10
     environment: 
       MYSQL_ROOT_PASSWORD: "adminpw"
     ports:
       - 12342:3306
+    volumes:
+      - datamyus:/var/lib/mysql
   postgres:
     image: postgres:11
     environment:
       POSTGRES_PASSWORD: "adminpw"
     ports:
       - 12343:5432
+    volumes:
+      - datapg:/var/lib/postgresql/data/
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
     ports:
       - 12348:80
+    environment:
+      PMA_HOSTS: "mysql_source,mysql_fr,mysql_us"
+      PMA_USER: "root"
+      PMA_PASSWORD: "adminpw"
   phppgadmin:
     image: dockage/phppgadmin:latest
     ports:
       - 12349:80
     environment:
       PHP_PG_ADMIN_SERVER_HOST: postgres
+volumes:
+  datamyfr:
+  datamyus:
+  datamysrc:
+  datapg:

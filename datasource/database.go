@@ -62,7 +62,7 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine) (Dat
 
 		ds.url = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", ds.user, ds.userPw, ds.host, ds.port, ds.database)
 		ds.urlAdmin = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", ds.admin, ds.adminPw, ds.host, ds.port, ds.database)
-		ds.urlNoDb = fmt.Sprintf("%s:%s@tcp(%s:%s)", ds.admin, ds.adminPw, ds.host, ds.port)
+		ds.urlNoDb = fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", ds.admin, ds.adminPw, ds.host, ds.port)
 
 	case Postgres:
 		ds.user = v.GetString("user")
@@ -92,22 +92,24 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 		logDb.Error("Can not open as a database")
 		return nil, fmt.Errorf("can not open %s as a database", ds.name)
 	}
-	URL := ds.url
-	db := ds.db
+	var URL string
+	var db *sql.DB
 	if nodb {
-		logDb.Debug("Openning connection to database engine in Admin")
+		//		logDb.Debug("Openning connection to database engine in Admin")
 		URL = ds.urlNoDb
 		db = ds.dbNoDb
 	} else if admin {
-		logDb.Debugf("Openning database %s in Admin", ds.database)
+		//		logDb.Debugf("Openning database %s in Admin", ds.database)
 		URL = ds.urlAdmin
 		db = ds.dbAdmin
 	} else {
-		logDb.Debugf("Openning database %s in User", ds.database)
+		//		logDb.Debugf("Openning database %s in User", ds.database)
+		URL = ds.url
+		db = ds.db
 	}
 
 	if db != nil {
-		logDb.Debug("The database is already opened, returning the current handler")
+		//		logDb.Debug("The database is already opened, returning the current handler")
 		return db, nil
 	}
 

@@ -21,6 +21,7 @@ type Datasourcer interface {
 	CloseFile(*logrus.Entry) error
 	GetName() string
 	GetEngine() Engine
+	IsTransaction() bool
 }
 
 //Engine constants for file/database engine
@@ -164,6 +165,11 @@ func TypeToString(dsType Type) string {
 //GetEngine return the engine enum value
 func (ds *Datasource) GetEngine() Engine {
 	return ds.engine
+}
+
+//IsTransaction return true if the datasource has transaction
+func (ds *Datasource) IsTransaction() bool {
+	return ds.transaction
 }
 
 //GetNamedTag return the value of the tag with the provided name or "" if not exists

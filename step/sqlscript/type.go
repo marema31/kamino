@@ -2,7 +2,7 @@
 package sqlscript
 
 import (
-	"html/template"
+	"database/sql"
 
 	"github.com/marema31/kamino/datasource"
 )
@@ -14,6 +14,8 @@ type Step struct {
 	admin        bool
 	noDb         bool
 	query        string
-	template     *template.Template
 	templateFile string
+	sqlCmds      []string
+	transaction  bool
+	tx           *sql.Tx
 }

@@ -8,4 +8,4 @@ tags:
 admin: "true"
 nodb: "true"
 engines: "mysql"
-query: "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '{{.User}}')" 
+query: "SELECT COUNT(user) FROM mysql.user WHERE user = '{{.User}}'" 

@@ -16,15 +16,20 @@ var hadError bool
 func stepWatchdog(ctxRecipe context.Context, log *logrus.Entry, wgWatchdog *sync.WaitGroup, end chan bool, step common.Steper) {
 	defer close(end)
 	defer wgWatchdog.Done()
+	log.Debug("Watchdog entering")
 
 	select {
 	case <-ctxRecipe.Done(): // the context has been cancelled
+		log.Debug("Watchdog cancel")
 		//Step aborted, revert the action of the step if we can
 		step.Cancel(log)
 		//Even if have cancelled, we should wait for Do.recipe to ask us to quit
 		<-end
-	case <-end: // the channel has a information we stop this goroutine
+	case <-end: // All the step of this priority has ended without error, the Do.recipe ask us to quit
+		log.Debug("Watchdog finish")
+		step.Finish(log)
 	}
+	log.Debug("Watchdog ending")
 }
 
 //stepExecutor will execute the step, cancel the context and raise the global fi
@@ -36,8 +41,8 @@ func stepExecutor(ctxRecipe context.Context, log *logrus.Entry, step common.Step
 
 	err := step.Do(ctxRecipe, log)
 	if err != nil {
-		hadError <- true
 		cancelRecipe()
+		hadError <- true
 	} else {
 		hadError <- false
 	}
@@ -79,7 +84,7 @@ func (ck *Cookbook) doOneRecipe(ctx context.Context, log *logrus.Entry, wgRecipe
 			}
 		}
 		nbSteps := len(stepsToBeDone)
-
+		log.Debugf("Will skip %d steps of the %d of this priority", cap(stepsToBeDone)-nbSteps, cap(stepsToBeDone))
 		for _, step := range stepsToBeDone {
 			err := step.Init(ctxRecipe, log)
 			if err != nil {
