@@ -7,4 +7,4 @@ tags:
   - "pokemon"
 admin: "true"
 engines: "postgres"
-query: "SELECT 1 FROM pg_roles WHERE rolname='sacha'" 
+query: "SELECT COUNT(rolname) FROM pg_roles WHERE rolname='sacha'" 

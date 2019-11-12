@@ -123,7 +123,7 @@ func TestRecipeDoStepError(t *testing.T) {
 		t.Errorf("Do should return true")
 	}
 	// Way to verify the status of all steps in synthetic way (only for debug)
-	log.Warnf("%11v | %6v | %10v | %6v", "name", "Called", "Cancelled", "Error")
+	log.Warnf("%11v | %6v | %10v | %10v | %6v", "name", "Called", "Cancelled", "Finished", "Error")
 	for _, step := range sf.Steps["steperror"] {
 		if step.Priority < 5 && step.Canceled {
 			t.Errorf("A step with priority less than 5 of steperror was cancelled")
@@ -132,7 +132,7 @@ func TestRecipeDoStepError(t *testing.T) {
 			t.Errorf("A step with priority less than 5 of steperror was not called")
 		}
 		if step.Priority == 5 {
-			log.Warnf("%11v | %6v | %10v | %6v", step.name, step.Called, step.Canceled, step.HasError)
+			log.Warnf("%11v | %6v | %10v | %10v | %6v", step.name, step.Called, step.Canceled, step.Finished, step.HasError)
 		}
 
 		// TODO: Non blocking issue (#1), for the moment will will go to MVP, come to back after
@@ -141,7 +141,6 @@ func TestRecipeDoStepError(t *testing.T) {
 				t.Errorf("A step with priority 5 of steperror was not cancelled")
 			}
 		*/
-
 		if step.Priority == 5 && !step.Called {
 			t.Errorf("A step with priority 5 of steperror was not called")
 		}

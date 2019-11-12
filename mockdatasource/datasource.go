@@ -48,6 +48,11 @@ func (ds *MockDatasource) GetEngine() datasource.Engine {
 	return ds.Engine
 }
 
+//IsTransaction return true if the datasource has transaction
+func (ds *MockDatasource) IsTransaction() bool {
+	return ds.Transaction
+}
+
 //GetNamedTag return the value of the tag with the provided name or "" if not exists
 func (ds *MockDatasource) GetNamedTag(name string) string {
 	for _, tag := range ds.Tags {

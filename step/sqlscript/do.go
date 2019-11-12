@@ -7,18 +7,50 @@ import (
 	"github.com/marema31/kamino/step/common"
 )
 
+//Finish manage the finish of the step (called after all other step of the same priority has ended their Do)
+func (st *Step) Finish(log *logrus.Entry) {
+	logStep := log.WithField("name", st.Name).WithField("type", "sql")
+	logStep.Info("Finishing step")
+	if st.tx != nil {
+		st.tx.Commit()
+	}
+}
+
 //Cancel manage the cancellation of the step
 func (st *Step) Cancel(log *logrus.Entry) {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
-	//TODO: to be implemented
 	logStep.Info("Cancelling step")
+	if st.tx != nil {
+		st.tx.Rollback()
+	}
 }
 
 //Do manage the runnning of the step
 func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
-	//TODO: to be implemented
-	logStep.Debug("Beginning step")
+	logStep.Info("Beginning step")
+
+	db, err := st.datasource.OpenDatabase(logStep, st.admin, st.noDb)
+	if err != nil {
+		return err
+	}
+
+	for _, stmt := range st.sqlCmds {
+		logStep.Debug("Executing")
+		logStep.Debug(stmt)
+		if st.tx != nil {
+			_, err = st.tx.ExecContext(ctx, stmt)
+		} else {
+			_, err = db.ExecContext(ctx, stmt)
+		}
+		if err != nil {
+			logStep.Error("Execution of one statement failed:")
+			logStep.Error(stmt)
+			logStep.Error(err)
+			return err
+		}
+	}
+
 	return nil
 }
 

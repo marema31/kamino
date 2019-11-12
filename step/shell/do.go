@@ -6,6 +6,13 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
+//Finish manage the finish of the step (called after all other step of the same priority has ended their Do)
+func (st *Step) Finish(log *logrus.Entry) {
+	logStep := log.WithField("name", st.Name).WithField("type", "sql")
+	logStep.Info("Finishing step")
+	//TODO: to be implemented
+}
+
 //Cancel manage the cancellation of the step
 func (st *Step) Cancel(log *logrus.Entry) {
 	logStep := log.WithField("name", st.Name).WithField("type", "shell")

@@ -86,7 +86,7 @@ func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, dsTypes []Ty
 							candidates[name] = true
 						} else {
 							if _, ok := candidates[name]; ok {
-								logLookup.Debugf("Found: %s, present fro previous sub-ag", name)
+								logLookup.Debugf("Found: %s, present from previous sub-tag", name)
 								candidates[name] = true
 							} else {
 								logLookup.Debugf("Skipped: %s, not present for previous sub-tag", name)
@@ -114,11 +114,13 @@ func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, dsTypes []Ty
 	}
 
 	logLookup.Debug("Final datasources list:")
+	finalDsList := make([]string, 0, len(selected))
 
 	selectedDs := make([]Datasourcer, 0, len(selected))
 	for _, ds := range selected {
-		logLookup.Debugf("  - %s", ds.name)
+		finalDsList = append(finalDsList, ds.name)
 		selectedDs = append(selectedDs, ds)
 	}
+	logLookup.Debug(strings.Join(finalDsList, ","))
 	return selectedDs
 }

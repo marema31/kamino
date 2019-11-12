@@ -7,4 +7,4 @@ tags:
   - "pokemon"
 admin: "true"
 engines: "mysql"
-query: "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = 'sacha')" 
+query: "SELECT COUNT(user) FROM mysql.user WHERE user = 'sacha'" 

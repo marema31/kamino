@@ -8,4 +8,5 @@ tags:
 admin: "true"
 nodb: "true"
 engines: "postgres"
+transaction: "false"
 query: "SELECT COUNT(datname) FROM pg_database WHERE datname = '{{.Database}}';" 

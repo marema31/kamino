@@ -11,6 +11,7 @@ import (
 type Steper interface {
 	Do(context.Context, *logrus.Entry) error
 	Cancel(*logrus.Entry)
+	Finish(log *logrus.Entry)
 	Init(context.Context, *logrus.Entry) error
 	ToSkip(context.Context, *logrus.Entry) (bool, error)
 }

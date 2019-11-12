@@ -42,7 +42,7 @@ func TestLoadMysqlCompleteEngine(t *testing.T) {
 		t.Errorf("The admin url is '%s'", ds.urlAdmin)
 	}
 
-	if ds.urlNoDb != "super:adminpw@tcp(hmc:1234)" {
+	if ds.urlNoDb != "super:adminpw@tcp(hmc:1234)/mysql" {
 		t.Errorf("The nodb url is '%s'", ds.urlNoDb)
 	}
 
@@ -86,7 +86,7 @@ func TestLoadMysqlMinimalEngine(t *testing.T) {
 		t.Errorf("The admin url is '%s'", ds.urlAdmin)
 	}
 
-	if ds.urlNoDb != "root:123soleil@tcp(127.0.0.1:3306)" {
+	if ds.urlNoDb != "root:123soleil@tcp(127.0.0.1:3306)/mysql" {
 		t.Errorf("The nodb url is '%s'", ds.urlNoDb)
 	}
 
