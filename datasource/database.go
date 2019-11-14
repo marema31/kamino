@@ -3,6 +3,7 @@ package datasource
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/Sirupsen/logrus"
@@ -12,7 +13,7 @@ import (
 )
 
 // load a database type datasource from the viper configuration
-func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine) (Datasource, error) {
+func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, connectionTimeout time.Duration, connectionRetry int) (Datasource, error) {
 	var ds Datasource
 	ds.dstype = Database
 	ds.engine = engine
@@ -26,6 +27,9 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine) (Dat
 	if len(ds.tags) == 0 {
 		ds.tags = []string{""}
 	}
+
+	ds.conTimeout = connectionTimeout
+	ds.conRetry = connectionRetry
 
 	ds.schema = v.GetString("schema")
 
@@ -76,7 +80,7 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine) (Dat
 		if ds.port == "" {
 			ds.port = "5432"
 		}
-		//TODO: try without ssldisable or make it a option on datasource
+		//TODO: try without ssldisable or make it a option on datasource (for testing see: https://gist.github.com/mrw34/c97bb03ea1054afb551886ffc8b63c3b)
 		//TODO: manage ds.Schema
 		ds.url = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", ds.host, ds.port, ds.user, ds.userPw, ds.database)
 		ds.urlAdmin = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", ds.host, ds.port, ds.admin, ds.adminPw, ds.database)
@@ -117,8 +121,12 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 	switch ds.engine {
 	case Mysql:
 		driver = "mysql"
+		log.Debug("Opening Mysql database")
+		log.Debug(URL)
 	case Postgres:
 		driver = "postgres"
+		log.Debug("Opening")
+		log.Debug(URL)
 	}
 
 	db, err := sqlOpen(driver, URL)
@@ -127,8 +135,20 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 		log.Error(err)
 		return nil, err
 	}
+	db.SetConnMaxLifetime(time.Minute * 5)
+	db.SetMaxIdleConns(10)
 
-	// Open does not really do a connection and therefore does not test for url is correct, ping will do
+	for databaseConnectionAttemptLoop := 0; databaseConnectionAttemptLoop < ds.conRetry; databaseConnectionAttemptLoop++ {
+		// Open does not really do a connection and therefore does not test for url is correct, ping will do
+		err = db.Ping()
+
+		if err == nil {
+			break // Here, if there is no error, it simply breaks out and does not retry again.
+
+		}
+		time.Sleep(ds.conTimeout)
+	}
+
 	err = db.Ping()
 	if err != nil {
 		log.Error("Ping database failed")

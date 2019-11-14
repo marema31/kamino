@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -66,6 +67,8 @@ type Datasource struct {
 	url         string
 	urlAdmin    string
 	urlNoDb     string
+	conTimeout  time.Duration
+	conRetry    int
 	db          *sql.DB
 	dbAdmin     *sql.DB
 	dbNoDb      *sql.DB

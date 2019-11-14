@@ -5,6 +5,10 @@ type: "sql"
 template: "templates/createuser_postgres.sql.tmpl"
 tags: 
   - "pokemon"
+# If we leave transaction for this kind of request on Postgres
+# Kamino will block if we try to modify/create the same role on the same postgres engine
+# Rule of thumb, avoid transactions on DDL
+transaction: "false"
 admin: "true"
 nodb: "true"
 engines: "postgres"

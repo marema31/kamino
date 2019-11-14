@@ -1,6 +1,10 @@
 package datasource
 
-import "github.com/Sirupsen/logrus"
+import (
+	"time"
+
+	"github.com/Sirupsen/logrus"
+)
 
 // Datasources is a collection of Datasource
 type Datasources struct {
@@ -8,13 +12,19 @@ type Datasources struct {
 	datasources map[string]*Datasource
 	// Datasource tag dictionnary for lookup
 	tagToDatasource map[string][]string
+	// Timeout of each database ping try
+	conTimeout time.Duration
+	// Number of retry of database ping
+	conRetry int
 }
 
 // New returns a new Datasources object with elments initialized
-func New() *Datasources {
+func New(connectionTimeout time.Duration, connectionRetry int) *Datasources {
 	var dss Datasources
 	dss.datasources = make(map[string]*Datasource)
 	dss.tagToDatasource = make(map[string][]string)
+	dss.conTimeout = connectionTimeout
+	dss.conRetry = connectionRetry
 	return &dss
 }
 

@@ -17,7 +17,7 @@ import (
 func setupLoad() (context.Context, *logrus.Entry, *MockedStepFactory, *recipe.Cookbook) {
 	ctx := context.Background()
 	sf := &MockedStepFactory{}
-	ck := recipe.New(sf)
+	ck := recipe.New(sf, time.Millisecond*2, 2)
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)
 	log := logger.WithField("appname", "kamino")

@@ -81,7 +81,7 @@ func (dss *Datasources) load(recipePath string, filename string) (Datasource, er
 
 	switch e {
 	case Mysql, Postgres:
-		return loadDatabaseDatasource(filename, v, e)
+		return loadDatabaseDatasource(filename, v, e, dss.conTimeout, dss.conRetry)
 	case JSON, YAML, CSV:
 		return loadFileDatasource(recipePath, filename, v, e)
 	}

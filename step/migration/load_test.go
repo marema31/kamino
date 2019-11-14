@@ -36,7 +36,7 @@ func TestMigrationLoadOk(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", v, dss)
+	priority, steps, err := migration.Load(ctx, log, "testdata/good", "namemigrationok", 0, v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -71,7 +71,7 @@ func TestMigrationLoadNoTag(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := migration.Load(ctx, log, "testdata/good", "notags", v, dss)
+	priority, steps, err := migration.Load(ctx, log, "testdata/good", "notags", 0, v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestMigrationLoadNoFolder(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = migration.Load(ctx, log, "testdata/fail", "nofolder", v, dss)
+	_, _, err = migration.Load(ctx, log, "testdata/fail", "nofolder", 0, v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -101,7 +101,7 @@ func TestMigrationLoadDFolderTemplateWrong(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = migration.Load(ctx, log, "testdata/fail", "wrongfolder", v, dss)
+	_, _, err = migration.Load(ctx, log, "testdata/fail", "wrongfolder", 0, v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -112,7 +112,7 @@ func TestMigrationLoadWrongEngine(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = migration.Load(ctx, log, "testdata/fail", "wrongengine", v, dss)
+	_, _, err = migration.Load(ctx, log, "testdata/fail", "wrongengine", 0, v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

@@ -3,6 +3,7 @@ package cmd
 
 import (
 	"context"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -23,6 +24,10 @@ var (
 	Verbose bool
 	//TODO: use this for the subcommands
 	tags []string
+	// Timeout of each database ping try
+	conTimeout time.Duration
+	// Number of retry of database ping
+	conRetry int
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -64,7 +69,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&DryRun, "dry-run", "d", false, "list action only do not do them")
 	rootCmd.PersistentFlags().BoolVarP(&Quiet, "quiet", "q", false, "do not print to screen")
 	rootCmd.PersistentFlags().StringSliceVarP(&tags, "tags", "T", []string{}, "comma separated list of tags to filter the calculated impacted datasources")
-
+	rootCmd.PersistentFlags().DurationVar(&conTimeout, "connection-timeout", time.Millisecond*2, "timeout of each database connection retry")
+	rootCmd.PersistentFlags().IntVar(&conRetry, "connection-retry", 1, "number maximum of database connection retries")
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	//RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")

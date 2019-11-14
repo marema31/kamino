@@ -1,6 +1,17 @@
-CREATE ROLE sacha WITH NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT NOLOGIN NOREPLICATION;
-REVOKE ALL ON DATABASE {{.Database}} FROM PUBLIC;
+-- Since we may use the same postgres engine, we may want to create the role more than once
+-- StatementBegin
+DO $$
+BEGIN
+CREATE ROLE sacha 
+  WITH NOSUPERUSER NOCREATEDB NOCREATEROLE 
+       INHERIT LOGIN ENCRYPTED PASSWORD 'pikachu' 
+       CONNECTION LIMIT 750 NOREPLICATION;
+EXCEPTION 
+  WHEN duplicate_object THEN NULL;
+  WHEN unique_violation THEN NULL;
+  WHEN integrity_constraint_violation THEN NULL;
+END
+$$;
+-- StatementEnd
 GRANT CONNECT ON DATABASE {{.Database}} TO sacha;
-ALTER ROLE sacha LOGIN;
-ALTER ROLE sacha ENCRYPTED PASSWORD 'pikachu';
-ALTER ROLE sacha CONNECTION LIMIT 750;
+

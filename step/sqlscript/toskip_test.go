@@ -19,7 +19,7 @@ func TestToSkipYesOk(t *testing.T) {
 
 	mock.ExpectQuery("SELECT \\* FROM USER WHERE user = 'user1';").WillReturnRows(rows)
 
-	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", v, dss)
+	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -52,7 +52,7 @@ func TestToSkipNoOk(t *testing.T) {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
 
-	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", v, dss)
+	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -83,7 +83,7 @@ func TestToSkipError(t *testing.T) {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
 
-	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", v, dss)
+	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
