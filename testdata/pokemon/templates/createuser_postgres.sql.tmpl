@@ -1,6 +1,15 @@
+-- Since we may use the same postgres engine, we may want to create the role more than once
+-- StatementBegin
+DO $$
+BEGIN
 CREATE ROLE {{.User}} WITH NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT NOLOGIN NOREPLICATION;
+EXCEPTION
+ WHEN duplicate_object THEN NULL;
+ WHEN unique_violation THEN NULL;
+ WHEN integrity_constraint_violation THEN NULL;
+END
+$$;
+-- StatementEnd
 REVOKE ALL ON DATABASE {{.Database}} FROM PUBLIC;
 GRANT CONNECT ON DATABASE {{.Database}} TO {{.User}};
-ALTER ROLE {{.User}} LOGIN;
-ALTER ROLE {{.User}} ENCRYPTED PASSWORD '{{.Password}}';
-ALTER ROLE {{.User}} CONNECTION LIMIT 750;
+ALTER ROLE {{.User}} LOGIN ENCRYPTED PASSWORD '{{.Password}}' CONNECTION LIMIT 750;
