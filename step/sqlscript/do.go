@@ -36,7 +36,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	}
 
 	for _, stmt := range st.sqlCmds {
-		logStep.Debug("Executing")
+		logStep.Debug("Executing: ")
 		logStep.Debug(stmt)
 		if st.tx != nil {
 			_, err = st.tx.ExecContext(ctx, stmt)
@@ -50,7 +50,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 			return err
 		}
 	}
-
+	logStep.Info("Ending step")
 	return nil
 }
 

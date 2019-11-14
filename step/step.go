@@ -26,10 +26,12 @@ type Creater interface {
 }
 
 // Factory implements the StepCreated and use configuration files to create the steps
-type Factory struct{}
+type Factory struct {
+	indexes map[string]int
+}
 
 // Load the step file and returns the priority and a list of steper for this file
-func (sf Factory) Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider, stepNames []string, stepTypes []string) (priority uint, stepList []common.Steper, err error) {
+func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider, stepNames []string, stepTypes []string) (priority uint, stepList []common.Steper, err error) {
 	v := viper.New()
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
 	stepsFolder := filepath.Join(recipePath, "steps")
@@ -38,6 +40,15 @@ func (sf Factory) Load(ctx context.Context, log *logrus.Entry, recipePath string
 	if err != nil {
 		log.Errorf("Unable to parse configuration: %v", err)
 		return 0, nil, err
+	}
+
+	name := v.GetString("name")
+	if sf.indexes == nil {
+		sf.indexes = make(map[string]int)
+	}
+	nameIndex, ok := sf.indexes[name]
+	if !ok {
+		nameIndex = 0
 	}
 
 	stepType := strings.ToLower(v.GetString("type"))
@@ -51,15 +62,15 @@ func (sf Factory) Load(ctx context.Context, log *logrus.Entry, recipePath string
 	//by sending stepNames and  stepTypes to the Load functions
 	switch stepType {
 	case "shell":
-		priority, stepList, err = shell.Load(ctx, logStep, recipePath, filename, v, dss)
+		priority, stepList, err = shell.Load(ctx, logStep, recipePath, name, nameIndex, v, dss)
 	case "migration":
-		priority, stepList, err = migration.Load(ctx, logStep, recipePath, filename, v, dss)
+		priority, stepList, err = migration.Load(ctx, logStep, recipePath, name, nameIndex, v, dss)
 	case "sync", "synchro", "synchronization":
-		priority, stepList, err = sync.Load(ctx, logStep, recipePath, filename, v, dss, prov)
+		priority, stepList, err = sync.Load(ctx, logStep, recipePath, name, nameIndex, v, dss, prov)
 	case "template":
-		priority, stepList, err = tmpl.Load(ctx, logStep, recipePath, filename, v, dss)
+		priority, stepList, err = tmpl.Load(ctx, logStep, recipePath, name, nameIndex, v, dss)
 	case "sql", "sqlscript":
-		priority, stepList, err = sqlscript.Load(ctx, logStep, recipePath, filename, v, dss)
+		priority, stepList, err = sqlscript.Load(ctx, logStep, recipePath, name, nameIndex, v, dss)
 	default:
 		log.Errorf("Do not know how to manage %s step type", stepType)
 		return 0, nil, fmt.Errorf("does not how to manage %s step type", stepType)
@@ -68,5 +79,6 @@ func (sf Factory) Load(ctx context.Context, log *logrus.Entry, recipePath string
 		logStep.Error("Parsing step configuration failed")
 	}
 	logStep.Debugf("Created %d steps at priority %d", len(stepList), priority)
+	sf.indexes[name] = nameIndex + len(stepList)
 	return priority, stepList, err
 }

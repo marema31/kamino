@@ -17,7 +17,7 @@ import (
 )
 
 //Load data from step file using its viper representation a return priority and list of steps
-func Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, v *viper.Viper, dss datasource.Datasourcers) (priority uint, steps []common.Steper, err error) {
+func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers) (priority uint, steps []common.Steper, err error) {
 	steps = make([]common.Steper, 0, 1)
 
 	priority = v.GetUint("priority")
@@ -26,7 +26,6 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, filename st
 		tags = []string{""}
 	}
 
-	name := v.GetString("name")
 	logStep := log.WithField("name", name).WithField("type", "migration")
 
 	folderTmpl := v.GetString("folder")
@@ -55,7 +54,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, filename st
 	for index, datasource := range dss.Lookup(log, tags, []datasource.Type{datasource.Database}, e) {
 		var step Step
 
-		step.Name = fmt.Sprintf("%s:%d", name, index)
+		step.Name = fmt.Sprintf("%s:%d", name, nameIndex+index)
 		step.datasource = datasource
 
 		renderedFolder := bytes.NewBuffer(make([]byte, 0, 1024))
