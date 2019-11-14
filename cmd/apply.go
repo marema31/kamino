@@ -15,7 +15,7 @@ var (
 		Long:                  ``,
 		DisableFlagsInUseLine: true,
 		RunE: func(_ *cobra.Command, args []string) error {
-			cookbook := recipe.New(step.Factory{})
+			cookbook := recipe.New(&step.Factory{}, conTimeout, conRetry)
 			return Apply(cookbook, CfgFolder, names, types, args)
 		},
 	}

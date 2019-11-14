@@ -28,7 +28,7 @@ func (ck *Cookbook) Load(ctx context.Context, log *logrus.Entry, configPath stri
 func (ck *Cookbook) loadOneRecipe(ctx context.Context, log *logrus.Entry, configPath string, rname string, stepNames []string, stepTypes []string) error {
 	prov := &provider.KaminoProvider{}
 	log.Info("Reading datasources")
-	dss := datasource.New()
+	dss := datasource.New(ck.conTimeout, ck.conRetry)
 	recipePath := filepath.Join(configPath, rname)
 	if err := dss.LoadAll(recipePath, log); err != nil {
 		return err

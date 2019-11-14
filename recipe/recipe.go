@@ -13,6 +13,7 @@ package recipe
 import (
 	"context"
 	"sort"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
@@ -38,14 +39,18 @@ type recipe struct {
 type Cookbook struct {
 	Recipes     map[string]recipe
 	stepFactory step.Creater
+	conTimeout  time.Duration
+	conRetry    int
 }
 
 // New returns a new
-func New(sf step.Creater) *Cookbook {
+func New(sf step.Creater, connectionTimeout time.Duration, connectionRetry int) *Cookbook {
 	rs := make(map[string]recipe)
 	return &Cookbook{
 		Recipes:     rs,
 		stepFactory: sf,
+		conTimeout:  connectionTimeout,
+		conRetry:    connectionRetry,
 	}
 }
 

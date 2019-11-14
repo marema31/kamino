@@ -2,13 +2,14 @@ package datasource
 
 import (
 	"testing"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 )
 
 // We are using private function, we must be in same package
 func setupLoadTest() *Datasources {
-	return New()
+	return New(time.Microsecond*2, 2)
 }
 
 func TestLoadNoTag(t *testing.T) {
