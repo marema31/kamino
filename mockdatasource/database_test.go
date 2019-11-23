@@ -28,4 +28,8 @@ func TestDatabaseOpenMysql(t *testing.T) {
 	if _, err = ds.OpenDatabase(log, true, false); err == nil {
 		t.Errorf("OpenDatabase should returns an error")
 	}
+	if ds.IsTransaction() {
+		t.Errorf("The datasource should not have transaction")
+	}
+
 }

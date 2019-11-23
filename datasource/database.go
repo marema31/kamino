@@ -52,6 +52,7 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, conn
 		ds.userPw = ds.adminPw
 	}
 
+	//TODO: Allow the user to define options for the DSN (like MySql allowOldPasswords=1 use for some very old DB)
 	switch ds.engine {
 	case Mysql:
 		if ds.user == "" {
@@ -64,9 +65,11 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, conn
 			ds.port = "3306"
 		}
 
-		ds.url = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", ds.user, ds.userPw, ds.host, ds.port, ds.database)
-		ds.urlAdmin = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", ds.admin, ds.adminPw, ds.host, ds.port, ds.database)
-		ds.urlNoDb = fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", ds.admin, ds.adminPw, ds.host, ds.port)
+		//use parseTime=true to force date and time conversion
+		//TODO: may disturb the sync mechanism
+		ds.url = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", ds.user, ds.userPw, ds.host, ds.port, ds.database)
+		ds.urlAdmin = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", ds.admin, ds.adminPw, ds.host, ds.port, ds.database)
+		ds.urlNoDb = fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql?parseTime=true", ds.admin, ds.adminPw, ds.host, ds.port)
 
 	case Postgres:
 		ds.user = v.GetString("user")
@@ -125,7 +128,7 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 		log.Debug(URL)
 	case Postgres:
 		driver = "postgres"
-		log.Debug("Opening")
+		log.Debug("Opening Postgresql database")
 		log.Debug(URL)
 	}
 

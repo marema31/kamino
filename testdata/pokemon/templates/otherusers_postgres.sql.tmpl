@@ -15,3 +15,6 @@ $$;
 -- StatementEnd
 GRANT CONNECT ON DATABASE {{.Database}} TO sacha;
 
+GRANT USAGE ON SCHEMA {{default "public" .Schema}} TO sacha;
+
+GRANT SELECT,INSERT,UPDATE,DELETE  ON ALL TABLES IN SCHEMA {{default "public" .Schema}} TO sacha;

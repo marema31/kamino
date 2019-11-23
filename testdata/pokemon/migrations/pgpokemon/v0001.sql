@@ -1,3 +1,4 @@
+-- +migrate Up
 CREATE TABLE pokemon (
     id integer NOT NULL,
     pokedex_id integer NOT NULL,
@@ -6,10 +7,6 @@ CREATE TABLE pokemon (
     type2 character varying(30),
     total integer,
     hp integer,
-    attack integer,
-    defense integer,
-    attack_speed integer,
-    defense_speed integer,
     speed integer,
     generation integer,
     legendary boolean NOT NULL
@@ -26,3 +23,7 @@ ALTER TABLE ONLY pokemon ALTER COLUMN id SET DEFAULT nextval('pokemon_id_seq'::r
 
 ALTER TABLE ONLY pokemon ADD CONSTRAINT pokemon_pkey PRIMARY KEY (id);
 
+-- +migrate Down
+
+DROP TABLE pokemon;
+DROP SEQUENCE pokemon_id_seq;

@@ -1,5 +1,5 @@
 ---
-priority: 3
+priority: 2
 name: "createschema"
 type: "sql"
 template: "templates/createschema_postgres.sql.tmpl"

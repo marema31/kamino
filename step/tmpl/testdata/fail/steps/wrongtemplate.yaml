@@ -2,8 +2,8 @@
 priority: 42
 name: "nametmplok"
 type: "tmpl"
-template: "testdata/templates/wrongconfig.cfg"
-destination: "testdata/tmp/{{.Database}}.cfg"
+template: "templates/wrongconfig.cfg"
+destination: "tmp/{{.Database}}.cfg"
 mode: ReplaceAppend
 tags: 
   - "tag1"

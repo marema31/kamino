@@ -25,6 +25,7 @@ import (
 type Cooker interface {
 	Statistics() (map[string][]int, int)
 	Load(context.Context, *logrus.Entry, string, []string, []string, []string) error
+	PostLoad(*logrus.Entry, map[string]string) error
 	Do(context.Context, *logrus.Entry) bool
 }
 
@@ -41,16 +42,20 @@ type Cookbook struct {
 	stepFactory step.Creater
 	conTimeout  time.Duration
 	conRetry    int
+	force       bool
+	sequential  bool
 }
 
 // New returns a new
-func New(sf step.Creater, connectionTimeout time.Duration, connectionRetry int) *Cookbook {
+func New(sf step.Creater, connectionTimeout time.Duration, connectionRetry int, force bool, sequential bool) *Cookbook {
 	rs := make(map[string]recipe)
 	return &Cookbook{
 		Recipes:     rs,
 		stepFactory: sf,
 		conTimeout:  connectionTimeout,
 		conRetry:    connectionRetry,
+		force:       force,
+		sequential:  sequential,
 	}
 }
 

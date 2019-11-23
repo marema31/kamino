@@ -3,6 +3,7 @@ package mockdatasource_test
 import (
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/mockdatasource"
 )
 
@@ -17,7 +18,9 @@ func TestLoadAllGood(t *testing.T) {
 	if err != nil {
 		t.Errorf("Load should not returns an error, was : %v", err)
 	}
-
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	dss.CloseAll(log)
 }
 
 func TestLoadAllWrong(t *testing.T) {

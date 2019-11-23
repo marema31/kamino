@@ -1,5 +1,5 @@
 ---
-priority: 2
+priority: 3
 name: "createuser"
 type: "sql"
 template: "templates/createuser_postgres.sql.tmpl"
@@ -10,6 +10,7 @@ tags:
 # Rule of thumb, avoid transactions on DDL
 transaction: "false"
 admin: "true"
-nodb: "true"
+# Since we want to change grants on some schemas, we must connect to the database that contain the schema
+nodb: "false"
 engines: "postgres"
 query: "SELECT COUNT(rolname) FROM pg_roles WHERE rolname='{{.User}}'" 

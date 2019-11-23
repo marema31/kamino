@@ -1,0 +1,16 @@
+CREATE DATABASE mydb;
+
+-- Test comment
+
+CREATE USER '{{.User}}' 
+IDENTIFIED BY '{{.Password}}';
+
+-- StatementBegin
+CREATE FUNCTION inc(val integer) RETURNS integer AS $$
+BEGIN
+RETURN val + 1;
+END; $$
+LANGUAGE PLPGSQL;
+-- StatementEnd
+
+REVOKE ALL ON DATABASE {{.Database}} FROM PUBLIC;

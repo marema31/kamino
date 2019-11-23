@@ -27,6 +27,7 @@ services:
       - datamyus:/var/lib/mysql
   postgres:
     image: postgres:11
+#    command: ["postgres", "-c", "log_statement=all"]  # For debug rights problem
     environment:
       POSTGRES_PASSWORD: "adminpw"
     ports:

@@ -10,7 +10,7 @@ import (
 
 // We are using private function, we must be in same package
 func setupFileTest() *Datasources {
-	return &Datasources{}
+	return &Datasources{datasources: make(map[string]*Datasource)}
 }
 func TestLoadCsvEngine(t *testing.T) {
 	dss := setupFileTest()
@@ -609,4 +609,25 @@ func TestCloseFileZipNoDataError(t *testing.T) {
 	if err == nil {
 		t.Fatalf("ResetFile Should return an error")
 	}
+}
+
+func TestFileCloseAll(t *testing.T) {
+	dss := setupFileTest()
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	logger.SetLevel(logrus.PanicLevel)
+	ds, err := dss.load("testdata/good", "csv")
+	if err != nil {
+		t.Errorf("Load returns an error %v", err)
+	}
+	dss.datasources["test"] = &ds
+	if _, err := os.Stat("testdata/good/tmp"); os.IsNotExist(err) {
+		os.Mkdir("testdata/good/tmp", 0777)
+	}
+	_, err = ds.OpenWriteFile(log)
+	if err != nil {
+		t.Fatalf("OpenWriteFile Should not return error and returned '%v'", err)
+	}
+
+	dss.CloseAll(log)
 }

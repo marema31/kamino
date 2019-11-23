@@ -9,9 +9,9 @@ import (
 
 func TestApplyOk(t *testing.T) {
 	ck := &mockedCookbook{}
-	err := cmd.Apply(ck, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
+	err := cmd.Apply(ck, nil, nil, []string{"recipe1ok", "recipe2ok"})
 	if err != nil {
-		t.Errorf("Load should not returns an error, returned: %v", err)
+		t.Errorf("Apply should not returns an error, returned: %v", err)
 	}
 
 	if !ck.called {
@@ -22,9 +22,9 @@ func TestApplyOk(t *testing.T) {
 func TestApplyLoadError(t *testing.T) {
 	ck := &mockedCookbook{}
 	ck.errorLoad = fmt.Errorf("fake error")
-	err := cmd.Apply(ck, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
+	err := cmd.Apply(ck, nil, nil, []string{"recipe1ok", "recipe2ok"})
 	if err == nil {
-		t.Errorf("Load should returns an error")
+		t.Errorf("Apply should returns an error")
 	}
 
 	if ck.called {
@@ -35,12 +35,24 @@ func TestApplyLoadError(t *testing.T) {
 func TestApplyDoError(t *testing.T) {
 	ck := &mockedCookbook{}
 	ck.doReturnValue = true
-	err := cmd.Apply(ck, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
+	err := cmd.Apply(ck, nil, nil, []string{"recipe1ok", "recipe2ok"})
 	if err == nil {
-		t.Errorf("Load should returns an error")
+		t.Errorf("Apply should returns an error")
 	}
 
 	if !ck.called {
 		t.Errorf("Do should be called")
+	}
+}
+
+func TestApplyFindRecipesError(t *testing.T) {
+	ck := &mockedCookbook{}
+	err := cmd.Apply(ck, nil, nil, []string{})
+	if err == nil {
+		t.Errorf("Apply should returns an error")
+	}
+
+	if ck.called {
+		t.Errorf("Do should not be called")
 	}
 }

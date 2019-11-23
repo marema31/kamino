@@ -45,5 +45,8 @@ func (ds *MockDatasource) ResetFile(log *logrus.Entry) error {
 
 //CloseFile close the file and rename the temporary file to real name (if exists)
 func (ds *MockDatasource) CloseFile(log *logrus.Entry) error {
+	if ds.FileHandle != nil {
+		ds.FileHandle.Close()
+	}
 	return ds.ErrorClose
 }

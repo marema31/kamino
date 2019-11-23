@@ -1,0 +1,12 @@
+---
+priority: 4
+name: "migration"
+type: "migration"
+folder: "migrations/mypokemon"
+engines: "mysql"
+nouser: false
+noadmin: true
+usertable: "pokemon_migration"
+query: "SELECT count(*) FROM information_schema.tables WHERE table_schema = \"{{.Database}}\""
+tags: 
+  - "pokemon"
