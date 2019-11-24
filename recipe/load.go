@@ -12,6 +12,20 @@ import (
 	"github.com/marema31/kamino/step/common"
 )
 
+//PostLoad modify the loaded step values with the values provided in the map in argument
+func (ck *Cookbook) PostLoad(log *logrus.Entry, superseed map[string]string) error {
+	for _, recipe := range ck.Recipes {
+		for _, steps := range recipe.steps {
+			for _, step := range steps {
+				if err := step.PostLoad(log, superseed); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
 // Load Lookup the provided folder for recipes folder and will return a Cookbook of the selected recipes/steps.
 // For each recipe, it will load all datasources and the selected steps
 func (ck *Cookbook) Load(ctx context.Context, log *logrus.Entry, configPath string, recipes []string, stepNames []string, stepTypes []string) error {

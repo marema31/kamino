@@ -14,10 +14,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-func setupLoad() (context.Context, *logrus.Entry, *MockedStepFactory, *recipe.Cookbook) {
+func setupLoad(force bool, sequential bool) (context.Context, *logrus.Entry, *MockedStepFactory, *recipe.Cookbook) {
 	ctx := context.Background()
 	sf := &MockedStepFactory{}
-	ck := recipe.New(sf, time.Millisecond*2, 2)
+	ck := recipe.New(sf, time.Millisecond*2, 2, force, sequential)
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)
 	log := logger.WithField("appname", "kamino")
@@ -26,17 +26,19 @@ func setupLoad() (context.Context, *logrus.Entry, *MockedStepFactory, *recipe.Co
 
 // ***** MOCK STEP and STEP CREATER
 type mockedStep struct {
-	name        string
-	Initialized bool
-	Called      bool
-	Canceled    bool
-	Finished    bool
-	HasError    bool
-	InitError   error
-	StepError   error
-	Priority    uint
-	ToBeSkipped bool
-	ToSkipError error
+	name          string
+	Initialized   bool
+	Called        bool
+	Canceled      bool
+	Finished      bool
+	HasError      bool
+	PostLoaded    bool
+	InitError     error
+	PostLoadError error
+	StepError     error
+	Priority      uint
+	ToBeSkipped   bool
+	ToSkipError   error
 }
 
 //Init manage the initialization of the step
@@ -78,6 +80,13 @@ func (st *mockedStep) Do(ctx context.Context, log *logrus.Entry) error {
 	return st.StepError
 }
 
+//PostLoad modify the loaded step values with the values provided in the map in argument
+func (st *mockedStep) PostLoad(log *logrus.Entry, superseed map[string]string) error {
+	// Nothing to do
+	st.PostLoaded = true
+	return st.PostLoadError
+}
+
 // MockedStepFactory implement the step.Creater interface for testing purpose returning step.Steper that are doing no I/O
 type MockedStepFactory struct {
 	Steps map[string][]*mockedStep
@@ -99,6 +108,7 @@ func (sf *MockedStepFactory) Load(ctx context.Context, log *logrus.Entry, recipe
 	generateError := v.GetBool("generateerror")
 	stepError := v.GetBool("steperror")
 	stepInitError := v.GetBool("stepiniterror")
+	postLoadError := v.GetBool("postloaderror")
 
 	ToBeSkipped := v.GetBool("tobeskipped")
 	ToSkipError := v.GetBool("toskiperror")
@@ -127,6 +137,10 @@ func (sf *MockedStepFactory) Load(ctx context.Context, log *logrus.Entry, recipe
 
 		if ToSkipError {
 			m.ToSkipError = fmt.Errorf("fake error")
+		}
+
+		if postLoadError {
+			m.PostLoadError = fmt.Errorf("fake error")
 		}
 
 		m.ToBeSkipped = ToBeSkipped

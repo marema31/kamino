@@ -43,7 +43,6 @@ func TestLoadAllGood(t *testing.T) {
 	if err != nil {
 		t.Errorf("Load should not returns an error, was : %v", err)
 	}
-
 }
 
 func TestLoadAllWrong(t *testing.T) {
@@ -70,6 +69,16 @@ func TestLoadAllEmpty(t *testing.T) {
 	logger := logrus.New()
 	log := logger.WithField("a", 1)
 	err := dss.LoadAll("testdata/empty", log)
+	if err == nil {
+		t.Errorf("Load should returns an error")
+	}
+}
+
+func TestLoadAllFormatError(t *testing.T) {
+	dss := setupLoadTest()
+	logger := logrus.New()
+	log := logger.WithField("a", 1)
+	err := dss.LoadAll("testdata/wrongformat", log)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

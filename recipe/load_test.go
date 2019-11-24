@@ -5,7 +5,7 @@ import (
 )
 
 func TestRecipeLoadOk(t *testing.T) {
-	ctx, log, _, ck := setupLoad()
+	ctx, log, _, ck := setupLoad(false, false)
 
 	err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
 	if err != nil {
@@ -37,7 +37,7 @@ func TestRecipeLoadOk(t *testing.T) {
 }
 
 func TestRecipeLoadKo(t *testing.T) {
-	ctx, log, _, ck := setupLoad()
+	ctx, log, _, ck := setupLoad(false, false)
 
 	err := ck.Load(ctx, log, "testdata/fail", []string{"recipe1", "recipe2"}, nil, nil)
 	if err == nil {
@@ -46,7 +46,7 @@ func TestRecipeLoadKo(t *testing.T) {
 }
 
 func TestRecipeLoadNoFolder(t *testing.T) {
-	ctx, log, _, ck := setupLoad()
+	ctx, log, _, ck := setupLoad(false, false)
 
 	err := ck.Load(ctx, log, "testdata/fail", []string{"recipe1", "unknown"}, nil, nil)
 	if err == nil {

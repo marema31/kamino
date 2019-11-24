@@ -85,5 +85,6 @@ func (dss *Datasources) load(recipePath string, filename string) (Datasource, er
 	case JSON, YAML, CSV:
 		return loadFileDatasource(recipePath, filename, v, e)
 	}
+	//Should never come here, error will be raised by StringToEngine
 	return Datasource{}, fmt.Errorf("does not how to manage %s datasource engine", engine)
 }

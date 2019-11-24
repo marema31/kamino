@@ -46,6 +46,10 @@ func helperTestLookup(t *testing.T, dss *mockdatasource.MockDatasources, tags []
 
 	rnames := []string{}
 	for _, ds := range result {
+		tv := ds.FillTmplValues()
+		if tv.Name != ds.GetName() {
+			t.Errorf("FillTmplValue and GetName should give the same name but %s != %s", tv.Name, ds.GetName())
+		}
 		rnames = append(rnames, ds.GetName())
 	}
 	sort.Strings(rnames)

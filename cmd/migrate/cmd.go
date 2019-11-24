@@ -1,18 +1,21 @@
 package migrate
 
 import (
-	"context"
+	"fmt"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
 
-var admin, user bool
+// Admin only migration
+var Admin bool
 
-//TODO:var ctx context.Context
+// User only migration
+var User bool
+var limit int
 
 //AddCommands adds all subcommands to RootCmd
-func AddCommands(c context.Context, cmd *cobra.Command) {
-	//TODO:	ctx = c //Save context only to make it accessible to sub-command
+func AddCommands(cmd *cobra.Command) {
 	cmd.AddCommand(
 		NewMigrateCommand(),
 	)
@@ -34,7 +37,27 @@ func NewMigrateCommand() *cobra.Command {
 		newMigrateStatusCommand(),
 	)
 
-	cmd.PersistentFlags().BoolVarP(&admin, "admin", "a", false, "Only admin migration (if relevant)")
-	cmd.PersistentFlags().BoolVarP(&user, "user", "u", false, "Only user migration")
+	cmd.PersistentFlags().BoolVarP(&Admin, "admin", "a", false, "Only admin migration (if relevant)")
+	cmd.PersistentFlags().BoolVarP(&User, "user", "u", false, "Only user migration")
+	cmd.PersistentFlags().IntVarP(&limit, "limit", "l", 0, "Max number of migration(0 for all)")
 	return cmd
+}
+
+func createSuperseed() (map[string]string, error) {
+	superseed := make(map[string]string)
+	if Admin && User {
+		return superseed, fmt.Errorf("option --admin and --user are mutually exclusive")
+	}
+	if Admin {
+		superseed["migration.noAdmin"] = "false"
+		superseed["migration.noUser"] = "true"
+	}
+	if User {
+		superseed["migration.noAdmin"] = "true"
+		superseed["migration.noUser"] = "false"
+	}
+	if limit != 0 {
+		superseed["migration.limit"] = strconv.Itoa(limit)
+	}
+	return superseed, nil
 }

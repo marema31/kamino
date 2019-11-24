@@ -9,6 +9,7 @@ import (
 type mockedCookbook struct {
 	called        bool
 	errorLoad     error
+	errorPostLoad error
 	doReturnValue bool
 }
 
@@ -22,6 +23,11 @@ func (ck *mockedCookbook) Do(ctx context.Context, log *logrus.Entry) bool {
 func (ck *mockedCookbook) Load(ctx context.Context, log *logrus.Entry, path string, recipes []string, stepNames []string, stepTypes []string) error {
 	ck.called = false
 	return ck.errorLoad
+}
+
+//PostLoad modify the loaded step values with the values provided in the map in argument
+func (ck *mockedCookbook) PostLoad(log *logrus.Entry, superseed map[string]string) error {
+	return ck.errorPostLoad
 }
 
 // Statistics return statistics on the cookbook

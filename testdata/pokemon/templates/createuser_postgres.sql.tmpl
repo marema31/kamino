@@ -11,4 +11,12 @@ END
 $$;
 -- StatementEnd
 REVOKE ALL ON DATABASE {{.Database}} FROM PUBLIC;
-GRANT CONNECT ON DATABASE {{.Database}} TO {{.User}};
+GRANT CREATE,CONNECT ON DATABASE {{.Database}} TO {{.User}};
+
+REVOKE ALL ON SCHEMA {{default "public" .Schema}} FROM PUBLIC;
+GRANT CREATE,USAGE ON SCHEMA {{default "public" .Schema}} TO {{.User}};
+
+REVOKE ALL ON ALL TABLES IN SCHEMA {{default "public" .Schema}} FROM PUBLIC ;
+GRANT ALL  ON ALL TABLES IN SCHEMA {{default "public" .Schema}} TO {{.User}};
+
+ALTER ROLE {{.User}} SET search_path TO {{default "public" .Schema}};

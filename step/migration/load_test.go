@@ -15,9 +15,10 @@ func setupLoad(path string, filename string) (context.Context, *logrus.Entry, da
 	dss := mockdatasource.New()
 	ds1 := mockdatasource.MockDatasource{Name: "ds1", Database: "db1", User: "user1", Tags: []string{"tag1a", "tag1b"}}
 	ds2 := mockdatasource.MockDatasource{Name: "ds2", Database: "db2", User: "user2", Tags: []string{"tag2"}}
-	ds3 := mockdatasource.MockDatasource{Name: "ds3", Database: "db3", User: "user3", Tags: []string{"tag2"}}
+	ds3 := mockdatasource.MockDatasource{Name: "ds3", Database: "db3", User: "user3", Schema: "az", Tags: []string{"tag2"}}
 
 	dss.Insert([]string{"tag1", "tag2"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds1, &ds2, &ds3})
+	dss.Insert([]string{"tag1"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds1, &ds2, &ds3})
 	v := viper.New()
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
 	v.AddConfigPath(path)
@@ -115,5 +116,74 @@ func TestMigrationLoadWrongEngine(t *testing.T) {
 	_, _, err = migration.Load(ctx, log, "testdata/fail", "wrongengine", 0, v, dss)
 	if err == nil {
 		t.Errorf("Load should returns an error")
+	}
+}
+
+func TestMigrationLoadNoQuery(t *testing.T) {
+	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "noquery")
+	if err != nil {
+		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
+	}
+	_, _, err = migration.Load(ctx, log, "testdata/fail", "noquery", 0, v, dss)
+	if err == nil {
+		t.Errorf("Load should returns an error")
+	}
+}
+func TestMigrationLoadWrongQuery(t *testing.T) {
+	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "wrongquery")
+	if err != nil {
+		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
+	}
+	_, _, err = migration.Load(ctx, log, "testdata/fail", "wrongquery", 0, v, dss)
+	if err == nil {
+		t.Errorf("Load should returns an error")
+	}
+}
+
+func TestMigrationPostLoad(t *testing.T) {
+	ctx, log, dss, v, err := setupLoad("testdata/good/steps/", "migrationok")
+	if err != nil {
+		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
+	}
+
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "namemigrationok", 0, v, dss)
+	if err != nil {
+		t.Errorf("Load should not returns an error, returned: %v", err)
+	}
+
+	superseed := make(map[string]string)
+	err = steps[0].PostLoad(log, superseed)
+	if err != nil {
+		t.Errorf("PostLoad should not returns an error, returned: %v", err)
+	}
+
+	superseed["unknown.limit"] = "novalue"
+	err = steps[0].PostLoad(log, superseed)
+	if err != nil {
+		t.Errorf("PostLoad should not returns an error, returned: %v", err)
+	}
+
+	superseed["migration.limit"] = "1"
+	superseed["migration.noAdmin"] = "true"
+	superseed["migration.noUser"] = "false"
+	superseed["migration.dir"] = "up"
+	err = steps[0].PostLoad(log, superseed)
+	if err != nil {
+		t.Errorf("PostLoad should not returns an error, returned: %v", err)
+	}
+	superseed["migration.dir"] = "down"
+	err = steps[0].PostLoad(log, superseed)
+	if err != nil {
+		t.Errorf("PostLoad should not returns an error, returned: %v", err)
+	}
+	superseed["migration.dir"] = "status"
+	err = steps[0].PostLoad(log, superseed)
+	if err != nil {
+		t.Errorf("PostLoad should not returns an error, returned: %v", err)
+	}
+	superseed["migration.dir"] = "dummy"
+	err = steps[0].PostLoad(log, superseed)
+	if err == nil {
+		t.Errorf("PostLoad should returns an error")
 	}
 }

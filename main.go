@@ -44,7 +44,7 @@ func main() {
 		os.Exit(1)
 	case executeError := <-end: //The goroutine executing the action is finished we can stop here
 		if executeError != nil {
-			log.Info("exiting on error")
+			log.Infof("exiting on error: %v", executeError)
 			os.Exit(1)
 		}
 	}

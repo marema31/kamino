@@ -1,0 +1,13 @@
+---
+priority: 42
+name: "nametmplok"
+type: "tmpl"
+template: "templates/config.cfg"
+destination: "tmp/{{.Database}}.cfg"
+mode: ReplaceAppend
+engines:
+  - MariaDB
+tags: 
+  - "tag1"
+  - "tag2"
+  

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/marema31/kamino/cmd"
+	"github.com/marema31/kamino/cmd/common"
 )
 
 func TestGetLoggerOk(t *testing.T) {
@@ -12,13 +13,13 @@ func TestGetLoggerOk(t *testing.T) {
 }
 
 func TestVerboseOk(t *testing.T) {
-	cmd.Verbose = true
+	common.Verbose = true
 	cmd.InitConfig()
 	_ = cmd.GetLogger()
 }
 
 func TestQuietOk(t *testing.T) {
-	cmd.Quiet = true
+	common.Quiet = true
 	cmd.InitConfig()
 	_ = cmd.GetLogger()
 }

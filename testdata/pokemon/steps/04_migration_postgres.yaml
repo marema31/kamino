@@ -1,0 +1,13 @@
+---
+priority: 4
+name: "migration"
+type: "migration"
+folder: "migrations/pgpokemon"
+engines: "postgres"
+nouser: false
+noadmin: false
+usertable: "pokemon_migration"
+query: "SELECT count(*) FROM information_schema.tables WHERE table_catalog = '{{.Database}}' and table_schema = '{{default \"public\" .Schema}}'"
+tags: 
+  - "pokemon"
+  - "!subschema"

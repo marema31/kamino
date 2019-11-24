@@ -8,7 +8,7 @@ import (
 
 // We are using private function, we must be in same package
 func setupDatabaseTest() *Datasources {
-	return &Datasources{}
+	return &Datasources{datasources: make(map[string]*Datasource)}
 }
 
 func TestLoadMysqlCompleteEngine(t *testing.T) {
@@ -34,15 +34,15 @@ func TestLoadMysqlCompleteEngine(t *testing.T) {
 		t.Errorf("The schema is '%s'", ds.schema)
 	}
 
-	if ds.url != "bob:123soleil@tcp(hmc:1234)/dbmc" {
+	if ds.url != "bob:123soleil@tcp(hmc:1234)/dbmc?parseTime=true" {
 		t.Errorf("The user url is '%s'", ds.url)
 	}
 
-	if ds.urlAdmin != "super:adminpw@tcp(hmc:1234)/dbmc" {
+	if ds.urlAdmin != "super:adminpw@tcp(hmc:1234)/dbmc?parseTime=true" {
 		t.Errorf("The admin url is '%s'", ds.urlAdmin)
 	}
 
-	if ds.urlNoDb != "super:adminpw@tcp(hmc:1234)/mysql" {
+	if ds.urlNoDb != "super:adminpw@tcp(hmc:1234)/mysql?parseTime=true" {
 		t.Errorf("The nodb url is '%s'", ds.urlNoDb)
 	}
 
@@ -78,15 +78,15 @@ func TestLoadMysqlMinimalEngine(t *testing.T) {
 		t.Errorf("The schema is '%s'", ds.schema)
 	}
 
-	if ds.url != "root:123soleil@tcp(127.0.0.1:3306)/dbmm" {
+	if ds.url != "root:123soleil@tcp(127.0.0.1:3306)/dbmm?parseTime=true" {
 		t.Errorf("The user url is '%s'", ds.url)
 	}
 
-	if ds.urlAdmin != "root:123soleil@tcp(127.0.0.1:3306)/dbmm" {
+	if ds.urlAdmin != "root:123soleil@tcp(127.0.0.1:3306)/dbmm?parseTime=true" {
 		t.Errorf("The admin url is '%s'", ds.urlAdmin)
 	}
 
-	if ds.urlNoDb != "root:123soleil@tcp(127.0.0.1:3306)/mysql" {
+	if ds.urlNoDb != "root:123soleil@tcp(127.0.0.1:3306)/mysql?parseTime=true" {
 		t.Errorf("The nodb url is '%s'", ds.urlNoDb)
 	}
 
@@ -185,6 +185,9 @@ func TestLoadPostgresMinimalEngine(t *testing.T) {
 	if len(ds.tags) != 0 && ds.tags[0] != "tagpm" {
 		t.Errorf("The tag should be found")
 	}
+	if ds.IsTransaction() {
+		t.Errorf("The datasource should not have transaction")
+	}
 }
 
 func TestLoadNoDatabase(t *testing.T) {
@@ -245,10 +248,54 @@ func TestDatabaseOpenNoDb(t *testing.T) {
 	}
 }
 
+func TestDatabaseReOpen(t *testing.T) {
+	mockingSQL = true
+	ds := Datasource{engine: Mysql, dstype: Database, url: "bob:123soleil@tcp(localhost:1234)/dbmc", urlAdmin: "urlAdmin", urlNoDb: "urlNoDb"}
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	db1, err := ds.OpenDatabase(log, false, false)
+	if err != nil {
+		t.Errorf("OpenDatabase should not returns an error, was: %v", err)
+	}
+	db2, err := ds.OpenDatabase(log, false, false)
+	if err != nil {
+		t.Errorf("OpenDatabase should not returns an error, was: %v", err)
+	}
+
+	if db1 != db2 {
+		t.Errorf("Reopenning database should return the same object")
+	}
+}
 func TestLoadNoTags(t *testing.T) {
 	dss := setupDatabaseTest()
 	_, err := dss.load("testdata/good", "mysqlnotag")
 	if err != nil {
 		t.Errorf("Load should not returns an error")
 	}
+}
+
+func TestDatabaseCloseAll(t *testing.T) {
+	mockingSQL = true
+	dss := setupDatabaseTest()
+	ds, err := dss.load("testdata/good", "postgresminimal")
+	if err != nil {
+		t.Errorf("Load returns an error %v", err)
+	}
+	dss.datasources["test"] = &ds
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+	_, err = ds.OpenDatabase(log, false, false)
+	if err != nil {
+		t.Errorf("OpenDatabase should not returns an error, was: %v", err)
+	}
+	_, err = ds.OpenDatabase(log, true, false)
+	if err != nil {
+		t.Errorf("OpenDatabase should not returns an error, was: %v", err)
+	}
+	_, err = ds.OpenDatabase(log, false, true)
+	if err != nil {
+		t.Errorf("OpenDatabase should not returns an error, was: %v", err)
+	}
+
+	dss.CloseAll(log)
 }

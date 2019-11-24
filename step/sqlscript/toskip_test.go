@@ -48,9 +48,6 @@ func TestToSkipNoOk(t *testing.T) {
 		AddRow(0)
 
 	mock.ExpectQuery("SELECT \\* FROM USER WHERE user = 'user1';").WillReturnRows(rows)
-	if err != nil {
-		t.Fatalf("NewSaver should not return error and returned '%v'", err)
-	}
 
 	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss)
 	if err != nil {
@@ -79,9 +76,6 @@ func TestToSkipError(t *testing.T) {
 	}
 
 	mock.ExpectQuery("SELECT \\* FROM USER WHERE user = 'user1';").WillReturnError(fmt.Errorf("fake error"))
-	if err != nil {
-		t.Fatalf("NewSaver should not return error and returned '%v'", err)
-	}
 
 	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss)
 	if err != nil {

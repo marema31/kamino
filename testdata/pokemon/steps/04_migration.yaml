@@ -1,7 +1,0 @@
----
-priority: 4
-name: "migration"
-type: "migration"
-folder: "pokemon_migration"
-tags: 
-  - "pokemon"

@@ -6,7 +6,7 @@
     "port":          "12343",
     "admin":         "postgres",
     "adminpassword": "adminpw",
-    "user":          "bob",
+    "user":          "bobschema",
     "password":      "123soleil",
     "transaction":   true,
     "tags":          [ "pokemon","copy", "us", "az1","subschema"]

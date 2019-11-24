@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/marema31/kamino/cmd/common"
 	"github.com/marema31/kamino/recipe"
 	"github.com/marema31/kamino/step"
 	"github.com/spf13/cobra"
@@ -15,8 +16,8 @@ var (
 		Long:                  ``,
 		DisableFlagsInUseLine: true,
 		RunE: func(_ *cobra.Command, args []string) error {
-			cookbook := recipe.New(&step.Factory{}, conTimeout, conRetry)
-			return Apply(cookbook, CfgFolder, names, types, args)
+			cookbook := recipe.New(&step.Factory{}, common.Timeout, common.Retry, common.Force, common.Sequential)
+			return Apply(cookbook, names, types, args)
 		},
 	}
 	names = []string{}
@@ -30,13 +31,20 @@ func init() {
 }
 
 //Apply will run only the recipes with Apply type
-func Apply(cookbook recipe.Cooker, cfgFolder string, names []string, types []string, args []string) error {
-	log := logger.WithField("action", "apply")
-	err := cookbook.Load(ctx, log, cfgFolder, args, names, types)
+func Apply(cookbook recipe.Cooker, names []string, types []string, args []string) error {
+	log := common.Logger.WithField("action", "apply")
+
+	recipes, err := common.FindRecipes(args)
+	if err != nil {
+		return err
+	}
+
+	err = cookbook.Load(common.Ctx, log, common.CfgFolder, recipes, names, types)
 	if err != nil {
 		return fmt.Errorf("error while loading the recipes: %v", err)
 	}
-	if cookbook.Do(ctx, log) {
+
+	if cookbook.Do(common.Ctx, log) {
 		return fmt.Errorf("a step had an error")
 	}
 	return nil

@@ -14,4 +14,5 @@ type Steper interface {
 	Finish(log *logrus.Entry)
 	Init(context.Context, *logrus.Entry) error
 	ToSkip(context.Context, *logrus.Entry) (bool, error)
+	PostLoad(*logrus.Entry, map[string]string) error
 }

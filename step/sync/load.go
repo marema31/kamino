@@ -137,6 +137,12 @@ func getFilters(ctx context.Context, log *logrus.Entry, v *viper.Viper) ([]filte
 	return filters, nil
 }
 
+//PostLoad modify the loaded step values with the values provided in the map in argument
+func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) error {
+	// Nothing to do
+	return nil
+}
+
 //Load data from step file using its viper representation a return priority and list of steps
 func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, provider provider.Provider) (priority uint, steps []common.Steper, err error) {
 	var step Step

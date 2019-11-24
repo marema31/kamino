@@ -16,6 +16,12 @@ import (
 	"github.com/marema31/kamino/step/common"
 )
 
+//PostLoad modify the loaded step values with the values provided in the map in argument
+func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) error {
+
+	return nil
+}
+
 //Load data from step file using its viper representation a return priority and list of steps
 func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers) (priority uint, steps []common.Steper, err error) {
 	steps = make([]common.Steper, 0, 1)

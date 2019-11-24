@@ -117,3 +117,21 @@ func TestShellLoadWrongEngine(t *testing.T) {
 		t.Errorf("Load should returns an error")
 	}
 }
+
+func TestShellPostLoadOk(t *testing.T) {
+	ctx, log, dss, v, err := setupLoad("testdata/good/steps/", "shellok")
+	if err != nil {
+		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
+	}
+
+	_, steps, err := shell.Load(ctx, log, "testdata/good/", "nameshellok", 0, v, dss)
+	if err != nil {
+		t.Errorf("Load should not returns an error, returned: %v", err)
+	}
+
+	superseed := make(map[string]string)
+	err = steps[0].PostLoad(log, superseed)
+	if err != nil {
+		t.Errorf("PostLoad should not returns an error, returned: %v", err)
+	}
+}

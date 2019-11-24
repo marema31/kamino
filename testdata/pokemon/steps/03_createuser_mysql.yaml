@@ -1,5 +1,5 @@
 ---
-priority: 2
+priority: 3
 name: "createuser"
 type: "sql"
 template: "templates/createuser_mysql.sql.tmpl"
