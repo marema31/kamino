@@ -282,6 +282,14 @@ func TestOpenFile(t *testing.T) {
 		t.Errorf("CloseFile Should not return error and returned '%v'", err)
 	}
 
+	fi, err := ds.Stat()
+	if err != nil {
+		t.Errorf("Stat Should not return error and returned '%v'", err)
+	}
+	if !fi.Mode().IsRegular() {
+		t.Fatalf("Should be a file")
+	}
+
 	reader, err := ds.OpenReadFile(log)
 	if err != nil {
 		t.Fatalf("OpenReadFile Should not return error and returned '%v'", err)

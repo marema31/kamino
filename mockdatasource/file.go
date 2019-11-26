@@ -3,6 +3,7 @@ package mockdatasource
 import (
 	"io"
 	"io/ioutil"
+	"os"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -49,4 +50,9 @@ func (ds *MockDatasource) CloseFile(log *logrus.Entry) error {
 		ds.FileHandle.Close()
 	}
 	return ds.ErrorClose
+}
+
+// Stat returns os.FileInfo on the file of the datasource
+func (ds *MockDatasource) Stat() (os.FileInfo, error) {
+	return os.Stat(".")
 }

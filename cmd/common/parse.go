@@ -17,6 +17,7 @@ func FindRecipes(args []string) ([]string, error) {
 	}
 	for _, file := range files {
 		if file.Mode().IsDir() {
+			//TODO: test for datasources and steps folders
 			recipes = append(recipes, file.Name())
 		}
 	}

@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"time"
 
@@ -23,6 +24,7 @@ type Datasourcer interface {
 	GetName() string
 	GetEngine() Engine
 	IsTransaction() bool
+	Stat() (os.FileInfo, error)
 }
 
 //Engine constants for file/database engine

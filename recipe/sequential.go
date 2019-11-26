@@ -51,8 +51,7 @@ func (ck *Cookbook) doSequentialOneRecipe(ctx context.Context, log *logrus.Entry
 			err := step.Do(ctx, log)
 			//Look for cancellation between each steps
 			select {
-			case <-ctx.Done(): // the context has been cancelled before, since all the goroutine has also be notified
-				//  via context inheritance, we can afford to take this event in account after their termination (via the wgRecipe.Wait)
+			case <-ctx.Done(): // If the context has been cancelled stop the recipe execution here
 				hadError = true
 				for _, step := range stepsToBeDone[:i+1] {
 					step.Cancel(log)

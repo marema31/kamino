@@ -14,17 +14,15 @@ func (st *Step) Init(ctx context.Context, log *logrus.Entry) error {
 
 	logStep.Debug("Initializing step")
 	logStep.Debug("Creating loader instance for source")
+
+	//TODO: add a parameter allowFromCacheOnly, if its true and the NewLoader get back in error, open the cache as source and st.cacheCfg = nil
 	st.source, err = st.prov.NewLoader(ctx, log, st.sourceCfg.ds, st.sourceCfg.table, st.sourceCfg.where)
 	if err != nil {
 		return err
 	}
 
 	if st.cacheCfg.ds != nil {
-		logStep.Debug("Creating loader instance for cache")
-		st.cacheLoader, err = st.prov.NewLoader(ctx, log, st.cacheCfg.ds, st.cacheCfg.table, "")
-		if err != nil {
-			return err
-		}
+		// Not creating loader instance for cache since the file may not exists if the cache has never be generated
 		logStep.Debug("Creating saver instance for cache")
 		st.cacheSaver, err = st.prov.NewSaver(ctx, log, st.cacheCfg.ds, st.cacheCfg.table, "", "")
 		if err != nil {
