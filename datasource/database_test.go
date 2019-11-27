@@ -18,7 +18,7 @@ func TestLoadMysqlCompleteEngine(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds.dstype != Database {
+	if ds.GetType() != Database {
 		t.Errorf("Should be recognized as database datasource")
 	}
 
@@ -62,7 +62,7 @@ func TestLoadMysqlMinimalEngine(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds.dstype != Database {
+	if ds.GetType() != Database {
 		t.Errorf("Should be recognized as database datasource")
 	}
 
@@ -106,7 +106,7 @@ func TestLoadPostgresCompleteEngine(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds.dstype != Database {
+	if ds.GetType() != Database {
 		t.Errorf("Should be recognized as database datasource")
 	}
 
@@ -150,7 +150,7 @@ func TestLoadPostgresMinimalEngine(t *testing.T) {
 		t.Errorf("Load returns an error %v", err)
 	}
 
-	if ds.dstype != Database {
+	if ds.GetType() != Database {
 		t.Errorf("Should be recognized as database datasource")
 	}
 

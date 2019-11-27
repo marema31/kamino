@@ -48,6 +48,11 @@ func (ds *MockDatasource) GetEngine() datasource.Engine {
 	return ds.Engine
 }
 
+//GetType return the type enum value
+func (ds *MockDatasource) GetType() datasource.Type {
+	return ds.Type
+}
+
 //IsTransaction return true if the datasource has transaction
 func (ds *MockDatasource) IsTransaction() bool {
 	return ds.Transaction
