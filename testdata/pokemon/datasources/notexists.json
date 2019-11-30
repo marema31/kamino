@@ -1,0 +1,6 @@
+{
+    "engine":        "json",
+    "file":          "../tmp/notexists.json",
+    "zip":           true,
+    "tags":          [ "pokemon", "notexists"]
+}

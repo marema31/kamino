@@ -1,0 +1,13 @@
+---
+priority: 5
+name: "initialSynchronization"
+type: "sync"
+source: 
+  tags: "pokemon.notexists"
+cache:
+  tags: "pokemon.cacheonly"
+  allowonly: true
+destinations:
+  - tags:  
+      - "pokemon.yout"
+      

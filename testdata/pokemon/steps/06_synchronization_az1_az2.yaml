@@ -8,6 +8,7 @@ source:
 cache: 
   tags: "pokemon.cache"
   ttl: "3m"
+  allowonly: true
 filters:
   - type: "only"
     aparameters: 

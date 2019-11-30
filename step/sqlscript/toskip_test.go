@@ -19,7 +19,7 @@ func TestToSkipYesOk(t *testing.T) {
 
 	mock.ExpectQuery("SELECT \\* FROM USER WHERE user = 'user1';").WillReturnRows(rows)
 
-	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss)
+	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -49,7 +49,7 @@ func TestToSkipNoOk(t *testing.T) {
 
 	mock.ExpectQuery("SELECT \\* FROM USER WHERE user = 'user1';").WillReturnRows(rows)
 
-	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss)
+	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -77,7 +77,7 @@ func TestToSkipError(t *testing.T) {
 
 	mock.ExpectQuery("SELECT \\* FROM USER WHERE user = 'user1';").WillReturnError(fmt.Errorf("fake error"))
 
-	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss)
+	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}

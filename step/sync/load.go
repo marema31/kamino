@@ -3,6 +3,8 @@ package sync
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -88,7 +90,7 @@ func parseSourceConfig(ctx context.Context, log *logrus.Entry, objectType string
 	return parsedSource, nil
 }
 
-func parseDestConfig(ctx context.Context, log *logrus.Entry, v *viper.Viper, dss datasource.Datasourcers) ([]parsedDestConfig, error) {
+func parseDestConfig(ctx context.Context, log *logrus.Entry, v *viper.Viper, dss datasource.Datasourcers, force bool) ([]parsedDestConfig, error) {
 	var dests []DestinationConfig
 	parsedDests := make([]parsedDestConfig, 0)
 
@@ -109,7 +111,10 @@ func parseDestConfig(ctx context.Context, log *logrus.Entry, v *viper.Viper, dss
 			p.ds = datasource
 			p.table = dest.Table
 			p.key = dest.Key
-			p.mode = dest.Mode
+			p.mode = strings.ToLower(dest.Mode)
+			if p.mode == "onlyifempty" && force {
+				p.mode = "truncate"
+			}
 			parsedDests = append(parsedDests, p)
 		}
 	}
@@ -138,13 +143,15 @@ func getFilters(ctx context.Context, log *logrus.Entry, v *viper.Viper) ([]filte
 }
 
 //PostLoad modify the loaded step values with the values provided in the map in argument
-func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) error {
-	// Nothing to do
-	return nil
+func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) (err error) {
+	if value, ok := superseed["sync.forceCacheOnly"]; ok {
+		st.forceCacheOnly, err = strconv.ParseBool(value)
+	}
+	return err
 }
 
 //Load data from step file using its viper representation a return priority and list of steps
-func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, provider provider.Provider) (priority uint, steps []common.Steper, err error) {
+func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, provider provider.Provider, force bool) (priority uint, steps []common.Steper, err error) {
 	var step Step
 
 	step.baseFolder = recipePath
@@ -174,6 +181,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 	logStep.Debug("Lookup cache")
 	if v.IsSet("cache") {
 		step.cacheTTL = v.GetDuration("cache.ttl")
+		step.allowCacheOnly = v.GetBool("cache.allowonly")
 		sub = v.Sub("cache")
 		step.cacheCfg, err = parseSourceConfig(ctx, logStep, "cache", sub, dss)
 		if err != nil {
@@ -189,8 +197,9 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 			return 0, nil, err
 		}
 	}
+
 	log.Debug("Lookup destinations")
-	step.destsCfg, err = parseDestConfig(ctx, logStep, v, dss)
+	step.destsCfg, err = parseDestConfig(ctx, logStep, v, dss, force)
 	if err != nil {
 		return 0, nil, err
 	}

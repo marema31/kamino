@@ -46,6 +46,7 @@ func stepExecutor(ctxRecipe context.Context, log *logrus.Entry, step common.Step
 		hadError <- false
 	}
 }
+
 func (ck *Cookbook) doParallelOneRecipe(ctx context.Context, log *logrus.Entry, wgRecipe *sync.WaitGroup, rname string) {
 	defer wgRecipe.Done()
 
@@ -64,17 +65,18 @@ func (ck *Cookbook) doParallelOneRecipe(ctx context.Context, log *logrus.Entry, 
 	sort.Ints(priorities)
 
 	for _, priority := range priorities {
-		log.Debugf("Executing step of priority: %d", priority)
+		logPriority := log.WithField("priority", priority)
+		logPriority.Debug("Executing step of this priority")
 
 		stepsToBeDone := make([]common.Steper, 0, len(ck.Recipes[rname].steps[uint(priority)]))
 		if ck.force {
 			stepsToBeDone = append(stepsToBeDone, ck.Recipes[rname].steps[uint(priority)]...)
-			log.Debugf("Force mode, will do all the %d steps of this priority", cap(stepsToBeDone))
+			logPriority.Debugf("Force mode, will do all the %d steps of this priority", cap(stepsToBeDone))
 		} else {
 			for _, step := range ck.Recipes[rname].steps[uint(priority)] {
-				yes, err := step.ToSkip(ctx, log)
+				yes, err := step.ToSkip(ctx, logPriority)
 				if err != nil {
-					log.Error("Can not determine if the step a step can be skipped")
+					logPriority.Error("Can not determine if the step a step can be skipped")
 					mu.Lock()
 					{
 						hadError = true
@@ -88,9 +90,9 @@ func (ck *Cookbook) doParallelOneRecipe(ctx context.Context, log *logrus.Entry, 
 			}
 		}
 		nbSteps := len(stepsToBeDone)
-		log.Debugf("Will skip %d steps of the %d of this priority", cap(stepsToBeDone)-nbSteps, cap(stepsToBeDone))
+		logPriority.Debugf("Will skip %d steps of the %d of this priority", cap(stepsToBeDone)-nbSteps, cap(stepsToBeDone))
 		for _, step := range stepsToBeDone {
-			err := step.Init(ctxRecipe, log)
+			err := step.Init(ctxRecipe, logPriority)
 			if err != nil {
 				//we set the flag for the cookbook, does not execute following priorities for this recipe
 				mu.Lock()
@@ -98,7 +100,7 @@ func (ck *Cookbook) doParallelOneRecipe(ctx context.Context, log *logrus.Entry, 
 					hadError = true
 				}
 				mu.Unlock()
-				log.Errorf("One step of priority %d had error at initialization, skipping the following steps", priority)
+				logPriority.Error("One step of this priority had error at initialization, skipping the following steps")
 				return //We won't execute the following priorities
 			}
 		}
@@ -120,22 +122,22 @@ func (ck *Cookbook) doParallelOneRecipe(ctx context.Context, log *logrus.Entry, 
 			end := make(chan bool, 1)
 			ends = append(ends, end)
 
-			go stepExecutor(ctxRecipe, log, step, &wgStep, &wgWatchdog, cancelRecipe, end, recipeHadError)
+			go stepExecutor(ctxRecipe, logPriority, step, &wgStep, &wgWatchdog, cancelRecipe, end, recipeHadError)
 		}
 
 		//Wait for all step/stepExecutor to finish
-		log.Debugf("Waiting for steps of priority: %d", priority)
+		logPriority.Debug("Waiting for steps of this priority")
 		wgStep.Wait()
-		log.Debugf("All steps of priority %d ended", priority)
+		logPriority.Debug("All steps of this priority ended")
 		// All the step of this priority has finished (completed or cancelled), it's time to stop the watchdogs
 		for _, end := range ends {
 			end <- true
 		}
 
-		log.Debug("Waiting for watchdog")
+		logPriority.Debug("Waiting for watchdog")
 		//Wait for all the watchdog to finish
 		wgWatchdog.Wait()
-		log.Debug("All watchdog ended")
+		logPriority.Debug("All watchdog ended")
 
 		//Since there is one end channel by stepExecutor
 		//Each stepExecutor will send only one boolean to the recipeHadError channel
@@ -149,7 +151,7 @@ func (ck *Cookbook) doParallelOneRecipe(ctx context.Context, log *logrus.Entry, 
 					hadError = true
 				}
 				mu.Unlock()
-				log.Errorf("One step of priority %d had error, skipping the following steps", priority)
+				logPriority.Error("One step of this priority had error, skipping the following steps")
 				return //We won't execute the following priorities
 			}
 		}

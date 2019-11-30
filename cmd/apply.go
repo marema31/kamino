@@ -44,6 +44,11 @@ func Apply(cookbook recipe.Cooker, names []string, types []string, args []string
 		return fmt.Errorf("error while loading the recipes: %v", err)
 	}
 
+	err = cookbook.PostLoad(log, common.CreateSuperseed())
+	if err != nil {
+		return fmt.Errorf("error while postloading the recipes: %v", err)
+	}
+
 	if cookbook.Do(common.Ctx, log) {
 		return fmt.Errorf("a step had an error")
 	}

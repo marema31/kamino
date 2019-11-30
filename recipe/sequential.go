@@ -17,16 +17,17 @@ func (ck *Cookbook) doSequentialOneRecipe(ctx context.Context, log *logrus.Entry
 	sort.Ints(priorities)
 
 	for _, priority := range priorities {
-		log.Debugf("Executing step of priority: %d", priority)
+		logPriority := log.WithField("priority", priority)
+		logPriority.Debugf("Executing step of this priority")
 		stepsToBeDone := make([]common.Steper, 0, len(ck.Recipes[rname].steps[uint(priority)]))
 		if ck.force {
 			stepsToBeDone = append(stepsToBeDone, ck.Recipes[rname].steps[uint(priority)]...)
-			log.Debugf("Force mode, will do all the %d steps of this priority", cap(stepsToBeDone))
+			logPriority.Debugf("Force mode, will do all the %d steps of this priority", cap(stepsToBeDone))
 		} else {
 			for _, step := range ck.Recipes[rname].steps[uint(priority)] {
-				yes, err := step.ToSkip(ctx, log)
+				yes, err := step.ToSkip(ctx, logPriority)
 				if err != nil {
-					log.Error("Can not determine if the step a step can be skipped")
+					logPriority.Error("Can not determine if the step a step can be skipped")
 					hadError = true
 					return
 				}
@@ -35,28 +36,28 @@ func (ck *Cookbook) doSequentialOneRecipe(ctx context.Context, log *logrus.Entry
 				}
 			}
 			nbSteps := len(stepsToBeDone)
-			log.Debugf("Will skip %d steps of the %d of this priority", cap(stepsToBeDone)-nbSteps, cap(stepsToBeDone))
+			logPriority.Debugf("Will skip %d steps of the %d of this priority", cap(stepsToBeDone)-nbSteps, cap(stepsToBeDone))
 		}
 		for _, step := range stepsToBeDone {
-			err := step.Init(ctx, log)
+			err := step.Init(ctx, logPriority)
 			if err != nil {
 				//we set the flag for the cookbook, does not execute following priorities for this recipe
 				hadError = true
-				log.Errorf("One step of priority %d had error at initialization, skipping the following steps", priority)
+				logPriority.Error("One step of this priority had error at initialization, skipping the following steps")
 				return //We won't execute the following priorities
 			}
 		}
 
 		for i, step := range stepsToBeDone {
-			err := step.Do(ctx, log)
+			err := step.Do(ctx, logPriority)
 			//Look for cancellation between each steps
 			select {
 			case <-ctx.Done(): // If the context has been cancelled stop the recipe execution here
 				hadError = true
 				for _, step := range stepsToBeDone[:i+1] {
-					step.Cancel(log)
+					step.Cancel(logPriority)
 				}
-				log.Debug("Recipe execution cancelled")
+				logPriority.Debug("Recipe execution cancelled")
 				return
 
 			default: // Make the poll to ctx.Done() non blocking
@@ -65,15 +66,15 @@ func (ck *Cookbook) doSequentialOneRecipe(ctx context.Context, log *logrus.Entry
 			if err != nil {
 				hadError = true
 				for _, step := range stepsToBeDone[:i+1] {
-					step.Cancel(log)
+					step.Cancel(logPriority)
 				}
-				log.Debug("Recipe execution failed")
+				logPriority.Debug("Recipe execution failed")
 				return
 			}
 		}
 
 		for _, step := range stepsToBeDone {
-			step.Finish(log)
+			step.Finish(logPriority)
 		}
 	}
 	log.Debug("Recipe ended without error")

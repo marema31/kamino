@@ -4,11 +4,13 @@ import (
 	"context"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/marema31/kamino/provider"
 )
 
 func (st *Step) copyData(ctx context.Context, log *logrus.Entry) error {
 
-	destinations := st.destinations
+	destinations := make([]provider.Saver, len(st.destinations))
+	copy(destinations, st.destinations)
 	source := st.source
 	if st.cacheSaver != nil {
 		destinations = append(destinations, st.cacheSaver)

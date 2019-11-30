@@ -22,10 +22,12 @@ func (st *Step) Finish(log *logrus.Entry) {
 	if st.cacheSaver != nil {
 		st.cacheSaver.Close(logStep)
 	}
+
 	for _, d := range st.destinations {
 		d.Close(logStep)
 
 	}
+
 }
 
 //Cancel manage the cancellation of the step
@@ -62,7 +64,12 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 
 		if os.IsNotExist(errFile) || ttlExpired {
 			logStep.Info("Cache file does not exist or too old, recreating it")
-			err := st.copyData(ctx, logStep)
+			var err error
+			st.cacheSaver, err = st.prov.NewSaver(ctx, log, st.cacheCfg.ds, st.cacheCfg.table, "", "")
+			if err != nil {
+				return err
+			}
+			err = st.copyData(ctx, logStep)
 			if err == nil {
 				logStep.Info("Synchronization ok, cache file created")
 				return nil
@@ -104,7 +111,6 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 // ToSkip return true if the step must be skipped
 func (st *Step) ToSkip(ctx context.Context, log *logrus.Entry) (bool, error) {
 	logStep := log.WithField("name", st.Name).WithField("type", "sync")
-	//TODO: to be implemented
-	logStep.Debug("Do we need to skip the step ?") //TODO : may be at saver level ?
+	logStep.Debug("Step always executed, the synchronization mode will determine if something will be done")
 	return false, nil
 }

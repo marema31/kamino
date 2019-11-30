@@ -1,0 +1,28 @@
+[
+    {
+        "attack": "49",
+        "defense": "49",
+        "generation": "1",
+        "hp": "100",
+        "id": "1",
+        "legendary": "0",
+        "name": "fakePoke1",
+        "pokedex_id": "1",
+        "speed": "45",
+        "type1": "Grass",
+        "type2": "ninja"
+    },
+    {
+        "attack": "62",
+        "defense": "63",
+        "generation": "1",
+        "hp": "100",
+        "id": "2",
+        "legendary": "0",
+        "name": "fakePoke2",
+        "pokedex_id": "2",
+        "speed": "60",
+        "type1": "Grass",
+        "type2": "ninja"
+    }
+]

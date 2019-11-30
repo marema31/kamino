@@ -22,7 +22,7 @@ import (
 
 // Creater is an interface to an object able to create Steper from configuration
 type Creater interface {
-	Load(context.Context, *logrus.Entry, string, string, datasource.Datasourcers, provider.Provider, []string, []string) (uint, []common.Steper, error)
+	Load(context.Context, *logrus.Entry, string, string, datasource.Datasourcers, provider.Provider, []string, []string, bool) (uint, []common.Steper, error)
 }
 
 // Factory implements the StepCreated and use configuration files to create the steps
@@ -49,7 +49,7 @@ func normalizeStepType(stepType string) (string, error) {
 }
 
 // Load the step file and returns the priority and a list of steper for this file
-func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider, stepNames []string, stepTypes []string) (priority uint, stepList []common.Steper, err error) {
+func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider, stepNames []string, stepTypes []string, force bool) (priority uint, stepList []common.Steper, err error) {
 	v := viper.New()
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
 	stepsFolder := filepath.Join(recipePath, "steps")
@@ -113,19 +113,19 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 		}
 	}
 
-	//TODO: Implement limitation of tag/engine from the CLI, pass them to the step that should pass them to the datastore.Lookup
+	//TODO: Implement limitation of tag/engine from the CLI, pass them to the step that should pass them to the datastore.Lookup (for synchronization it should be only for destination)
 	logStep := log.WithField("type", stepType)
 	switch stepType {
 	case "shell":
-		priority, stepList, err = shell.Load(ctx, logStep, recipePath, name, nameIndex, v, dss)
+		priority, stepList, err = shell.Load(ctx, logStep, recipePath, name, nameIndex, v, dss, force)
 	case "migration":
-		priority, stepList, err = migration.Load(ctx, logStep, recipePath, name, nameIndex, v, dss)
+		priority, stepList, err = migration.Load(ctx, logStep, recipePath, name, nameIndex, v, dss, force)
 	case "synchronization":
-		priority, stepList, err = sync.Load(ctx, logStep, recipePath, name, nameIndex, v, dss, prov)
+		priority, stepList, err = sync.Load(ctx, logStep, recipePath, name, nameIndex, v, dss, prov, force)
 	case "template":
-		priority, stepList, err = tmpl.Load(ctx, logStep, recipePath, name, nameIndex, v, dss)
+		priority, stepList, err = tmpl.Load(ctx, logStep, recipePath, name, nameIndex, v, dss, force)
 	case "sqlscript":
-		priority, stepList, err = sqlscript.Load(ctx, logStep, recipePath, name, nameIndex, v, dss)
+		priority, stepList, err = sqlscript.Load(ctx, logStep, recipePath, name, nameIndex, v, dss, force)
 	}
 	if err != nil {
 		logStep.Error("Parsing step configuration failed")

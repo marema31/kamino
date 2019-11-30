@@ -162,7 +162,6 @@ func (ds *Datasource) ResetFile(log *logrus.Entry) error {
 //CloseFile close the file and rename the temporary file to real name (if exists)
 func (ds *Datasource) CloseFile(log *logrus.Entry) error {
 	logFile := log.WithField("engine", EngineToString(ds.engine))
-
 	if ds.fileHandle == nil {
 		logFile.Debug("Skipping already closed")
 		return nil

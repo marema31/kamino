@@ -9,6 +9,3 @@ destinations:
     - "pokemon.source"
     table: "pokemon"
     mode: "onlyIfEmpty"
-  - tags: 
-      - "pokemon.yout"
-      

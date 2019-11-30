@@ -30,7 +30,6 @@ func init() {
 
 //Sync will run only the recipes with sync type
 func Sync(cookbook recipe.Cooker, names []string, args []string) error {
-	fmt.Println("TODO: To be implemented")
 	log := common.Logger.WithField("action", "sync")
 
 	recipes, err := common.FindRecipes(args)
@@ -41,6 +40,16 @@ func Sync(cookbook recipe.Cooker, names []string, args []string) error {
 	err = cookbook.Load(common.Ctx, log, common.CfgFolder, recipes, names, []string{"sync"})
 	if err != nil {
 		return fmt.Errorf("error while loading the recipes: %v", err)
+	}
+
+	superseed := common.CreateSuperseed()
+	if cacheOnly {
+		superseed["sync.forceCacheOnly"] = "true"
+	}
+
+	err = cookbook.PostLoad(log, superseed)
+	if err != nil {
+		return fmt.Errorf("error while postloading the recipes: %v", err)
 	}
 
 	if cookbook.Do(common.Ctx, log) {
