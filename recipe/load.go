@@ -61,7 +61,7 @@ func (ck *Cookbook) loadOneRecipe(ctx context.Context, log *logrus.Entry, config
 				name := strings.TrimSuffix(file.Name(), ext)
 				logRecipe := log.WithField("step", name)
 				logRecipe.Debug("Parsing step configuration")
-				priority, steps, err := ck.stepFactory.Load(ctx, logRecipe, recipePath, name, dss, prov, stepNames, stepTypes)
+				priority, steps, err := ck.stepFactory.Load(ctx, logRecipe, recipePath, name, dss, prov, stepNames, stepTypes, ck.force)
 				if err != nil {
 					return err
 				}

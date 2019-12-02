@@ -282,6 +282,14 @@ func TestOpenFile(t *testing.T) {
 		t.Errorf("CloseFile Should not return error and returned '%v'", err)
 	}
 
+	fi, err := ds.Stat()
+	if err != nil {
+		t.Errorf("Stat Should not return error and returned '%v'", err)
+	}
+	if !fi.Mode().IsRegular() {
+		t.Fatalf("Should be a file")
+	}
+
 	reader, err := ds.OpenReadFile(log)
 	if err != nil {
 		t.Fatalf("OpenReadFile Should not return error and returned '%v'", err)
@@ -289,6 +297,10 @@ func TestOpenFile(t *testing.T) {
 	reader.Read(test)
 	if test[2] != 3 {
 		t.Errorf("The content of file is not the one we waits for :%v", test)
+	}
+	err = ds.CloseFile(log)
+	if err != nil {
+		t.Errorf("Close Should not return error and returned '%v'", err)
 	}
 	err = ds.CloseFile(log)
 	if err != nil {
@@ -463,6 +475,10 @@ func TestResetFile(t *testing.T) {
 		t.Errorf("ResetFile Should have removed the temporary file'")
 	}
 
+	err = ds.ResetFile(log)
+	if err != nil {
+		t.Errorf("ResetFile Should not return error and returned '%v'", err)
+	}
 }
 
 func TestOpenFileError(t *testing.T) {
@@ -630,4 +646,16 @@ func TestFileCloseAll(t *testing.T) {
 	}
 
 	dss.CloseAll(log)
+}
+
+func TestStat(t *testing.T) {
+	if _, err := os.Stat("testdata/tmp"); os.IsNotExist(err) {
+		os.Mkdir("testdata/tmp", 0777)
+	}
+
+	ds := Datasource{dstype: File, zip: true, gzip: false, filePath: "testdata/tmp", tmpFilePath: ""}
+
+	if _, err := ds.Stat(); os.IsNotExist(err) {
+		t.Errorf("Stat Should have seen the file'")
+	}
 }

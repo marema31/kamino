@@ -32,6 +32,14 @@ func TestOpenFile(t *testing.T) {
 		t.Errorf("CloseFile Should not return error and returned '%v'", err)
 	}
 
+	fi, err := ds.Stat()
+	if err != nil {
+		t.Errorf("Stat Should not return error and returned '%v'", err)
+	}
+	if !fi.Mode().IsDir() { //Since we use in-memory in the mock, we mock this with the current directory
+		t.Fatalf("Should be a directory")
+	}
+
 	reader, err := ds.OpenReadFile(log)
 	if err != nil {
 		t.Fatalf("OpenReadFile Should not return error and returned '%v'", err)

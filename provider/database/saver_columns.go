@@ -49,7 +49,7 @@ func (saver *DbSaver) getColNames(log *logrus.Entry, record types.Record) ([]str
 	for _, col := range columns {
 		_, ok := record[col.Name()]
 		if !ok {
-			log.Warnf("Colum %s does not exist in source, using table default value", col.Name())
+			log.Warnf("Column %s does not exist in source, using table default value", col.Name())
 			continue
 		}
 		if strings.EqualFold(col.Name(), saver.key) {

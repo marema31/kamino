@@ -1,0 +1,5 @@
+{
+    "engine":        "json",
+    "file":          "initial_dataset/pokemon_cacheonly.json",
+    "tags":          [ "pokemon", "cacheonly"]
+}

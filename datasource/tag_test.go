@@ -112,6 +112,16 @@ func TestLookupOneTag(t *testing.T) {
 		nil,
 		[]string{"notag"},
 	)
+
+	helperTestlookupOneTag(
+		t,
+		dss,
+		"!tag1",
+		nil,
+		nil,
+		[]string{"ds1", "ds2"},
+	)
+
 }
 
 func helperTestLookup(t *testing.T, dss *Datasources, tags []string, dsTypes []Type, engines []Engine, awaited []*Datasource) {
@@ -162,6 +172,17 @@ func TestLookup(t *testing.T) {
 	helperTestLookup(
 		t,
 		dss,
+		[]string{"tag1", "!tag2"},
+		nil,
+		nil,
+		[]*Datasource{
+			dss.datasources["ds2"],
+		},
+	)
+
+	helperTestLookup(
+		t,
+		dss,
 		[]string{"tag1.tag2"},
 		nil,
 		nil,
@@ -197,6 +218,17 @@ func TestLookup(t *testing.T) {
 		[]*Datasource{
 			dss.datasources["ds1"],
 			dss.datasources["ds4"],
+		},
+	)
+
+	helperTestLookup(
+		t,
+		dss,
+		[]string{"tag1.tag2", "!tag2.environment:fr"},
+		nil,
+		nil,
+		[]*Datasource{
+			dss.datasources["ds1"],
 		},
 	)
 

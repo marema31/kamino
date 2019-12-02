@@ -33,7 +33,8 @@ func (ds *Datasource) isSelectedType(dsTypes []Type) bool {
 }
 
 func (dss *Datasources) lookupOneTag(tag string, dsTypes []Type, engines []Engine) (selected []string) {
-	//TODO: Implement "!tag" for all but this tag
+	tag = strings.TrimPrefix(tag, "!") // The negation is not useful here, it will be managed by caller
+
 	for _, name := range dss.tagToDatasource[tag] {
 		ds := dss.datasources[name]
 		if ds.isSelectedEngine(engines) && ds.isSelectedType(dsTypes) {
@@ -60,6 +61,7 @@ func (dss *Datasources) lookupWithoutTag(dsTypes []Type, engines []Engine) (sele
 func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, dsTypes []Type, engines []Engine) []Datasourcer {
 	logLookup := log.WithField("lookup", "tags")
 	selected := make(map[string]*Datasource) // Use map to emulate a "set" to avoid duplicates
+	unselected := make([]string, 0)
 	if len(tagList) == 0 {
 		logLookup.Debug("No tag provided, will only lookup on type and engines")
 		// The selection is not based on tag, lookup for all of them
@@ -72,8 +74,13 @@ func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, dsTypes []Ty
 			logLookup.Debugf("Lookup %s", tagElement)
 			if !strings.Contains(tagElement, ".") {
 				logLookup.Debug("Simple tag")
-				for _, name := range dss.lookupOneTag(tagElement, dsTypes, engines) {
-					selected[name] = dss.datasources[name]
+				if strings.HasPrefix(tagElement, "!") {
+					logLookup.Debug("Negative tag")
+					unselected = append(unselected, dss.lookupOneTag(tagElement, dsTypes, engines)...)
+				} else {
+					for _, name := range dss.lookupOneTag(tagElement, dsTypes, engines) {
+						selected[name] = dss.datasources[name]
+					}
 				}
 			} else {
 				logLookup.Debug("Composite tag")
@@ -106,8 +113,12 @@ func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, dsTypes []Ty
 				}
 				logLookup.Debugf("Final list for %s", tagElement)
 				for name := range candidates {
-					logLookup.Debugf("  - %s", name)
-					selected[name] = dss.datasources[name]
+					if strings.HasPrefix(tagElement, "!") {
+						unselected = append(unselected, name)
+					} else {
+						logLookup.Debugf("  - %s", name)
+						selected[name] = dss.datasources[name]
+					}
 				}
 			}
 		}
@@ -118,8 +129,17 @@ func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, dsTypes []Ty
 
 	selectedDs := make([]Datasourcer, 0, len(selected))
 	for _, ds := range selected {
-		finalDsList = append(finalDsList, ds.name)
-		selectedDs = append(selectedDs, ds)
+		found := false
+		for _, name := range unselected {
+			if name == ds.name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			finalDsList = append(finalDsList, ds.name)
+			selectedDs = append(selectedDs, ds)
+		}
 	}
 	logLookup.Debug(strings.Join(finalDsList, ","))
 	return selectedDs

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/marema31/kamino/cmd/common"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +45,7 @@ func NewMigrateCommand() *cobra.Command {
 }
 
 func createSuperseed() (map[string]string, error) {
-	superseed := make(map[string]string)
+	superseed := common.CreateSuperseed()
 	if Admin && User {
 		return superseed, fmt.Errorf("option --admin and --user are mutually exclusive")
 	}

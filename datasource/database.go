@@ -66,7 +66,6 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, conn
 		}
 
 		//use parseTime=true to force date and time conversion
-		//TODO: may disturb the sync mechanism
 		ds.url = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", ds.user, ds.userPw, ds.host, ds.port, ds.database)
 		ds.urlAdmin = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", ds.admin, ds.adminPw, ds.host, ds.port, ds.database)
 		ds.urlNoDb = fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql?parseTime=true", ds.admin, ds.adminPw, ds.host, ds.port)

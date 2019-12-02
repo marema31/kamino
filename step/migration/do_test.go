@@ -50,7 +50,7 @@ func TestDoUpOk(t *testing.T) {
 		AddRow("v0001.sql", time.Now())
 	mock.ExpectQuery("SELECT \\* FROM `kamino_user_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -99,7 +99,7 @@ func TestDoUpAdminError(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id", "applied_at"})
 	mock.ExpectQuery("SELECT \\* FROM `kamino_admin_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -146,7 +146,7 @@ func TestDoUpLimitedOk(t *testing.T) {
 		AddRow("v0001.sql", time.Now())
 	mock.ExpectQuery("SELECT \\* FROM `kamino_admin_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -212,7 +212,7 @@ func TestDoDownOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id", "applied_at"})
 	mock.ExpectQuery("SELECT \\* FROM `kamino_admin_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -279,7 +279,7 @@ func TestDoDownAdminError(t *testing.T) {
 		AddRow("v0001.sql", time.Now())
 	mock.ExpectQuery("SELECT \\* FROM `kamino_admin_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -326,7 +326,7 @@ func TestDoDownUserError(t *testing.T) {
 		AddRow("v0001.sql", time.Now())
 	mock.ExpectQuery("SELECT \\* FROM `kamino_user_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -371,7 +371,7 @@ func TestDoDownLimitedOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id", "applied_at"})
 	mock.ExpectQuery("SELECT \\* FROM `kamino_user_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -409,7 +409,7 @@ func TestDoDownExecError(t *testing.T) {
 		AddRow("v0099.sql", time.Now())
 	mock.ExpectQuery("SELECT \\* FROM `kamino_user_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -453,7 +453,7 @@ func TestDoPrintOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id", "applied_at"}).
 		AddRow("v0001.sql", time.Now())
 	mock.ExpectQuery("SELECT \\* FROM `kamino_user_migrations`").WillReturnRows(rows)
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}

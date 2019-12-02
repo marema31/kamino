@@ -25,16 +25,18 @@ type parsedDestConfig struct {
 
 // Step informations
 type Step struct {
-	Name         string
-	baseFolder   string
-	source       provider.Loader
-	cacheLoader  provider.Loader
-	cacheSaver   provider.Saver
-	cacheTTL     time.Duration
-	destinations []provider.Saver
-	filters      []filter.Filter
-	sourceCfg    parsedSourceConfig
-	cacheCfg     parsedSourceConfig
-	destsCfg     []parsedDestConfig
-	prov         provider.Provider
+	Name           string
+	baseFolder     string
+	source         provider.Loader
+	cacheLoader    provider.Loader
+	cacheSaver     provider.Saver
+	cacheTTL       time.Duration
+	allowCacheOnly bool
+	forceCacheOnly bool
+	destinations   []provider.Saver
+	filters        []filter.Filter
+	sourceCfg      parsedSourceConfig
+	cacheCfg       parsedSourceConfig
+	destsCfg       []parsedDestConfig
+	prov           provider.Provider
 }

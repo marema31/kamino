@@ -28,6 +28,24 @@ func TestGetEngineOK(t *testing.T) {
 	}
 }
 
+func TestTypeOK(t *testing.T) {
+	ds := mockdatasource.MockDatasource{}
+
+	set := []datasource.Type{
+		datasource.Database,
+		datasource.File,
+	}
+
+	for _, v := range set {
+		ds.Type = v
+		Type := ds.GetType()
+		if Type != v {
+			t.Errorf("GetType should return '%d' and returned '%d'", v, Type)
+		}
+
+	}
+}
+
 func TestGetNamedTags(t *testing.T) {
 	ds := mockdatasource.MockDatasource{}
 

@@ -139,7 +139,14 @@ func (ds *Datasource) OpenWriteFile(log *logrus.Entry) (io.WriteCloser, error) {
 func (ds *Datasource) ResetFile(log *logrus.Entry) error {
 	logFile := log.WithField("engine", EngineToString(ds.engine))
 	logFile.Debugf("Resetting file by removing the temporary file %s", ds.tmpFilePath)
+
+	if ds.fileHandle == nil {
+		logFile.Debug("Skipping already closed")
+		return nil
+	}
 	ds.fileHandle.Close()
+	ds.fileHandle = nil
+
 	if ds.filewriter && ds.tmpFilePath != "" {
 		err := os.Remove(ds.tmpFilePath)
 		if err != nil {
@@ -155,8 +162,12 @@ func (ds *Datasource) ResetFile(log *logrus.Entry) error {
 //CloseFile close the file and rename the temporary file to real name (if exists)
 func (ds *Datasource) CloseFile(log *logrus.Entry) error {
 	logFile := log.WithField("engine", EngineToString(ds.engine))
-
+	if ds.fileHandle == nil {
+		logFile.Debug("Skipping already closed")
+		return nil
+	}
 	ds.fileHandle.Close()
+	ds.fileHandle = nil
 
 	if !ds.filewriter || ds.tmpFilePath == "" || ds.filePath == "-" {
 		logFile.Debugf("Closing %s", ds.filePath)
@@ -226,4 +237,9 @@ func (ds *Datasource) CloseFile(log *logrus.Entry) error {
 	}
 	ds.tmpFilePath = ""
 	return nil
+}
+
+// Stat returns os.FileInfo on the file of the datasource
+func (ds *Datasource) Stat() (os.FileInfo, error) {
+	return os.Stat(ds.filePath)
 }

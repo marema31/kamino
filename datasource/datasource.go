@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"time"
 
@@ -22,7 +23,9 @@ type Datasourcer interface {
 	CloseFile(*logrus.Entry) error
 	GetName() string
 	GetEngine() Engine
+	GetType() Type
 	IsTransaction() bool
+	Stat() (os.FileInfo, error)
 }
 
 //Engine constants for file/database engine
@@ -168,6 +171,11 @@ func TypeToString(dsType Type) string {
 //GetEngine return the engine enum value
 func (ds *Datasource) GetEngine() Engine {
 	return ds.engine
+}
+
+//GetType return the type enum value
+func (ds *Datasource) GetType() Type {
+	return ds.dstype
 }
 
 //IsTransaction return true if the datasource has transaction
