@@ -9,8 +9,8 @@ source:
   table: "tablesource"
 cache: 
   tags: "tagcache"
-  types: "Database"
-  engines: "Mysql"
+  types: "File"
+  engines: "Json"
   ttl: "3m"
 filters:
   - type: "only"

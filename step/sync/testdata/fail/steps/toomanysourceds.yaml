@@ -8,8 +8,8 @@ source:
   engines: "Mysql"
   table: "tablesource"
 cache: 
-  tags: "tagcache"
-  types: "Database"
+  tags: "File"
+  types: "Json"
   engines: "Mysql"
   ttl: "3m"
 filters:

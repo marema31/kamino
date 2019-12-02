@@ -20,11 +20,12 @@ var (
 			return Sync(cookbook, names, args)
 		},
 	}
-	cacheOnly bool
+	// CacheOnly flags to force the usage of the cache not the database source
+	CacheOnly bool
 )
 
 func init() {
-	syncCmd.Flags().BoolVarP(&cacheOnly, "cache-only", "C", false, "Use only cache as source")
+	syncCmd.Flags().BoolVarP(&CacheOnly, "cache-only", "C", false, "Use only cache as source")
 	rootCmd.AddCommand(syncCmd)
 }
 
@@ -43,7 +44,7 @@ func Sync(cookbook recipe.Cooker, names []string, args []string) error {
 	}
 
 	superseed := common.CreateSuperseed()
-	if cacheOnly {
+	if CacheOnly {
 		superseed["sync.forceCacheOnly"] = "true"
 	}
 

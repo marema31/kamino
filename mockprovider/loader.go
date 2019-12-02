@@ -13,6 +13,7 @@ type MockLoader struct {
 	Content    []map[string]string
 	CurrentRow int
 	ErrorClose error
+	ErrorLoad  error
 }
 
 //Next moves to next record and return false if there is no more records
@@ -22,6 +23,9 @@ func (ml *MockLoader) Next() bool {
 
 //Load reads the next record and return it
 func (ml *MockLoader) Load(log *logrus.Entry) (types.Record, error) {
+	if ml.ErrorLoad != nil {
+		return nil, ml.ErrorLoad
+	}
 	if ml.CurrentRow >= len(ml.Content) {
 		return nil, fmt.Errorf("no more data to read")
 	}
