@@ -2,6 +2,11 @@
 priority: 42
 name: "namesyncok"
 type: "sync"
+source: 
+  tags: "tagsource"
+  types: "Database"
+  engines: "Mysql"
+  table: "tablesource"
 cache: 
   tags: "tagcache"
   types: "File"
@@ -24,9 +29,9 @@ destinations:
     table: "tabledest1"
     key: "id"
     mode: "replace"
-  - tags: ["tag3"]
-    types: "Database"
+  - types: "Database"
     engines: "Mysql"
-    table: "tabledest2"
+    table: "tabledest1"
     key: "id"
-    mode: "OnlyIfEmpty"
+    mode: "replace"
+  

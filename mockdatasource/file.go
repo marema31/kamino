@@ -54,5 +54,8 @@ func (ds *MockDatasource) CloseFile(log *logrus.Entry) error {
 
 // Stat returns os.FileInfo on the file of the datasource
 func (ds *MockDatasource) Stat() (os.FileInfo, error) {
+	if ds.FileNotExists {
+		return os.Stat("...")
+	}
 	return os.Stat(".")
 }

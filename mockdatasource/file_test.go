@@ -3,6 +3,7 @@ package mockdatasource_test
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/Sirupsen/logrus"
@@ -124,4 +125,26 @@ func TestErrorFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("ResetFile Should not return error and returned '%v'", err)
 	}
+}
+
+func TestStat(t *testing.T) {
+	ds := mockdatasource.MockDatasource{Type: datasource.File, Zip: false, Gzip: false, FilePath: "testdata/tmp/testfile"}
+
+	fi, err := ds.Stat()
+	if err != nil {
+		t.Errorf("Stat Should not return error and returned '%v'", err)
+	}
+	if !fi.Mode().IsDir() { //Since we use in-memory in the mock, we mock this with the current directory
+		t.Fatalf("Should be a directory")
+	}
+
+	ds.FileNotExists = true
+	_, err = ds.Stat()
+	if err == nil {
+		t.Errorf("Stat Should return error")
+	}
+	if os.IsExist(err) { //Since we use in-memory in the mock, we mock this with inexistant directory
+		t.Fatalf("Should not exists")
+	}
+
 }

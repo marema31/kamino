@@ -2,11 +2,11 @@
 priority: 42
 name: "namesyncok"
 type: "sync"
-cache: 
-  tags: "tagcache"
-  types: "File"
-  engines: "Json"
-  ttl: "3m"
+source: 
+  tags: "tagsource"
+  types: "Database"
+  engines: "Mysql"
+  table: "tablesource"
 filters:
   - type: "only"
     aparameters:

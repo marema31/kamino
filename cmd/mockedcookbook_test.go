@@ -11,6 +11,7 @@ type mockedCookbook struct {
 	errorLoad     error
 	errorPostLoad error
 	doReturnValue bool
+	superseed     map[string]string
 }
 
 //Do manage the runnning of the cookbook
@@ -26,7 +27,8 @@ func (ck *mockedCookbook) Load(ctx context.Context, log *logrus.Entry, path stri
 }
 
 //PostLoad modify the loaded step values with the values provided in the map in argument
-func (ck *mockedCookbook) PostLoad(log *logrus.Entry, superseed map[string]string) error {
+func (ck *mockedCookbook) PostLoad(log *logrus.Entry, s map[string]string) error {
+	ck.superseed = s
 	return ck.errorPostLoad
 }
 

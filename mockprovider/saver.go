@@ -11,10 +11,14 @@ type MockSaver struct {
 	Content    []map[string]string
 	ErrorClose error
 	ErrorReset error
+	ErrorSave  error
 }
 
 //Save writes the record to the destination
 func (ms *MockSaver) Save(log *logrus.Entry, record types.Record) error {
+	if ms.ErrorSave != nil {
+		return ms.ErrorSave
+	}
 	ms.Content = append(ms.Content, record)
 	return nil
 }

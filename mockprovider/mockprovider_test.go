@@ -33,6 +33,13 @@ func TestOk(t *testing.T) {
 	}
 	mockedLoader.MockName = "myload"
 
+	mockedLoader.ErrorLoad = fmt.Errorf("fake error")
+	_, err = loader.Load(log)
+	if err == nil {
+		t.Fatalf("Load should return error")
+	}
+
+	mockedLoader.ErrorLoad = nil
 	for loader.Next() {
 		record, err := loader.Load(log)
 		if err != nil {
@@ -55,6 +62,12 @@ func TestOk(t *testing.T) {
 	_, err = loader.Load(log)
 	if err == nil {
 		t.Fatalf("Load should return error")
+	}
+
+	mockedSaver.ErrorSave = fmt.Errorf("fake error")
+	err = saver.Save(log, nil)
+	if err == nil {
+		t.Fatalf("Save should return error")
 	}
 
 	if loader.Name() != "myload" {
@@ -89,6 +102,7 @@ func TestError(t *testing.T) {
 	}
 
 	pf.ErrorSaver = fmt.Errorf("Fake error")
+	pf.SaverToFail = 1
 	_, err = pf.NewSaver(context.Background(), log, &mockdatasource.MockDatasource{}, "", "", "")
 	if err == nil {
 		t.Fatalf("NewSaver should return error")
@@ -102,6 +116,7 @@ func TestError(t *testing.T) {
 	}
 	mockedLoader := pf.Loader
 
+	pf.LoaderToFail = 1
 	pf.ErrorLoader = fmt.Errorf("Fake error")
 	_, err = pf.NewLoader(context.Background(), log, &mockdatasource.MockDatasource{}, "", "")
 	if err == nil {
