@@ -163,12 +163,13 @@ func TestDoCacheError(t *testing.T) {
 	prov.LoaderToFail = 1
 	prov.ErrorLoader = fmt.Errorf("fake error")
 	err = steps[0].Do(context.Background(), log)
-	if err == nil {
-		t.Errorf("Do should return error")
+	if err != nil {
+		t.Fatalf("Do should not returns an error, returned: %v", err)
 	}
 
 	steps[0].Finish(log)
 }
+
 func TestDoForceCacheOk(t *testing.T) {
 	ctx, log, dss, v, prov := setupDo("testdata/good/steps/", "syncok")
 
