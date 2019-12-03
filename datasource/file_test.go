@@ -75,7 +75,7 @@ func TestLoadZipCsvEngine(t *testing.T) {
 
 func TestLoadGzipCsvEngine(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good", "Gzipcsv")
+	ds, err := dss.load("testdata/good", "gzipcsv")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
