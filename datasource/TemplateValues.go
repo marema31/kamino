@@ -31,6 +31,6 @@ func (ds *Datasource) FillTmplValues() TmplValues {
 	tv.Tags = ds.tags
 	tv.Type = TypeToString(ds.dstype)
 	tv.Engine = EngineToString(ds.engine)
-	tv.FilePath = ds.filePath
+	tv.FilePath = ds.file.FilePath
 	return tv
 }

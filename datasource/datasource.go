@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+
+	"github.com/marema31/kamino/file"
 )
 
 //Datasourcer interface for allowing mocking of Datasource object
@@ -60,7 +62,6 @@ type Datasource struct {
 	dstype      Type
 	database    string
 	engine      Engine
-	inline      string
 	host        string
 	port        string
 	user        string
@@ -77,12 +78,7 @@ type Datasource struct {
 	dbNoDb      *sql.DB
 	transaction bool
 	schema      string
-	filePath    string
-	tmpFilePath string
-	gzip        bool
-	zip         bool
-	fileHandle  io.Closer
-	filewriter  bool
+	file        file.File
 	tags        []string
 }
 
