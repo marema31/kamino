@@ -43,7 +43,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		templateFile = filepath.Join(recipePath, templateFile)
 	}
 
-	template, err := template.New("template").Funcs(sprig.FuncMap()).ParseFiles(templateFile)
+	template, err := template.New(filepath.Base(templateFile)).Funcs(sprig.FuncMap()).ParseFiles(templateFile)
 	if err != nil {
 		logStep.Error("Parsing the template failed:")
 		logStep.Error(err)
@@ -69,11 +69,15 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		mode = Replace
 	case "append":
 		mode = Append
-	case "replaceappend":
-		mode = ReplaceAppend
+	case "unique":
+		mode = Unique
 	default:
 		mode = Replace
 	}
+
+	onlyIfNotExists := v.GetBool("onlyifnotexists")
+	zip := v.GetBool("zip")
+	gzip := v.GetBool("gzip")
 
 	engines := v.GetStringSlice("engines")
 	e, err := datasource.StringsToEngines(engines)
@@ -82,20 +86,46 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		return 0, nil, err
 	}
 
-	for index, datasource := range dss.Lookup(log, tags, []datasource.Type{datasource.Database}, e) {
+	datasourcesByDestinations := make(map[string][]datasource.Datasourcer)
+	for _, ds := range dss.Lookup(log, tags, []datasource.Type{datasource.Database}, e) {
+
+		tdestination.Execute(renderedDestination, ds.FillTmplValues())
+		destination := renderedDestination.String()
+		renderedDestination.Reset()
+
+		if !filepath.IsAbs(destination) {
+			destination = filepath.Join(recipePath, destination)
+		}
+
+		if _, ok := datasourcesByDestinations[destination]; !ok {
+			datasourcesByDestinations[destination] = make([]datasource.Datasourcer, 0, 1)
+		}
+		datasourcesByDestinations[destination] = append(datasourcesByDestinations[destination], ds)
+	}
+
+	index := 0
+	for destination, datasources := range datasourcesByDestinations {
+		logStep.Debugf("creating step for %s", destination)
 		var step Step
 
 		step.Name = fmt.Sprintf("%s:%d", name, nameIndex+index)
 		step.templateFile = templateFile
 		step.template = template
-		step.datasource = datasource
+		step.datasources = datasources
 		step.mode = mode
+		step.onlyIfNotExists = onlyIfNotExists
 
-		tdestination.Execute(renderedDestination, datasource.FillTmplValues())
-		step.destination = renderedDestination.String()
-
+		step.destination = destination
+		if step.mode == Unique || step.mode == Append {
+			step.input.FilePath = destination
+			step.input.Gzip = gzip
+			step.input.Zip = zip
+		}
+		step.output.FilePath = destination
+		step.output.Gzip = gzip
+		step.output.Zip = zip
 		steps = append(steps, &step)
-
+		index++
 	}
 
 	return priority, steps, nil

@@ -1,0 +1,10 @@
+---
+priority: 8
+name: "configline"
+type: "template"
+template: "templates/configline.tmpl"
+destination: "../tmp/config_append.lst"
+mode: "append"
+tags: 
+  - "pokemon"
+  - "!source"

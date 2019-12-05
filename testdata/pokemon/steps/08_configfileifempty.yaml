@@ -3,9 +3,9 @@ priority: 8
 name: "configfile"
 type: "template"
 template: "templates/config.tmpl"
-destination: "../tmp/config_{{.Database}}.yaml"
-mode: "replace"
-onlyifnotexists: false
+destination: "../tmp/config_append.yaml"
+mode: "append"
+onlyifnotexists: true
 tags: 
   - "pokemon"
   - "!source"

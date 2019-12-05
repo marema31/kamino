@@ -1,1 +1,7 @@
-{{.Database}}:{{.User}}:{{.Password}}:{{.Host}}:{{.Port}}:{{.Tags | join ","}}
+{{.Database}}:
+   user: {{.User}}
+   password: {{.Password}}
+   host: {{.Host}}
+   port: {{.Port}}
+   tags:
+     - {{.Tags | join "\n     - "}}
