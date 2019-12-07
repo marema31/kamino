@@ -3,7 +3,7 @@ priority: 42
 name: "nametmplok"
 type: "tmpl"
 template: "templates/config.cfg"
-destination: "../tmp/{{.Database}}.cfg"
+destination: "../tmp/fixed.cfg"
 mode: unique
 engines:
   - MariaDB

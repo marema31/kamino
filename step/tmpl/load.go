@@ -32,7 +32,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		tags = []string{""}
 	}
 
-	logStep := log.WithField("name", name).WithField("type", "shell")
+	logStep := log.WithField("name", name).WithField("type", "tmpl")
 
 	templateFile := v.GetString("template")
 	if templateFile == "" {

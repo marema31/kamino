@@ -91,7 +91,7 @@ func (st *Step) ToSkip(ctx context.Context, log *logrus.Entry) (bool, error) {
 	logStep := log.WithField("name", st.Name).WithField("type", "template")
 	logStep.Debug("Do we need to skip the step ?")
 	if st.onlyIfNotExists {
-		if _, err := os.Stat(st.destination); os.IsExist(err) {
+		if _, err := os.Stat(st.destination); !os.IsNotExist(err) {
 			return true, nil
 		}
 	}
