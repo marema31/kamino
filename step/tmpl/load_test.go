@@ -18,6 +18,7 @@ func setupLoad(path string, filename string) (context.Context, *logrus.Entry, da
 	ds3 := mockdatasource.MockDatasource{Name: "ds3", Database: "db3", User: "user3", Tags: []string{"tag2"}}
 
 	dss.Insert([]string{"tag1", "tag2"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds1, &ds2, &ds3})
+	dss.Insert([]string{"tag3"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds1, &ds3})
 	v := viper.New()
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
 	v.AddConfigPath(path)
@@ -41,8 +42,8 @@ func TestTmplLoadOk(t *testing.T) {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
 
-	if len(steps) != 3 {
-		t.Fatalf("It should have been 3 steps created but it was created: %v", len(steps))
+	if len(steps) != 2 {
+		t.Fatalf("It should have been 2 steps created but it was created: %v", len(steps))
 	}
 
 	if priority != 42 {
@@ -104,6 +105,22 @@ func TestTmplLoadReplace(t *testing.T) {
 		t.Errorf("The priority should be 42, it was: %v", priority)
 	}
 }
+
+func TestTmplLoadFixedDestinationOk(t *testing.T) {
+	ctx, log, dss, v, err := setupLoad("testdata/good/steps/", "fixeddest")
+	if err != nil {
+		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
+	}
+
+	_, steps, err := tmpl.Load(ctx, log, "testdata/good", "nametmplok", 0, v, dss, false)
+	if err != nil {
+		t.Errorf("Load should not returns an error, returned: %v", err)
+	}
+	if len(steps) != 1 {
+		t.Fatalf("It should have been 1 steps created but it was created: %v", len(steps))
+	}
+}
+
 func TestTmplLoadNoMode(t *testing.T) {
 	ctx, log, dss, v, err := setupLoad("testdata/good/steps/", "nomode")
 	if err != nil {

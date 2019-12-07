@@ -88,11 +88,11 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 		logStep.Info("Using cache as source")
 		cacheLoader, err := st.prov.NewLoader(ctx, logStep, st.cacheCfg.ds, st.cacheCfg.table, "")
 		if err != nil {
-			logStep.Error("Opening cache file failed")
+			logStep.Error("Opening cache file failed .. skipping it")
 			logStep.Error(err)
-			return err
+		} else {
+			st.cacheLoader = cacheLoader
 		}
-		st.cacheLoader = cacheLoader
 	}
 	err := st.copyData(ctx, logStep)
 	if err != nil {

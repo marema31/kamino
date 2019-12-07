@@ -1,5 +1,5 @@
 ---
-priority: 8
+priority: 9
 name: "notify"
 type: "shell"
 script: "bin/notify.sh"

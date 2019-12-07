@@ -35,13 +35,11 @@ type Datasourcers interface {
 	Lookup(*logrus.Entry, []string, []Type, []Engine) []Datasourcer
 }
 
-// CloseAll close all filehandle and database connection still openned
+// CloseAll close all filehandle and database connection still opened
 func (dss *Datasources) CloseAll(log *logrus.Entry) {
 	for _, ds := range dss.datasources {
 		log.Debugf("Closing %s", ds.name)
-		if ds.fileHandle != nil {
-			ds.fileHandle.Close()
-		}
+		ds.file.Close()
 		if ds.db != nil {
 			ds.db.Close()
 		}

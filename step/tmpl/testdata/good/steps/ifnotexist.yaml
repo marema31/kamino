@@ -3,9 +3,8 @@ priority: 42
 name: "nametmplok"
 type: "tmpl"
 template: "templates/config.cfg"
-destination: "../tmp/{{.Database}}.cfg"
-mode: unique
-engines:
-  - MariaDB
+destination: "../tmp/alreadyexists.yaml"
+onlyifnotexists: true
 tags: 
-  - "tag3"  
+  - tag1
+  - tag2

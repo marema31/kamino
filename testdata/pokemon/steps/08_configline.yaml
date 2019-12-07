@@ -1,0 +1,11 @@
+---
+priority: 8
+name: "configline"
+type: "template"
+template: "templates/configline.tmpl"
+destination: "../tmp/config_unique.lst"
+mode: "unique"
+onlyifnotexists: false
+tags: 
+  - "pokemon"
+  - "!source"
