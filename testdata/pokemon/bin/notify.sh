@@ -1,5 +1,4 @@
 #! /bin/sh
-
 shift
 DATABASE=$1
 shift

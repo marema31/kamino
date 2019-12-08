@@ -2,8 +2,20 @@
 priority: 9
 name: "notify"
 type: "shell"
-script: "bin/notify.sh"
-arguments: "-d {{.Database}}  -u {{.User}} {{range .Tags}} -t {{.}} {{end}}"
+script: "../pokemon/bin/notify.sh"
+path: "../tmp"
+arguments: 
+  - "-d"
+  - "{{.Database}}"
+  - "-u"
+  - "{{.User}}"
+  - "{{range .Tags}} -t {{.}} {{end}}"
+environment: 
+  - "PROJECT_NAME=kamino"
+  - "DATASOURCE={{.Datasource}}"
+engines:
+  - Mysql
+  - Postgres
 tags: 
   - "pokemon"
   - "!source"

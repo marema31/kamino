@@ -2,6 +2,8 @@
 package shell
 
 import (
+	"os/exec"
+
 	"github.com/marema31/kamino/datasource"
 )
 
@@ -9,6 +11,5 @@ import (
 type Step struct {
 	Name       string
 	datasource datasource.Datasourcer
-	arguments  string
-	script     string
+	cmd        *exec.Cmd
 }
