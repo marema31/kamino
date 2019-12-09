@@ -1,8 +1,9 @@
 ---
-priority: 42
+priority: 9
 name: "notify"
 type: "shell"
 script: "bin/notify.sh"
+path: "../tmp/{{.Database}}"
 arguments: 
   - "-d"
   - "{{.Database}}"
@@ -11,4 +12,10 @@ arguments:
   - "{{range .Tags}} -t {{.}} {{end}}"
 environment: 
   - "PROJECT_NAME=kamino"
-  - "DATASOURCE={{.Datasource}}"
+  - "DATASOURCE={{.Datasource"
+engine:
+  - Mysql
+tags: 
+  - "tag1"
+  - "tag2"
+  

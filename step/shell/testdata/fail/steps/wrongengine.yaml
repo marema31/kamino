@@ -1,12 +1,21 @@
 ---
-priority: 42
-name: "nameshellok"
+priority: 9
+name: "notify"
 type: "shell"
-script: "bin/shell.sh"
-arguments: "-d {{.Database}}  -u {{.User}} {{range .Tags}} -t {{.}} {{end}}"
+script: "bin/notify.sh"
+path: "../tmp"
+arguments: 
+  - "-d"
+  - "{{.Database}}"
+  - "-u"
+  - "{{.User}}"
+  - "{{range .Tags}} -t {{.}} {{end}}"
+environment: 
+  - "PROJECT_NAME=kamino"
+  - "DATASOURCE={{.Datasource}}"
 engines:
   - Unknown
 tags: 
-  - "tag1"
-  - "tag2"
+  - "pokemon"
+  - "!source"
   

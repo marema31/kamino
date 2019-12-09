@@ -2,36 +2,80 @@ package shell
 
 import (
 	"context"
+	"io"
+	"os"
+	"sync"
 
 	"github.com/Sirupsen/logrus"
 )
 
 //Finish manage the finish of the step (called after all other step of the same priority has ended their Do)
 func (st *Step) Finish(log *logrus.Entry) {
-	logStep := log.WithField("name", st.Name).WithField("type", "sql")
+	logStep := log.WithField("name", st.Name).WithField("type", "shell")
 	logStep.Info("Finishing step")
-	//TODO: to be implemented
 }
 
 //Cancel manage the cancellation of the step
 func (st *Step) Cancel(log *logrus.Entry) {
 	logStep := log.WithField("name", st.Name).WithField("type", "shell")
-	//TODO: to be implemented
 	logStep.Info("Cancelling step")
 }
 
 //Do manage the runnning of the step
 func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	logStep := log.WithField("name", st.Name).WithField("type", "shell")
-	//TODO: to be implemented
 	logStep.Debug("Beginning step")
-	return nil
+
+	var wg sync.WaitGroup
+
+	stdout, err := st.cmd.StdoutPipe()
+	if err != nil {
+		logStep.Error("Script output gathering failed")
+		logStep.Error(err)
+		return err
+	}
+
+	stderr, err := st.cmd.StderrPipe()
+	if err != nil {
+		logStep.Error("Script output gathering failed")
+		logStep.Error(err)
+		return err
+	}
+
+	err = st.cmd.Start()
+	if err != nil {
+		logStep.Error("Script execution failed")
+		logStep.Error(err)
+		return err
+	}
+
+	logStep.Debug("Waiting for command to finish...")
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		io.Copy(os.Stdout, stdout)
+	}()
+
+	go func() {
+		defer wg.Done()
+		io.Copy(os.Stderr, stderr)
+	}()
+
+	wg.Wait()
+
+	err = st.cmd.Wait()
+	if err != nil {
+		logStep.Error("Script finished with error")
+		logStep.Error(err)
+	}
+	return err
 }
 
 // ToSkip return true if the step must be skipped
 func (st *Step) ToSkip(ctx context.Context, log *logrus.Entry) (bool, error) {
 	logStep := log.WithField("name", st.Name).WithField("type", "shell")
-	//TODO: to be implemented
+	//TODO: Determine which kind of condition can trigger a skip (query, run of a script ?)
 	logStep.Debug("Do we need to skip the step ?")
-	return true, nil
+	return false, nil
 }

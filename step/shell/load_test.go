@@ -96,12 +96,12 @@ func TestShellLoadNoScript(t *testing.T) {
 	}
 }
 
-func TestShellLoadTemplateWrong(t *testing.T) {
-	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "wrongtemplate")
+func TestShellLoadWrongArguments(t *testing.T) {
+	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "wrongarguments")
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = shell.Load(ctx, log, "testdata/fail", "wrongtemplate", 0, v, dss, false)
+	_, _, err = shell.Load(ctx, log, "testdata/fail", "wrongarguments", 0, v, dss, false)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -118,6 +118,28 @@ func TestShellLoadWrongEngine(t *testing.T) {
 	}
 }
 
+func TestShellLoadWrongPath(t *testing.T) {
+	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "wrongpath")
+	if err != nil {
+		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
+	}
+	_, _, err = shell.Load(ctx, log, "testdata/fail", "wrongpath", 0, v, dss, false)
+	if err == nil {
+		t.Errorf("Load should returns an error")
+	}
+}
+
+func TestShellLoadWrongEnvironments(t *testing.T) {
+	ctx, log, dss, v, err := setupLoad("testdata/fail/steps/", "wrongenvironments")
+	if err != nil {
+		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
+	}
+	_, _, err = shell.Load(ctx, log, "testdata/fail", "wrongenvironments", 0, v, dss, false)
+	if err == nil {
+		t.Errorf("Load should returns an error")
+	}
+}
+
 func TestShellPostLoadOk(t *testing.T) {
 	ctx, log, dss, v, err := setupLoad("testdata/good/steps/", "shellok")
 	if err != nil {
@@ -126,7 +148,11 @@ func TestShellPostLoadOk(t *testing.T) {
 
 	_, steps, err := shell.Load(ctx, log, "testdata/good/", "nameshellok", 0, v, dss, false)
 	if err != nil {
-		t.Errorf("Load should not returns an error, returned: %v", err)
+		t.Fatalf("Load should not returns an error, returned: %v", err)
+	}
+
+	if len(steps) == 0 {
+		t.Fatalf("It should have been 3 steps created but it was created: %v", steps)
 	}
 
 	superseed := make(map[string]string)
