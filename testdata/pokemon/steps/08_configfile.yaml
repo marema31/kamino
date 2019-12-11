@@ -4,7 +4,7 @@ name: "configfile"
 type: "template"
 template: "templates/config.tmpl"
 destination: "../tmp/config_{{.Database}}.yaml"
-mode: "replace"
+replacemode: "replace"
 tags: 
   - "pokemon"
   - "!source"

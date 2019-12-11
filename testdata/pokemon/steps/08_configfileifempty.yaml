@@ -4,7 +4,7 @@ name: "configfile"
 type: "template"
 template: "templates/config.tmpl"
 destination: "../tmp/config_append.yaml"
-mode: "skip"
+replacemode: "skip"
 tags: 
   - "pokemon"
   - "!source"

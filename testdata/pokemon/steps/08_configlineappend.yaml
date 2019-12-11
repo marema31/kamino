@@ -4,7 +4,7 @@ name: "configline"
 type: "template"
 template: "templates/configline.tmpl"
 destination: "../tmp/config_append.lst"
-mode: "append"
+repllacemode: "append"
 tags: 
   - "pokemon"
   - "!source"
