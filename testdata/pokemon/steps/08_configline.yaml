@@ -4,8 +4,7 @@ name: "configline"
 type: "template"
 template: "templates/configline.tmpl"
 destination: "../tmp/config_unique.lst"
-mode: "unique"
-onlyifnotexists: false
+mode: "skip"
 tags: 
   - "pokemon"
   - "!source"

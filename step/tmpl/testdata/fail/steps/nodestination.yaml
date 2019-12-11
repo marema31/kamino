@@ -3,7 +3,7 @@ priority: 42
 name: "nametmplok"
 type: "tmpl"
 template: "templates/config.cfg"
-mode: ReplaceAppend
+replacemode: Replace
 tags: 
   - "tag1"
   - "tag2"

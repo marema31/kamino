@@ -4,7 +4,7 @@ name: "nametmplok"
 type: "tmpl"
 template: "templates/config.cfg"
 destination: "../tmp/alreadyexists.yaml"
-onlyifnotexists: true
+replacemode: "skip"
 tags: 
   - tag1
   - tag2

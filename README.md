@@ -55,7 +55,7 @@ Each steps are described in files in JSON,TOML or YAML format. The needed attrib
 In _apply_ and _sync_ mode, before running a step of type _migration_, _sql_ or _sync_, Kamino will determine if the action is necessary by running a provided SQL query, if this query returns a count different of 0, the step will be skipped. ~~Once the action done, the query is re-run and the results must be different or Kamino will stop with an error.~~ 
 This condition can be removed with the --force option.
 
-In _migration_ mode, the condition will never be enforced.
+In _migrate_ mode, the condition will never be enforced.
 
 For step of type _shell_, it is the script responsability to be idempotent.
 
