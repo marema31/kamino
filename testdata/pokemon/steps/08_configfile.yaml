@@ -5,7 +5,6 @@ type: "template"
 template: "templates/config.tmpl"
 destination: "../tmp/config_{{.Database}}.yaml"
 mode: "replace"
-onlyifnotexists: false
 tags: 
   - "pokemon"
   - "!source"

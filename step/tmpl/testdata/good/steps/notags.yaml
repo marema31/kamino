@@ -4,4 +4,4 @@ name: "nametmplok"
 type: "tmpl"
 template: "templates/config.cfg"
 destination: "../tmp/{{.Database}}.cfg"
-mode: Append
+replacemode: Append

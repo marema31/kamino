@@ -63,10 +63,15 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 	}
 	renderedDestination := bytes.NewBuffer(make([]byte, 0, 1024))
 
+	onlyIfNotExists := false
+
 	var mode Mode
-	switch strings.ToLower(v.GetString("mode")) {
+	switch strings.ToLower(v.GetString("replacemode")) {
 	case "replace":
 		mode = Replace
+	case "skip":
+		mode = Replace
+		onlyIfNotExists = true
 	case "append":
 		mode = Append
 	case "unique":
@@ -75,7 +80,6 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		mode = Replace
 	}
 
-	onlyIfNotExists := v.GetBool("onlyifnotexists")
 	zip := v.GetBool("zip")
 	gzip := v.GetBool("gzip")
 

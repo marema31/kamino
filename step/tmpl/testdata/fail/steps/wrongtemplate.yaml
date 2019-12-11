@@ -4,7 +4,7 @@ name: "nametmplok"
 type: "tmpl"
 template: "templates/wrongconfig.cfg"
 destination: "tmp/{{.Database}}.cfg"
-mode: ReplaceAppend
+replacemode: Replace
 tags: 
   - "tag1"
   - "tag2"
