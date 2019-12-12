@@ -1,12 +1,3 @@
-# kamino
-[![Golang Documentation](https://godoc.org/github.com/marema31/kamino?status.svg)](https://godoc.org/github.com/marema31/kamino) 
-[![Build Status](https://travis-ci.org/marema31/kamino.svg)](https://travis-ci.org/marema31/kamino) 
-[![GitHub release](http://img.shields.io/github/release/marema31/kamino.svg?style=flat-square)](https://github.com/marema31/kamino/releases/latest)
-[![Golang CI](https://golangci.com/badges/github.com/marema31/kamino.svg)](https://golangci.com/r/github.com/marema31/kamino)
-[![Go Report Card](https://goreportcard.com/badge/github.com/marema31/kamino)](https://goreportcard.com/report/github.com/marema31/kamino)
-[![CodeCoverage](https://codecov.io/gh/marema31/kamino/branch/master/graph/badge.svg)](https://codecov.io/gh/marema31/kamino/branch/master)
-[![BSD-2 License](http://img.shields.io/badge/license-BSD--2-blue.svg?style=flat)](LICENSE)
-
 Manage development databases lifecycle described in 'recipes'
 
 Kamino can be used to automatically:
@@ -35,15 +26,15 @@ A common 'recipe' would implies the following steps:
 Kamino combine several type of 'objects' to manage the database lifecycle
 
 ### Datasource
-Each environment can be composed of several 'datasources'. This datasource is connection informations needed for a recipe (server, users/password, engine type, database name and/or schema if relevant). Each datasource is described in [files](/docs/datasource.md) in JSON, TOML or YAML format
+Each environment can be composed of several 'datasources'. This datasource is connection informations needed for a recipe (server, users/password, engine type, database name and/or schema if relevant). Each datasource is described in [files](datasource.md) in JSON, TOML or YAML format
 
 ### Step
 A step is an action to be done on the selected datasources. The action could be:
-   * [_sql_](/docs/sql.md)     : run a templated sql script
-   * [_migrate_](/docs/migrate.md) : apply sql-migrate migration, the actions will be different if Kamino is in apply or migrate mode.
-   * [_sync_](/docs/sync.md)    : Synchronize data from an other database or files
-   * [_shell_](/docs/shell.md)   : run a shell script
-   * [_template_](/docs/template.md): Create a file from a template
+   * [_sql_](sql.md)     : run a templated sql script
+   * [_migrate_](migrate.md) : apply sql-migrate migration, the actions will be different if Kamino is in apply or migrate mode.
+   * [_sync_](sync.md)    : Synchronize data from an other database or files
+   * [_shell_](shell.md)   : run a shell script
+   * [_template_](template.md): Create a file from a template
 
 More than one step can share the same 'name'. When user runs Kamino in _apply_ mode, he can select a liste of step name or a step type to be run, only the steps corresponding to this criterias will be executed.
 
@@ -80,7 +71,7 @@ A recipe is a collection of steps (a folders that contains the steps), the order
 ## Usage
 Create a folder named after the name of your recipe, in this folder populate at least two folders (_datasources_ and _steps_) with corresponding files and run `kamino apply`. 
 
-Refer to the [documentation](/docs/cli.md) for a comprehensive description of the tool options
+Refer to the [documentation](cli.md) for a comprehensive description of the tool options
 
 ### Example
 
@@ -100,25 +91,3 @@ The [_testdata_](/testdata) folder of this repository contains an exemple of a r
   The `--connection--*` parameters force to kamino to retry the first connection to datasources 5 times at 10 seconds interval, which is needed on this case because docker-compose will return when all containers are up, but database engines accept network connections only several seconds after the start of the containers.
 
   This example is meant to show all the possibilities of kamino, your recipe does not have to be so complicated.
-
-## Contribution
-I've made this project as a real use case to learn Golang.
-I've tried to adopt the Go mindset but I'm sure that other gophers could do better. 
-
-If this project can be useful for you, feel free to open issues, propose documentation updates or even pull request.
-
-Contributions are of course always welcome!
-
-1. Fork marema31/kamino (https://github.com/marema31/kamino/fork)
-2. Create a feature branch
-3. Commit your changes
-4. Run test using `go test ./...`
-5. Create a Pull Request
-
-See [`CONTRIBUTING.md`](https://github.com/marema31/kamino/blob/master/CONTRIBUTING.md) for details.
-
-## License
-
-Copyright (c) 2019-present [Marc Carmier](https://github.com/marema31)
-
-Licensed under [BSD-2 Clause License](./LICENSE)
