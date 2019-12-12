@@ -35,7 +35,7 @@ A common 'recipe' would implies the following steps:
 Kamino combine several type of 'objects' to manage the database lifecycle
 
 ### Datasource
-Each environment can be composed of several 'datasources'. This datasource is connection informations needed for a recipe (server, users/password, engine type, database name and/or schema if relevant). Each of this datasource has also have 'tags' that can be shared among them. These tags will be used by recipes to select on which datasource the operation will occur. Each datasource is described in [files](/doc/datasource.md) in JSON, TOML or YAML format
+Each environment can be composed of several 'datasources'. This datasource is connection informations needed for a recipe (server, users/password, engine type, database name and/or schema if relevant). Each datasource is described in [files](/doc/datasource.md) in JSON, TOML or YAML format
 
 ### Step
 A step is an action to be done on the selected datasources. The action could be:
@@ -51,6 +51,7 @@ Each steps are described in files in JSON,TOML or YAML format. The needed attrib
 
 **Note:** All relative path provided in attribute of a step are relative to the recipe folder that contains the recipe.
 
+
 #### Idempotency
 In _apply_ and _sync_ mode, before running a step of type _migration_, _sql_ or _sync_, Kamino will determine if the action is necessary by running a provided SQL query, if this query returns a count different of 0, the step will be skipped. ~~Once the action done, the query is re-run and the results must be different or Kamino will stop with an error.~~ 
 This condition can be removed with the --force option.
@@ -61,11 +62,20 @@ For step of type _shell_, it is the script responsability to be idempotent.
 
 The idempotency is not garanteed for step of type _template_
 
+### Tags
+Each datasource have _tags_ (list of tag) that can be shared among them. These tags are used by steps to select on which datasource the action will occur.
+
+Steps can have a list of _tag_ selectors, if a datasource correspond to one selector of the list, it will be choosed by the step, the negation will remove datasource from the list of choosen ones.
+
+
+A tag selector can be:
+* A single tag (myTag): All datasources with this tag will be selected
+* Intersection of tag (myTag1.myTag2): Only datasource with all this tag will be selected
+* A negation of a tag selector (!ta1.ta2): All datasources complying to this tag selector will be excluded of the final list of datasource impacted by the step. 
+
 ### Recipe
 A recipe is a collection of steps (a folders that contains the steps), the orders of step will be determine by the priority of the step (lower will be the first one), if more than one step have the same priority, they will be run in parallel. 
 
-### Migration
-List of ordered sql files containing _up_ and _down_ snippets to manage the schema of a database. Each of this files correspond to a version of the schema of the database. Kamino use the [sql-migrate library](https://github.com/rubenv/sql-migrate) to manage the migrations.
 
 ## Usage
 Create a folder named after the name of your recipe, in this folder populate at least two folders (_datasources_ and _steps_) with corresponding files and run `kamino apply`. 
@@ -74,7 +84,7 @@ Refer to the [documentation](/doc/cli.md) for a comprehensive description of the
 
 ### Example
 
-The [_testdata_](/testdata) folder of this repository contains an exemple of a recipe with all possible actions/options (pokemon) and a _docker-compose.yml_ file.  To see kamino in action run 
+The [_testdata_](/testdata) folder of this repository contains an exemple of a recipe (pokemon) with all possible actions/options and a _docker-compose.yml_ file.  To see kamino in action run 
 
     docker-compose -f testdata/pokemon/docker-compose.yml up -d
     kamino --connection-timeout 10s --connection-retry 5   -c testdata  apply pokemon

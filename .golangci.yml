@@ -1,0 +1,6 @@
+run:
+  skip-dirs:
+    - doc
+    - testdata
+  skip-files:
+    - ".*_test.go$"
