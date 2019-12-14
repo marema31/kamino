@@ -44,10 +44,11 @@ type Cookbook struct {
 	conRetry    int
 	force       bool
 	sequential  bool
+	validate    bool
 }
 
 // New returns a new
-func New(sf step.Creater, connectionTimeout time.Duration, connectionRetry int, force bool, sequential bool) *Cookbook {
+func New(sf step.Creater, connectionTimeout time.Duration, connectionRetry int, force bool, sequential bool, validate bool) *Cookbook {
 	rs := make(map[string]recipe)
 	return &Cookbook{
 		Recipes:     rs,
@@ -56,6 +57,7 @@ func New(sf step.Creater, connectionTimeout time.Duration, connectionRetry int, 
 		conRetry:    connectionRetry,
 		force:       force,
 		sequential:  sequential,
+		validate:    validate,
 	}
 }
 

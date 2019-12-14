@@ -21,7 +21,8 @@ Flags (short form)              | meaning
 *  `help`        Help about any command
 *  `migrate`     Manage schema migration
 *  `synchronize` Manage data synchronization
-*  `version`     Version will output the current build information
+*  `validate`    Validate the configuration files in recipes (datasources and steps)
+*  `version`     Output the current build information
 
 ### apply
 Run all the steps of provided recipes (or all the recipes of the config path).

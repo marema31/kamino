@@ -8,7 +8,7 @@ import (
 
 func TestRecipeDoOk(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
-		ctx, log, sf, ck := setupLoad(false, sequential)
+		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
 		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
 		if err != nil {
@@ -53,7 +53,7 @@ func TestRecipeDoOk(t *testing.T) {
 
 func TestRecipeDoAllCancel(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
-		ctx, log, sf, ck := setupLoad(false, sequential)
+		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
 		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
 		if err != nil {
@@ -90,7 +90,7 @@ func TestRecipeDoAllCancel(t *testing.T) {
 
 func TestRecipeDoCancelRecipeOnly(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
-		ctx, log, sf, ck := setupLoad(false, sequential)
+		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
 		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "steperror"}, nil, nil)
 		if err != nil {
@@ -118,7 +118,7 @@ func TestRecipeDoCancelRecipeOnly(t *testing.T) {
 
 func TestRecipeDoStepError(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
-		ctx, log, sf, ck := setupLoad(false, sequential)
+		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
 		err := ck.Load(ctx, log, "testdata/good", []string{"steperror"}, nil, nil)
 		if err != nil {
@@ -163,7 +163,7 @@ func TestRecipeDoStepError(t *testing.T) {
 
 func TestRecipeInitStepError(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
-		ctx, log, sf, ck := setupLoad(false, sequential)
+		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
 		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "stepiniterror"}, nil, nil)
 		if err != nil {
@@ -203,7 +203,7 @@ func TestRecipeInitStepError(t *testing.T) {
 
 func TestRecipeToSkipError(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
-		ctx, log, sf, ck := setupLoad(false, sequential)
+		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
 		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "toskiperror"}, nil, nil)
 		if err != nil {
@@ -243,7 +243,7 @@ func TestRecipeToSkipError(t *testing.T) {
 
 func TestRecipeToSkippedOk(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
-		ctx, log, sf, ck := setupLoad(false, sequential)
+		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
 		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "skipped"}, nil, nil)
 		if err != nil {
@@ -301,7 +301,7 @@ func TestRecipeToSkippedOk(t *testing.T) {
 
 func TestRecipeForceOk(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
-		ctx, log, sf, ck := setupLoad(true, sequential)
+		ctx, log, sf, ck := setupLoad(true, sequential, false)
 
 		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "skipped"}, nil, nil)
 		if err != nil {
@@ -322,7 +322,7 @@ func TestRecipeForceOk(t *testing.T) {
 }
 func TestRecipePostLoadOk(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
-		ctx, log, sf, ck := setupLoad(false, sequential)
+		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
 		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
 		if err != nil {
@@ -348,7 +348,7 @@ func TestRecipePostLoadOk(t *testing.T) {
 
 func TestRecipePostLoadError(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
-		ctx, log, _, ck := setupLoad(false, sequential)
+		ctx, log, _, ck := setupLoad(false, sequential, false)
 
 		err := ck.Load(ctx, log, "testdata/fail", []string{"recipe3"}, nil, nil)
 		if err != nil {
