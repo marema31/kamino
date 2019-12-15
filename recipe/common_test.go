@@ -14,10 +14,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-func setupLoad(force bool, sequential bool) (context.Context, *logrus.Entry, *MockedStepFactory, *recipe.Cookbook) {
+func setupLoad(force bool, sequential bool, validate bool) (context.Context, *logrus.Entry, *MockedStepFactory, *recipe.Cookbook) {
 	ctx := context.Background()
 	sf := &MockedStepFactory{}
-	ck := recipe.New(sf, time.Millisecond*2, 2, force, sequential)
+	ck := recipe.New(sf, time.Millisecond*2, 2, force, sequential, validate)
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)
 	log := logger.WithField("appname", "kamino")

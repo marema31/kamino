@@ -16,7 +16,7 @@ var (
 		Long:    ``,
 		Aliases: []string{"sync"},
 		RunE: func(_ *cobra.Command, args []string) error {
-			cookbook := recipe.New(&step.Factory{}, common.Timeout, common.Retry, common.Force, common.Sequential)
+			cookbook := recipe.New(&step.Factory{}, common.Timeout, common.Retry, common.Force, common.Sequential, false)
 			return Sync(cookbook, names, args)
 		},
 	}

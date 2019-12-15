@@ -18,7 +18,7 @@ func newMigrateUpCommand() *cobra.Command {
 		All non-applied Admin's migrations will be done first, then user's ones`,
 		DisableFlagsInUseLine: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cookbook := recipe.New(&step.Factory{}, common.Timeout, common.Retry, true, common.Sequential)
+			cookbook := recipe.New(&step.Factory{}, common.Timeout, common.Retry, true, common.Sequential, false)
 			return Up(cookbook, args)
 		},
 	}

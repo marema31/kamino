@@ -12,6 +12,7 @@ import (
 
 //LoadAll Lookup the provided folder for datasource configuration files
 func (dss *Datasources) LoadAll(recipePath string, log *logrus.Entry) error {
+	var firstError error
 	dsfolder := filepath.Join(recipePath, "datasources")
 
 	files, err := ioutil.ReadDir(dsfolder)
@@ -30,7 +31,9 @@ func (dss *Datasources) LoadAll(recipePath string, log *logrus.Entry) error {
 				ds, err := dss.load(recipePath, name)
 				if err != nil {
 					logDatasource.Errorf("Unable to parse configuration: %v", err)
-					return err
+					if firstError == nil {
+						firstError = err
+					}
 				}
 				dss.datasources[name] = &ds
 
@@ -55,7 +58,7 @@ func (dss *Datasources) LoadAll(recipePath string, log *logrus.Entry) error {
 			}
 		}
 	}
-	return nil
+	return firstError
 }
 
 func (dss *Datasources) load(recipePath string, filename string) (Datasource, error) {
