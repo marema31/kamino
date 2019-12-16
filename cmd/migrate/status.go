@@ -16,7 +16,7 @@ func newMigrateStatusCommand() *cobra.Command {
 		Long:                  ``,
 		DisableFlagsInUseLine: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cookbook := recipe.New(&step.Factory{}, common.Timeout, common.Retry, true, true, false)
+			cookbook := recipe.New(&step.Factory{}, common.Timeout, common.Retry, true, true, false, common.DryRun)
 			return Status(cookbook, args)
 		},
 	}

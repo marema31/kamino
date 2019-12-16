@@ -34,4 +34,5 @@ type Step struct {
 	inputHandle     io.ReadCloser
 	output          file.File
 	outputHandle    io.Writer
+	dryRun          bool
 }

@@ -40,6 +40,11 @@ func (st *Step) doNonUnique(ctx context.Context, log *logrus.Entry) error {
 	for _, ds := range st.datasources {
 		logDs := log.WithField("datasource", ds.GetName())
 		logDs.Debug("Rendering template")
+		if st.dryRun {
+			log.Infof("Rendering template to %s in append/replace mode", st.output.FilePath)
+			return nil
+		}
+
 		if err := st.template.Execute(st.outputHandle, ds.FillTmplValues()); err != nil {
 			logDs.Error("Template rendering failed")
 			logDs.Error(err)
@@ -61,6 +66,11 @@ func (st *Step) doUnique(ctx context.Context, log *logrus.Entry) error {
 	for _, ds := range st.datasources {
 		logDs := log.WithField("datasource", ds.GetName())
 		logDs.Debug("Rendering template")
+		if st.dryRun {
+			log.Infof("Rendering template to %s in unique mode", st.output.FilePath)
+			continue
+		}
+
 		if err := st.template.Execute(rendered, ds.FillTmplValues()); err != nil {
 			logDs.Error("Template rendering failed")
 			logDs.Error(err)

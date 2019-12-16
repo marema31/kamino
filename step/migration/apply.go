@@ -29,9 +29,8 @@ func (st *Step) apply(log *logrus.Entry, admin bool, limit int) (int, error) {
 	migSet := migrate.MigrationSet{TableName: tableName, SchemaName: st.schema}
 	source := migrate.FileMigrationSource{Dir: folder}
 
-	/*TODO: to be uncommented when adding the dryRun feature to Kamino
 	if st.dryRun {
-		migrations, _, err := migrate.PlanMigration(db, st.dialect, source, st.dir, limit)
+		migrations, _, err := migSet.PlanMigration(db, st.dialect, source, st.dir, limit)
 		if err != nil {
 			log.Error("Planning migration failed")
 			log.Error(err)
@@ -39,10 +38,10 @@ func (st *Step) apply(log *logrus.Entry, admin bool, limit int) (int, error) {
 		}
 
 		for _, m := range migrations {
-			log.Infof("Would apply migration %s (%s)", m.Id, direction))
+			log.Infof("Would apply migration %s (%s)", m.Id, direction)
 			statements := m.Up
 			if st.dir == migrate.Down {
-				statements := m.Down
+				statements = m.Down
 			}
 			for _, q := range statements {
 				log.Info(q)
@@ -50,7 +49,6 @@ func (st *Step) apply(log *logrus.Entry, admin bool, limit int) (int, error) {
 		}
 		return 0, nil
 	}
-	*/
 
 	applied, err := migSet.ExecMax(db, st.dialect, source, st.dir, limit)
 	if err != nil {

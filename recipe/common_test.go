@@ -17,7 +17,7 @@ import (
 func setupLoad(force bool, sequential bool, validate bool) (context.Context, *logrus.Entry, *MockedStepFactory, *recipe.Cookbook) {
 	ctx := context.Background()
 	sf := &MockedStepFactory{}
-	ck := recipe.New(sf, time.Millisecond*2, 2, force, sequential, validate)
+	ck := recipe.New(sf, time.Millisecond*2, 2, force, sequential, validate, false)
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)
 	log := logger.WithField("appname", "kamino")
@@ -93,7 +93,7 @@ type MockedStepFactory struct {
 }
 
 // Load the step file and returns the priority and a list of steper for this file
-func (sf *MockedStepFactory) Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider, stepNames []string, stepTypes []string, force bool) (uint, []common.Steper, error) {
+func (sf *MockedStepFactory) Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider, stepNames []string, stepTypes []string, force bool, dryRun bool) (uint, []common.Steper, error) {
 	v := viper.New()
 
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]

@@ -39,4 +39,5 @@ type Step struct {
 	cacheCfg       parsedSourceConfig
 	destsCfg       []parsedDestConfig
 	prov           provider.Provider
+	dryRun         bool
 }

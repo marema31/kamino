@@ -30,6 +30,13 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
 	logStep.Info("Beginning step")
 
+	if st.dryRun {
+		for _, stmt := range st.sqlCmds {
+			log.Infof("Will run %s", stmt)
+		}
+		return nil
+	}
+
 	db, err := st.datasource.OpenDatabase(logStep, st.admin, st.noDb)
 	if err != nil {
 		return err

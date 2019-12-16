@@ -19,6 +19,7 @@ type Step struct {
 	tableAdmin string
 	query      string
 	printOnly  bool //Used by migrate status
+	dryRun     bool
 	dialect    string
 	schema     string
 }
