@@ -23,6 +23,10 @@ func (st *Step) copyData(ctx context.Context, log *logrus.Entry) error {
 		log.Infof("   - %s", d.Name())
 	}
 
+	if st.dryRun {
+		return nil
+	}
+
 	for source.Next() {
 		record, err := source.Load(log)
 		if err != nil {

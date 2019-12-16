@@ -18,4 +18,5 @@ type Step struct {
 	sqlCmds      []string
 	transaction  bool
 	tx           *sql.Tx
+	dryRun       bool
 }

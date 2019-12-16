@@ -12,4 +12,5 @@ type Step struct {
 	Name       string
 	datasource datasource.Datasourcer
 	cmd        *exec.Cmd
+	dryRun     bool
 }

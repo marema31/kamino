@@ -12,7 +12,7 @@ import (
 func TestInitOk(t *testing.T) {
 	ctx, log, dss, v := setupDo("testdata/good/steps/", "shellok")
 
-	_, steps, err := shell.Load(ctx, log, "testdata/good", "shellok", 0, v, dss, false)
+	_, steps, err := shell.Load(ctx, log, "testdata/good", "shellok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -35,7 +35,7 @@ func TestInitOk(t *testing.T) {
 func TestDoFinishOk(t *testing.T) {
 	ctx, log, dss, v := setupDo("testdata/good/steps/", "shellok")
 
-	_, steps, err := shell.Load(ctx, log, "testdata/good", "shellok", 0, v, dss, false)
+	_, steps, err := shell.Load(ctx, log, "testdata/good", "shellok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -57,7 +57,7 @@ func TestDoFinishOk(t *testing.T) {
 func TestDoCancelOk(t *testing.T) {
 	ctx, log, dss, v := setupDo("testdata/good/steps/", "shellok")
 
-	_, steps, err := shell.Load(ctx, log, "testdata/good", "shellok", 0, v, dss, false)
+	_, steps, err := shell.Load(ctx, log, "testdata/good", "shellok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -71,6 +71,28 @@ func TestDoCancelOk(t *testing.T) {
 	err = steps[0].Do(context.Background(), log)
 	if err == nil {
 		t.Errorf("Do should return error")
+	}
+
+	steps[0].Cancel(log)
+}
+
+func TestDoDryRun(t *testing.T) {
+	ctx, log, dss, v := setupDo("testdata/good/steps/", "shellok")
+
+	_, steps, err := shell.Load(ctx, log, "testdata/good", "shellok", 0, v, dss, false, true)
+	if err != nil {
+		t.Fatalf("Load should not returns an error, returned: %v", err)
+	}
+
+	st, ok := steps[0].(*shell.Step)
+	if !ok {
+		t.Fatalf("The step should be a shell step")
+	}
+
+	st.FakeCmd(1, []string{})
+	err = steps[0].Do(context.Background(), log)
+	if err != nil {
+		t.Errorf("Do should not returns an error, returned: %v", err)
 	}
 
 	steps[0].Cancel(log)

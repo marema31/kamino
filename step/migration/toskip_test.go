@@ -19,7 +19,7 @@ func TestToSkipYesOk(t *testing.T) {
 
 	mock.ExpectQuery("SELECT count\\(table_schema\\) FROM information_schema.tables WHERE table_catalog = db1 and table_schema = public").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -49,7 +49,7 @@ func TestToSkipNoOk(t *testing.T) {
 
 	mock.ExpectQuery("SELECT count\\(table_schema\\) FROM information_schema.tables WHERE table_catalog = db1 and table_schema = public").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -77,7 +77,7 @@ func TestToSkipError(t *testing.T) {
 
 	mock.ExpectQuery("SELECT count\\(table_schema\\) FROM information_schema.tables WHERE table_catalog = db1 and table_schema = public").WillReturnError(fmt.Errorf("fake error"))
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}

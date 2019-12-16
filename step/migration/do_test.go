@@ -50,7 +50,7 @@ func TestDoUpOk(t *testing.T) {
 		AddRow("v0001.sql", time.Now())
 	mock.ExpectQuery("SELECT \\* FROM `kamino_user_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -99,7 +99,7 @@ func TestDoUpAdminError(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id", "applied_at"})
 	mock.ExpectQuery("SELECT \\* FROM `kamino_admin_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -146,7 +146,7 @@ func TestDoUpLimitedOk(t *testing.T) {
 		AddRow("v0001.sql", time.Now())
 	mock.ExpectQuery("SELECT \\* FROM `kamino_admin_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -212,7 +212,7 @@ func TestDoDownOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id", "applied_at"})
 	mock.ExpectQuery("SELECT \\* FROM `kamino_admin_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -279,7 +279,7 @@ func TestDoDownAdminError(t *testing.T) {
 		AddRow("v0001.sql", time.Now())
 	mock.ExpectQuery("SELECT \\* FROM `kamino_admin_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -326,7 +326,7 @@ func TestDoDownUserError(t *testing.T) {
 		AddRow("v0001.sql", time.Now())
 	mock.ExpectQuery("SELECT \\* FROM `kamino_user_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -371,7 +371,7 @@ func TestDoDownLimitedOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id", "applied_at"})
 	mock.ExpectQuery("SELECT \\* FROM `kamino_user_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -409,7 +409,7 @@ func TestDoDownExecError(t *testing.T) {
 		AddRow("v0099.sql", time.Now())
 	mock.ExpectQuery("SELECT \\* FROM `kamino_user_migrations`").WillReturnRows(rows)
 
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -453,13 +453,60 @@ func TestDoPrintOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id", "applied_at"}).
 		AddRow("v0001.sql", time.Now())
 	mock.ExpectQuery("SELECT \\* FROM `kamino_user_migrations`").WillReturnRows(rows)
-	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false)
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
 
 	superseed := make(map[string]string)
 	superseed["migration.dir"] = "status"
+	steps[0].PostLoad(log, superseed)
+	err = steps[0].Init(ctx, log)
+	if err != nil {
+		t.Fatalf("Init should not returns an error, returned: %v", err)
+	}
+
+	err = steps[0].Do(context.Background(), log)
+	if err != nil {
+		t.Errorf("Do should not return error, returned: %v", err)
+	}
+
+	steps[0].Cancel(log)
+	steps[0].Finish(log)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestDoDryRunOk(t *testing.T) {
+	ctx, log, dss, v, mock, err := setupDo("testdata/good/steps/", "migrationok")
+	if err != nil {
+		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
+	}
+	rows := sqlmock.NewRows([]string{"NOW()"}).
+		AddRow(time.Now())
+
+	mock.ExpectQuery("SELECT NOW()").WillReturnRows(rows)
+	mock.ExpectExec("create table if not exists `kamino_user_migrations` \\(`id` varchar\\(255\\) not null primary key, `applied_at` datetime\\) engine=InnoDB charset=UTF8;").WillReturnResult(sqlmock.NewResult(1, 1))
+	rows = sqlmock.NewRows([]string{"id", "applied_at"}).
+		AddRow("v0001.sql", time.Now())
+	mock.ExpectQuery("SELECT \\* FROM `kamino_user_migrations`").WillReturnRows(rows)
+	rows = sqlmock.NewRows([]string{"NOW()"}).
+		AddRow(time.Now())
+	mock.ExpectQuery("SELECT NOW()").WillReturnRows(rows)
+	mock.ExpectExec("create table if not exists `kamino_admin_migrations` \\(`id` varchar\\(255\\) not null primary key, `applied_at` datetime\\) engine=InnoDB charset=UTF8;").WillReturnResult(sqlmock.NewResult(1, 1))
+	rows = sqlmock.NewRows([]string{"id", "applied_at"}).
+		AddRow("v0001.sql", time.Now())
+	mock.ExpectQuery("SELECT \\* FROM `kamino_admin_migrations`").WillReturnRows(rows)
+
+	_, steps, err := migration.Load(ctx, log, "testdata/good", "migrationok", 0, v, dss, false, true)
+	if err != nil {
+		t.Fatalf("Load should not returns an error, returned: %v", err)
+	}
+
+	superseed := make(map[string]string)
+	superseed["migration.dir"] = "down"
 	steps[0].PostLoad(log, superseed)
 	err = steps[0].Init(ctx, log)
 	if err != nil {

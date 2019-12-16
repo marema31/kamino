@@ -12,7 +12,7 @@ import (
 func TestDoFinishOk(t *testing.T) {
 	ctx, log, dss, v := setupDo("testdata/good/steps/", "tmplok")
 
-	_, steps, err := tmpl.Load(ctx, log, "testdata/good", "tmplok", 0, v, dss, false)
+	_, steps, err := tmpl.Load(ctx, log, "testdata/good", "tmplok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -43,7 +43,7 @@ func TestDoFinishOk(t *testing.T) {
 func TestDoCancelOk(t *testing.T) {
 	ctx, log, dss, v := setupDo("testdata/good/steps/", "tmplok")
 
-	_, steps, err := tmpl.Load(ctx, log, "testdata/good", "tmplok", 0, v, dss, false)
+	_, steps, err := tmpl.Load(ctx, log, "testdata/good", "tmplok", 0, v, dss, false, false)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -79,10 +79,10 @@ func nbLineByFile(fileName string) int {
 	return lineCount
 }
 
-func helperDoTest(t *testing.T, configFile string, createdFile string, nblines1 int, nblines2 int) {
+func helperDoTest(t *testing.T, configFile string, createdFile string, nblines1 int, nblines2 int, dryRun bool) {
 	ctx, log, dss, v := setupDo("testdata/good/steps/", configFile)
 
-	_, steps, err := tmpl.Load(ctx, log, "testdata/good", configFile, 0, v, dss, false)
+	_, steps, err := tmpl.Load(ctx, log, "testdata/good", configFile, 0, v, dss, false, dryRun)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -101,7 +101,7 @@ func helperDoTest(t *testing.T, configFile string, createdFile string, nblines1 
 		t.Errorf("%s should have %d lines after first run but it have %d", createdFile, nblines1, nb)
 	}
 
-	_, steps, err = tmpl.Load(ctx, log, "testdata/good", configFile, 0, v, dss, false)
+	_, steps, err = tmpl.Load(ctx, log, "testdata/good", configFile, 0, v, dss, false, dryRun)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -124,13 +124,17 @@ func helperDoTest(t *testing.T, configFile string, createdFile string, nblines1 
 }
 
 func TestDoReplace(t *testing.T) {
-	helperDoTest(t, "replace", "testdata/tmp/replace.cfg", 1, 1)
+	helperDoTest(t, "replace", "testdata/tmp/replace.cfg", 1, 1, false)
 }
 
 func TestDoAppend(t *testing.T) {
-	helperDoTest(t, "notags", "testdata/tmp/db2.cfg", 1, 2)
+	helperDoTest(t, "notags", "testdata/tmp/db2.cfg", 1, 2, false)
 }
 
 func TestDoUnique(t *testing.T) {
-	helperDoTest(t, "fixeddest", "testdata/tmp/fixed.cfg", 2, 2)
+	helperDoTest(t, "fixeddest", "testdata/tmp/fixed.cfg", 2, 2, false)
+}
+
+func TestDoDryRun(t *testing.T) {
+	helperDoTest(t, "notags", "testdata/tmp/db2.cfg", 0, 0, true)
 }

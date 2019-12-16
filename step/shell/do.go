@@ -28,6 +28,11 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 
 	var wg sync.WaitGroup
 
+	if st.dryRun {
+		log.Infof("Will run %s", st.cmd.String())
+		return nil
+	}
+
 	stdout, err := st.cmd.StdoutPipe()
 	if err != nil {
 		logStep.Error("Script output gathering failed")
