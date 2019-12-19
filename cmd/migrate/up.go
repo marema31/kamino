@@ -40,7 +40,7 @@ func Up(cookbook recipe.Cooker, args []string) error {
 	if err != nil {
 		return err
 	}
-	err = cookbook.Load(common.Ctx, log, common.CfgFolder, recipes, nil, []string{"migration"})
+	err = cookbook.Load(common.Ctx, log, common.CfgFolder, recipes, common.Tags, nil, []string{"migration"})
 	if err != nil {
 		return fmt.Errorf("error while loading the recipes: %v", err)
 	}

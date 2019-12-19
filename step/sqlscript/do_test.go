@@ -19,7 +19,7 @@ func TestDoOk(t *testing.T) {
 	mock.ExpectExec("CREATE FUNCTION inc\\(val integer\\) RETURNS integer AS \\$\\$ BEGIN RETURN val \\+ 1; END; \\$\\$ LANGUAGE PLPGSQL;").WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec("REVOKE ALL ON DATABASE db1 FROM PUBLIC;").WillReturnResult(sqlmock.NewResult(1, 1))
 
-	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss, false, false)
+	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -53,7 +53,7 @@ func TestDoTransactionOk(t *testing.T) {
 	mock.ExpectExec("CREATE FUNCTION inc\\(val integer\\) RETURNS integer AS \\$\\$ BEGIN RETURN val \\+ 1; END; \\$\\$ LANGUAGE PLPGSQL;").WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec("REVOKE ALL ON DATABASE db1 FROM PUBLIC;").WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
-	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "transaction", 0, v, dss, false, false)
+	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "transaction", 0, v, dss, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -87,7 +87,7 @@ func TestDoTransactionCancelOk(t *testing.T) {
 	mock.ExpectExec("CREATE FUNCTION inc\\(val integer\\) RETURNS integer AS \\$\\$ BEGIN RETURN val \\+ 1; END; \\$\\$ LANGUAGE PLPGSQL;").WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec("REVOKE ALL ON DATABASE db1 FROM PUBLIC;").WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectRollback()
-	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "transaction", 0, v, dss, false, false)
+	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "transaction", 0, v, dss, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -115,7 +115,7 @@ func TestDoDryRun(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss, false, true)
+	_, steps, err := sqlscript.Load(ctx, log, "testdata/good", "sqlscriptok", 0, v, dss, false, true, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}

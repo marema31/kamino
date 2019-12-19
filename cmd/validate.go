@@ -35,7 +35,7 @@ func Validate(cookbook recipe.Cooker, names []string, args []string) error {
 		return err
 	}
 
-	err = cookbook.Load(common.Ctx, log, common.CfgFolder, recipes, names, []string{})
+	err = cookbook.Load(common.Ctx, log, common.CfgFolder, recipes, common.Tags, names, []string{})
 	if err != nil {
 		return fmt.Errorf("error while loading the recipes: %v", err)
 	}

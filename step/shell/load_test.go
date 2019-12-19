@@ -36,7 +36,7 @@ func TestShellLoadOk(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := shell.Load(ctx, log, "testdata/good/", "nameshellok", 0, v, dss, false, false)
+	priority, steps, err := shell.Load(ctx, log, "testdata/good/", "nameshellok", 0, v, dss, false, false, nil)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -71,7 +71,7 @@ func TestShellLoadNoTag(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := shell.Load(ctx, log, "testdata/good/", "notags", 0, v, dss, false, false)
+	priority, steps, err := shell.Load(ctx, log, "testdata/good/", "notags", 0, v, dss, false, false, nil)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestShellLoadNoScript(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = shell.Load(ctx, log, "testdata/fail", "noscript", 0, v, dss, false, false)
+	_, _, err = shell.Load(ctx, log, "testdata/fail", "noscript", 0, v, dss, false, false, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -101,7 +101,7 @@ func TestShellLoadWrongArguments(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = shell.Load(ctx, log, "testdata/fail", "wrongarguments", 0, v, dss, false, false)
+	_, _, err = shell.Load(ctx, log, "testdata/fail", "wrongarguments", 0, v, dss, false, false, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -112,7 +112,7 @@ func TestShellLoadWrongEngine(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = shell.Load(ctx, log, "testdata/fail", "wrongengine", 0, v, dss, false, false)
+	_, _, err = shell.Load(ctx, log, "testdata/fail", "wrongengine", 0, v, dss, false, false, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -123,7 +123,7 @@ func TestShellLoadWrongPath(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = shell.Load(ctx, log, "testdata/fail", "wrongpath", 0, v, dss, false, false)
+	_, _, err = shell.Load(ctx, log, "testdata/fail", "wrongpath", 0, v, dss, false, false, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -134,7 +134,7 @@ func TestShellLoadWrongEnvironments(t *testing.T) {
 	if err != nil {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
-	_, _, err = shell.Load(ctx, log, "testdata/fail", "wrongenvironments", 0, v, dss, false, false)
+	_, _, err = shell.Load(ctx, log, "testdata/fail", "wrongenvironments", 0, v, dss, false, false, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -146,7 +146,7 @@ func TestShellPostLoadOk(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, steps, err := shell.Load(ctx, log, "testdata/good/", "nameshellok", 0, v, dss, false, false)
+	_, steps, err := shell.Load(ctx, log, "testdata/good/", "nameshellok", 0, v, dss, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}

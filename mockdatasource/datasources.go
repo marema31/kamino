@@ -49,7 +49,7 @@ func getIndex(tags []string, dsTypes []datasource.Type, engines []datasource.Eng
 
 //Lookup : return the corresponding array of Mocked datasources
 //WARNING: the algorithm of lookup is much simpler than the one from the object, all the parameters must be exactly the same !
-func (dss *MockDatasources) Lookup(log *logrus.Entry, tags []string, dsTypes []datasource.Type, engines []datasource.Engine) []datasource.Datasourcer {
+func (dss *MockDatasources) Lookup(log *logrus.Entry, tags []string, limitedTags []string, dsTypes []datasource.Type, engines []datasource.Engine) []datasource.Datasourcer {
 	index := getIndex(tags, dsTypes, engines)
 	dsr := make([]datasource.Datasourcer, 0, len(dss.precordedAnswers[index]))
 	for _, ds := range dss.precordedAnswers[index] {

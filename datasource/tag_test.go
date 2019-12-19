@@ -128,7 +128,7 @@ func helperTestLookup(t *testing.T, dss *Datasources, tags []string, dsTypes []T
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
 
-	result := dss.Lookup(log, tags, dsTypes, engines)
+	result := dss.Lookup(log, tags, nil, dsTypes, engines)
 
 	anames := []string{}
 	for _, ds := range awaited {

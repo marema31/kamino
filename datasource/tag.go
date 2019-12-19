@@ -58,7 +58,8 @@ func (dss *Datasources) lookupWithoutTag(dsTypes []Type, engines []Engine) (sele
 
 //Lookup return a list of *Datasource that correspond to the
 // list of tag expression
-func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, dsTypes []Type, engines []Engine) []Datasourcer {
+func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags []string, dsTypes []Type, engines []Engine) []Datasourcer {
+	//TODO: use the limitedTags
 	logLookup := log.WithField("lookup", "tags")
 	selected := make(map[string]*Datasource) // Use map to emulate a "set" to avoid duplicates
 	unselected := make([]string, 0)

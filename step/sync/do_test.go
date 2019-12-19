@@ -11,7 +11,7 @@ import (
 func TestDoOk(t *testing.T) {
 	ctx, log, dss, v, prov := setupDo("testdata/good/steps/", "syncok")
 
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -45,7 +45,7 @@ func TestDoOk(t *testing.T) {
 func TestDoLoadError(t *testing.T) {
 	ctx, log, dss, v, prov := setupDo("testdata/good/steps/", "cachenotexist")
 
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "cachenotexist", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "cachenotexist", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -80,7 +80,7 @@ func TestDoLoadError(t *testing.T) {
 func TestDoNoCacheOk(t *testing.T) {
 	ctx, log, dss, v, prov := setupDo("testdata/good/steps/", "nocache")
 
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "nocache", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "nocache", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -101,7 +101,7 @@ func TestDoNoCacheOk(t *testing.T) {
 func TestDoCacheNotExistOk(t *testing.T) {
 	ctx, log, dss, v, prov := setupDo("testdata/good/steps/", "cachenotexist")
 
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "cachenotexist", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "cachenotexist", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -124,7 +124,7 @@ func TestDoCacheNotExistError(t *testing.T) {
 
 	prov.ErrorSaver = fmt.Errorf("fake error")
 	prov.SaverToFail = 3
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "cachenotexist", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "cachenotexist", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -145,7 +145,7 @@ func TestDoCacheNotExistError(t *testing.T) {
 func TestDoCacheError(t *testing.T) {
 	ctx, log, dss, v, prov := setupDo("testdata/good/steps/", "syncok")
 
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -173,7 +173,7 @@ func TestDoCacheError(t *testing.T) {
 func TestDoForceCacheOk(t *testing.T) {
 	ctx, log, dss, v, prov := setupDo("testdata/good/steps/", "syncok")
 
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -200,7 +200,7 @@ func TestDoForceCacheError(t *testing.T) {
 
 	prov.LoaderToFail = 0
 	prov.ErrorLoader = fmt.Errorf("fake error")
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -219,7 +219,7 @@ func TestDoAllowCacheOk(t *testing.T) {
 	ctx, log, dss, v, prov := setupDo("testdata/good/steps/", "errorallow")
 
 	prov.ErrorLoader = fmt.Errorf("fake error")
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "errorallow", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "errorallow", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -241,7 +241,7 @@ func TestDoInitLoaderError(t *testing.T) {
 	ctx, log, dss, v, prov := setupDo("testdata/good/steps/", "syncok")
 
 	prov.ErrorLoader = fmt.Errorf("fake error")
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -256,7 +256,7 @@ func TestDoInitSaverError(t *testing.T) {
 	ctx, log, dss, v, prov := setupDo("testdata/good/steps/", "syncok")
 
 	prov.ErrorSaver = fmt.Errorf("fake error")
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -270,7 +270,7 @@ func TestDoInitSaverError(t *testing.T) {
 func TestDoCancelCacheLoaderOk(t *testing.T) {
 	ctx, log, dss, v, prov := setupDo("testdata/good/steps/", "syncok")
 
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "syncok", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -296,7 +296,7 @@ func TestDoCancelCacheLoaderOk(t *testing.T) {
 func TestDoCancelCacheSaverOk(t *testing.T) {
 	ctx, log, dss, v, prov := setupDo("testdata/good/steps/", "cachenotexist")
 
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "cachenotexist", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "cachenotexist", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -322,7 +322,7 @@ func TestDoCancelCacheSaverOk(t *testing.T) {
 func TestDoUsingCacheOk(t *testing.T) {
 	ctx, log, dss, v, prov := setupDo("testdata/good/steps/", "nocache")
 
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "nocache", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "nocache", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -346,7 +346,7 @@ func TestDoUsingCacheOk(t *testing.T) {
 func TestDoDryRunOk(t *testing.T) {
 	ctx, log, dss, v, prov := setupDo("testdata/good/steps/", "nocache")
 
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "nocache", 0, v, dss, prov, false, true)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "nocache", 0, v, dss, prov, false, true, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}

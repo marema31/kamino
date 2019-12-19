@@ -10,7 +10,7 @@ func TestRecipeDoOk(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
 		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
-		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
+		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil, nil)
 		if err != nil {
 			t.Errorf("Load should not returns an error, returned: %v", err)
 		}
@@ -55,7 +55,7 @@ func TestRecipeDoAllCancel(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
 		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
-		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
+		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil, nil)
 		if err != nil {
 			t.Errorf("Load should not returns an error, returned: %v", err)
 		}
@@ -92,7 +92,7 @@ func TestRecipeDoCancelRecipeOnly(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
 		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
-		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "steperror"}, nil, nil)
+		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "steperror"}, nil, nil, nil)
 		if err != nil {
 			t.Errorf("Load should not returns an error, returned: %v", err)
 		}
@@ -120,7 +120,7 @@ func TestRecipeDoStepError(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
 		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
-		err := ck.Load(ctx, log, "testdata/good", []string{"steperror"}, nil, nil)
+		err := ck.Load(ctx, log, "testdata/good", []string{"steperror"}, nil, nil, nil)
 		if err != nil {
 			t.Errorf("Load should not returns an error, returned: %v", err)
 		}
@@ -165,7 +165,7 @@ func TestRecipeInitStepError(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
 		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
-		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "stepiniterror"}, nil, nil)
+		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "stepiniterror"}, nil, nil, nil)
 		if err != nil {
 			t.Errorf("Load should not returns an error, returned: %v", err)
 		}
@@ -205,7 +205,7 @@ func TestRecipeToSkipError(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
 		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
-		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "toskiperror"}, nil, nil)
+		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "toskiperror"}, nil, nil, nil)
 		if err != nil {
 			t.Errorf("Load should not returns an error, returned: %v", err)
 		}
@@ -245,7 +245,7 @@ func TestRecipeToSkippedOk(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
 		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
-		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "skipped"}, nil, nil)
+		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "skipped"}, nil, nil, nil)
 		if err != nil {
 			t.Errorf("Load should not returns an error, returned: %v", err)
 		}
@@ -303,7 +303,7 @@ func TestRecipeForceOk(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
 		ctx, log, sf, ck := setupLoad(true, sequential, false)
 
-		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "skipped"}, nil, nil)
+		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "skipped"}, nil, nil, nil)
 		if err != nil {
 			t.Errorf("Load should not returns an error, returned: %v", err)
 		}
@@ -324,7 +324,7 @@ func TestRecipePostLoadOk(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
 		ctx, log, sf, ck := setupLoad(false, sequential, false)
 
-		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
+		err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil, nil)
 		if err != nil {
 			t.Errorf("Load should not returns an error, returned: %v", err)
 		}
@@ -350,7 +350,7 @@ func TestRecipePostLoadError(t *testing.T) {
 	for _, sequential := range []bool{false, true} {
 		ctx, log, _, ck := setupLoad(false, sequential, false)
 
-		err := ck.Load(ctx, log, "testdata/fail", []string{"recipe3"}, nil, nil)
+		err := ck.Load(ctx, log, "testdata/fail", []string{"recipe3"}, nil, nil, nil)
 		if err != nil {
 			t.Errorf("Load should not returns an error, returned: %v", err)
 		}
