@@ -23,7 +23,7 @@ func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) error {
 }
 
 //Load data from step file using its viper representation a return priority and list of steps
-func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, force bool, dryRun bool) (priority uint, steps []common.Steper, err error) {
+func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, force bool, dryRun bool, limitedTags []string) (priority uint, steps []common.Steper, err error) {
 	steps = make([]common.Steper, 0, 1)
 
 	priority = v.GetUint("priority")
@@ -91,7 +91,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 	}
 
 	datasourcesByDestinations := make(map[string][]datasource.Datasourcer)
-	for _, ds := range dss.Lookup(log, tags, []datasource.Type{datasource.Database}, e) {
+	for _, ds := range dss.Lookup(log, tags, limitedTags, []datasource.Type{datasource.Database}, e) {
 
 		tdestination.Execute(renderedDestination, ds.FillTmplValues())
 		destination := renderedDestination.String()

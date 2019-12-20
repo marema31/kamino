@@ -28,11 +28,11 @@ func (ck *Cookbook) PostLoad(log *logrus.Entry, superseed map[string]string) err
 
 // Load Lookup the provided folder for recipes folder and will return a Cookbook of the selected recipes/steps.
 // For each recipe, it will load all datasources and the selected steps
-func (ck *Cookbook) Load(ctx context.Context, log *logrus.Entry, configPath string, recipes []string, stepNames []string, stepTypes []string) error {
+func (ck *Cookbook) Load(ctx context.Context, log *logrus.Entry, configPath string, recipes []string, limitedTags []string, stepNames []string, stepTypes []string) error {
 	var firstError error
 	for _, rname := range recipes {
 		logRecipe := log.WithField("recipe", rname)
-		err := ck.loadOneRecipe(ctx, logRecipe, configPath, rname, stepNames, stepTypes)
+		err := ck.loadOneRecipe(ctx, logRecipe, configPath, rname, limitedTags, stepNames, stepTypes)
 		if err != nil {
 			if !ck.validate {
 				return err
@@ -45,7 +45,7 @@ func (ck *Cookbook) Load(ctx context.Context, log *logrus.Entry, configPath stri
 	return firstError
 }
 
-func (ck *Cookbook) loadOneRecipe(ctx context.Context, log *logrus.Entry, configPath string, rname string, stepNames []string, stepTypes []string) error {
+func (ck *Cookbook) loadOneRecipe(ctx context.Context, log *logrus.Entry, configPath string, rname string, limitedTags []string, stepNames []string, stepTypes []string) error {
 	var firstError error
 	prov := &provider.KaminoProvider{}
 	log.Info("Reading datasources")
@@ -73,7 +73,7 @@ func (ck *Cookbook) loadOneRecipe(ctx context.Context, log *logrus.Entry, config
 				name := strings.TrimSuffix(file.Name(), ext)
 				logRecipe := log.WithField("step", name)
 				logRecipe.Debug("Parsing step configuration")
-				priority, steps, err := ck.stepFactory.Load(ctx, logRecipe, recipePath, name, dss, prov, stepNames, stepTypes, ck.force, ck.dryRun)
+				priority, steps, err := ck.stepFactory.Load(ctx, logRecipe, recipePath, name, dss, prov, limitedTags, stepNames, stepTypes, ck.force, ck.dryRun)
 				if err != nil {
 					if !ck.validate {
 						return err

@@ -10,7 +10,7 @@ import (
 func TestToSkipOk(t *testing.T) {
 	ctx, log, dss, v := setupDo("testdata/good/steps/", "shellok")
 
-	_, steps, err := shell.Load(ctx, log, "testdata/good", "shellok", 0, v, dss, false, false)
+	_, steps, err := shell.Load(ctx, log, "testdata/good", "shellok", 0, v, dss, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}

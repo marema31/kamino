@@ -21,7 +21,7 @@ func (ck *mockedCookbook) Do(ctx context.Context, log *logrus.Entry) bool {
 }
 
 // Load the step file and returns the priority and a list of steper for this file
-func (ck *mockedCookbook) Load(ctx context.Context, log *logrus.Entry, path string, recipes []string, stepNames []string, stepTypes []string) error {
+func (ck *mockedCookbook) Load(ctx context.Context, log *logrus.Entry, path string, recipes []string, tags []string, stepNames []string, stepTypes []string) error {
 	ck.called = false
 	return ck.errorLoad
 }

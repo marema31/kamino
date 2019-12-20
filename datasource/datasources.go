@@ -32,7 +32,7 @@ func New(connectionTimeout time.Duration, connectionRetry int) *Datasources {
 type Datasourcers interface {
 	LoadAll(string, *logrus.Entry) error
 	CloseAll(*logrus.Entry)
-	Lookup(*logrus.Entry, []string, []Type, []Engine) []Datasourcer
+	Lookup(*logrus.Entry, []string, []string, []Type, []Engine) []Datasourcer
 }
 
 // CloseAll close all filehandle and database connection still opened

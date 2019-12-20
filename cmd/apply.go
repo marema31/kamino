@@ -39,7 +39,7 @@ func Apply(cookbook recipe.Cooker, names []string, types []string, args []string
 		return err
 	}
 
-	err = cookbook.Load(common.Ctx, log, common.CfgFolder, recipes, names, types)
+	err = cookbook.Load(common.Ctx, log, common.CfgFolder, recipes, common.Tags, names, types)
 	if err != nil {
 		return fmt.Errorf("error while loading the recipes: %v", err)
 	}

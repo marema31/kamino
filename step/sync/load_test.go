@@ -44,7 +44,7 @@ func TestSyncLoadOk(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := sync.Load(ctx, log, "testdata/good", "namesyncok", 0, v, dss, prov, false, false)
+	priority, steps, err := sync.Load(ctx, log, "testdata/good", "namesyncok", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -79,7 +79,7 @@ func TestSyncLoadNoTagtsOk(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	priority, steps, err := sync.Load(ctx, log, "testdata/good", "namesyncok", 0, v, dss, prov, false, false)
+	priority, steps, err := sync.Load(ctx, log, "testdata/good", "namesyncok", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -114,7 +114,7 @@ func TestSyncNoSource(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, log, "testdata/fail", "nosource", 0, v, dss, prov, false, false)
+	_, _, err = sync.Load(ctx, log, "testdata/fail", "nosource", 0, v, dss, prov, false, false, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -127,7 +127,7 @@ func TestSyncNoDestination(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, log, "testdata/fail", "nodestination", 0, v, dss, prov, false, false)
+	_, _, err = sync.Load(ctx, log, "testdata/fail", "nodestination", 0, v, dss, prov, false, false, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -140,7 +140,7 @@ func TestSyncWrongEngine(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, log, "testdata/fail", "wrongengine", 0, v, dss, prov, false, false)
+	_, _, err = sync.Load(ctx, log, "testdata/fail", "wrongengine", 0, v, dss, prov, false, false, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -153,7 +153,7 @@ func TestSyncWrongType(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, log, "testdata/fail", "wrongtype", 0, v, dss, prov, false, false)
+	_, _, err = sync.Load(ctx, log, "testdata/fail", "wrongtype", 0, v, dss, prov, false, false, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -166,7 +166,7 @@ func TestSyncNoSourceDatasource(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, log, "testdata/fail", "nosourceds", 0, v, dss, prov, false, false)
+	_, _, err = sync.Load(ctx, log, "testdata/fail", "nosourceds", 0, v, dss, prov, false, false, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -179,7 +179,7 @@ func TestSyncNoDestinationDatasource(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, log, "testdata/fail", "nodestinationds", 0, v, dss, prov, false, false)
+	_, _, err = sync.Load(ctx, log, "testdata/fail", "nodestinationds", 0, v, dss, prov, false, false, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -192,7 +192,7 @@ func TestSyncTooManySourceDatasource(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, log, "testdata/fail", "toomanysourceds", 0, v, dss, prov, false, false)
+	_, _, err = sync.Load(ctx, log, "testdata/fail", "toomanysourceds", 0, v, dss, prov, false, false, nil)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -205,7 +205,7 @@ func TestSyncPostLoadOk(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, steps, err := sync.Load(ctx, log, "testdata/good", "namesyncok", 0, v, dss, prov, false, false)
+	_, steps, err := sync.Load(ctx, log, "testdata/good", "namesyncok", 0, v, dss, prov, false, false, nil)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -236,7 +236,7 @@ func TestSyncForceModeOk(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, log, "testdata/good", "namesyncok", 0, v, dss, prov, true, false)
+	_, _, err = sync.Load(ctx, log, "testdata/good", "namesyncok", 0, v, dss, prov, true, false, nil)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -248,7 +248,7 @@ func TestSyncDryRunModeOk(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 
-	_, _, err = sync.Load(ctx, log, "testdata/good", "namesyncok", 0, v, dss, prov, false, true)
+	_, _, err = sync.Load(ctx, log, "testdata/good", "namesyncok", 0, v, dss, prov, false, true, nil)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}

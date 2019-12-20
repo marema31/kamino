@@ -41,7 +41,7 @@ type FilterConfig struct {
 	Type        string
 }
 
-func getDatasources(log *logrus.Entry, dss datasource.Datasourcers, tags []string, engines []string, dsTypes []string, objectType string, unique bool, dryRun bool) ([]datasource.Datasourcer, error) {
+func getDatasources(log *logrus.Entry, dss datasource.Datasourcers, tags []string, engines []string, dsTypes []string, objectType string, unique bool, dryRun bool, limitedTags []string) ([]datasource.Datasourcer, error) {
 	if len(tags) == 0 {
 		tags = []string{""}
 	}
@@ -57,7 +57,7 @@ func getDatasources(log *logrus.Entry, dss datasource.Datasourcers, tags []strin
 		log.Error(err)
 		return nil, err
 	}
-	datasources := dss.Lookup(log, tags, t, e)
+	datasources := dss.Lookup(log, tags, limitedTags, t, e)
 	log.Debugf("Found %d %s", len(datasources), objectType)
 	if len(datasources) == 0 {
 		log.Errorf("no %s found", objectType)
@@ -80,7 +80,7 @@ func parseSourceConfig(ctx context.Context, log *logrus.Entry, objectType string
 		return parsedSource, err
 	}
 
-	datasources, err := getDatasources(log, dss, source.Tags, source.Engines, source.Types, objectType, true, dryRun)
+	datasources, err := getDatasources(log, dss, source.Tags, source.Engines, source.Types, objectType, true, dryRun, nil)
 	if err != nil {
 		return parsedSource, err
 	}
@@ -90,7 +90,7 @@ func parseSourceConfig(ctx context.Context, log *logrus.Entry, objectType string
 	return parsedSource, nil
 }
 
-func parseDestConfig(ctx context.Context, log *logrus.Entry, v *viper.Viper, dss datasource.Datasourcers, force bool, dryRun bool) ([]parsedDestConfig, error) {
+func parseDestConfig(ctx context.Context, log *logrus.Entry, v *viper.Viper, dss datasource.Datasourcers, force bool, dryRun bool, limitedTags []string) ([]parsedDestConfig, error) {
 	var dests []DestinationConfig
 	parsedDests := make([]parsedDestConfig, 0)
 
@@ -101,7 +101,7 @@ func parseDestConfig(ctx context.Context, log *logrus.Entry, v *viper.Viper, dss
 	}
 
 	for _, dest := range dests {
-		datasources, err := getDatasources(log, dss, dest.Tags, dest.Engines, dest.Types, "destination", false, dryRun)
+		datasources, err := getDatasources(log, dss, dest.Tags, dest.Engines, dest.Types, "destination", false, dryRun, limitedTags)
 		if err != nil {
 			return nil, err
 		}
@@ -151,7 +151,7 @@ func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) (err er
 }
 
 //Load data from step file using its viper representation a return priority and list of steps
-func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, provider provider.Provider, force bool, dryRun bool) (priority uint, steps []common.Steper, err error) {
+func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, provider provider.Provider, force bool, dryRun bool, limitedTags []string) (priority uint, steps []common.Steper, err error) {
 	var step Step
 
 	step.baseFolder = recipePath
@@ -200,7 +200,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 	}
 
 	log.Debug("Lookup destinations")
-	step.destsCfg, err = parseDestConfig(ctx, logStep, v, dss, force, dryRun)
+	step.destsCfg, err = parseDestConfig(ctx, logStep, v, dss, force, dryRun, limitedTags)
 	if err != nil {
 		return 0, nil, err
 	}

@@ -11,7 +11,7 @@ import (
 func TestToSkipOnlyIfNotExists(t *testing.T) {
 	ctx, log, dss, v := setupDo("testdata/good/steps/", "ifnotexist")
 
-	_, steps, err := tmpl.Load(ctx, log, "testdata/good", "ifnotexist", 0, v, dss, false, false)
+	_, steps, err := tmpl.Load(ctx, log, "testdata/good", "ifnotexist", 0, v, dss, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -43,7 +43,7 @@ func TestToSkipOnlyIfNotExists(t *testing.T) {
 func TestToSkipOk(t *testing.T) {
 	ctx, log, dss, v := setupDo("testdata/good/steps/", "ifnotexist")
 
-	_, steps, err := tmpl.Load(ctx, log, "testdata/good", "tmplok", 0, v, dss, false, false)
+	_, steps, err := tmpl.Load(ctx, log, "testdata/good", "tmplok", 0, v, dss, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}

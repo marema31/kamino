@@ -7,7 +7,7 @@ import (
 func TestRecipeLoadOk(t *testing.T) {
 	ctx, log, _, ck := setupLoad(false, false, false)
 
-	err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil)
+	err := ck.Load(ctx, log, "testdata/good", []string{"recipe1ok", "recipe2ok"}, nil, nil, nil)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -40,11 +40,11 @@ func TestRecipeLoadKo(t *testing.T) {
 	for _, validate := range []bool{true, false} {
 		ctx, log, _, ck := setupLoad(false, false, validate)
 
-		err := ck.Load(ctx, log, "testdata/fail", []string{"recipe1", "recipe2"}, nil, nil)
+		err := ck.Load(ctx, log, "testdata/fail", []string{"recipe1", "recipe2"}, nil, nil, nil)
 		if err == nil {
 			t.Errorf("Load should returns an error")
 		}
-		err = ck.Load(ctx, log, "testdata/fail", []string{"recipe1", "dserror"}, nil, nil)
+		err = ck.Load(ctx, log, "testdata/fail", []string{"recipe1", "dserror"}, nil, nil, nil)
 		if err == nil {
 			t.Errorf("Load should returns an error")
 		}
@@ -55,12 +55,12 @@ func TestRecipeLoadNoFolder(t *testing.T) {
 	for _, validate := range []bool{true, false} {
 		ctx, log, _, ck := setupLoad(false, false, validate)
 
-		err := ck.Load(ctx, log, "testdata/fail", []string{"recipe1", "unknown"}, nil, nil)
+		err := ck.Load(ctx, log, "testdata/fail", []string{"recipe1", "unknown"}, nil, nil, nil)
 		if err == nil {
 			t.Errorf("Load should returns an error")
 		}
 
-		err = ck.Load(ctx, log, "testdata/fail", []string{"recipe2", "nosteps"}, nil, nil)
+		err = ck.Load(ctx, log, "testdata/fail", []string{"recipe2", "nosteps"}, nil, nil, nil)
 		if err == nil {
 			t.Errorf("Load should returns an error")
 		}

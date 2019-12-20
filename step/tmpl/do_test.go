@@ -12,7 +12,7 @@ import (
 func TestDoFinishOk(t *testing.T) {
 	ctx, log, dss, v := setupDo("testdata/good/steps/", "tmplok")
 
-	_, steps, err := tmpl.Load(ctx, log, "testdata/good", "tmplok", 0, v, dss, false, false)
+	_, steps, err := tmpl.Load(ctx, log, "testdata/good", "tmplok", 0, v, dss, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -43,7 +43,7 @@ func TestDoFinishOk(t *testing.T) {
 func TestDoCancelOk(t *testing.T) {
 	ctx, log, dss, v := setupDo("testdata/good/steps/", "tmplok")
 
-	_, steps, err := tmpl.Load(ctx, log, "testdata/good", "tmplok", 0, v, dss, false, false)
+	_, steps, err := tmpl.Load(ctx, log, "testdata/good", "tmplok", 0, v, dss, false, false, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -82,7 +82,7 @@ func nbLineByFile(fileName string) int {
 func helperDoTest(t *testing.T, configFile string, createdFile string, nblines1 int, nblines2 int, dryRun bool) {
 	ctx, log, dss, v := setupDo("testdata/good/steps/", configFile)
 
-	_, steps, err := tmpl.Load(ctx, log, "testdata/good", configFile, 0, v, dss, false, dryRun)
+	_, steps, err := tmpl.Load(ctx, log, "testdata/good", configFile, 0, v, dss, false, dryRun, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
@@ -101,7 +101,7 @@ func helperDoTest(t *testing.T, configFile string, createdFile string, nblines1 
 		t.Errorf("%s should have %d lines after first run but it have %d", createdFile, nblines1, nb)
 	}
 
-	_, steps, err = tmpl.Load(ctx, log, "testdata/good", configFile, 0, v, dss, false, dryRun)
+	_, steps, err = tmpl.Load(ctx, log, "testdata/good", configFile, 0, v, dss, false, dryRun, nil)
 	if err != nil {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
