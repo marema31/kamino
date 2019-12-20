@@ -61,9 +61,9 @@ func (dss *Datasources) lookupWithoutTag(dsTypes []Type, engines []Engine) (sele
 	return selectedNames
 }
 
-func (dss *Datasources) getDsNameFromTagList(log *logrus.Entry, tagList []string, dsTypes []Type, engines []Engine) (selectedNames []string, unselectedNames []string) {
+func (dss *Datasources) getDsNameFromTagList(log *logrus.Entry, tagList []string, dsTypes []Type, engines []Engine) []string {
 	selected := make(map[string]bool) // Use map to emulate a "set" to avoid duplicates
-	unselectedNames = make([]string, 0)
+	unselectedNames := make([]string, 0)
 	for _, tagElement := range tagList {
 		log.Debugf("Lookup %s", tagElement)
 		if !strings.Contains(tagElement, ".") {
@@ -117,35 +117,14 @@ func (dss *Datasources) getDsNameFromTagList(log *logrus.Entry, tagList []string
 		}
 	}
 
-	selectedNames = make([]string, 0, len(selected))
+	selectedNames := make([]string, 0, len(selected))
 	for dsName := range selected {
 		selectedNames = append(selectedNames, dsName)
 	}
-	return selectedNames, unselectedNames
+	return removeFromList(selectedNames, unselectedNames)
 }
 
-//Lookup return a list of *Datasource that correspond to the
-// list of tag expression
-func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags []string, dsTypes []Type, engines []Engine) []Datasourcer {
-	logLookup := log.WithField("lookup", "tags")
-	var selected []string
-	unselected := make([]string, 0)
-	limited := make([]string, 0)
-	if limitedTags != nil {
-		limited, _ = dss.getDsNameFromTagList(logLookup, limitedTags, dsTypes, engines)
-	}
-	if len(tagList) == 0 {
-		logLookup.Debug("No tag provided, will only lookup on type and engines")
-		// The selection is not based on tag, lookup for all of them
-		selected = dss.lookupWithoutTag(dsTypes, engines)
-	} else {
-		selected, unselected = dss.getDsNameFromTagList(logLookup, tagList, dsTypes, engines)
-	}
-
-	logLookup.Debug("Final datasources list:")
-	finalDsList := make([]string, 0, len(selected))
-
-	selectedDs := make([]Datasourcer, 0, len(selected))
+func removeFromList(selected []string, unselected []string) (filtered []string) {
 	for _, dsName := range selected {
 		found := false
 		for _, name := range unselected {
@@ -155,20 +134,61 @@ func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags 
 			}
 		}
 		if !found {
-			inLimit := true
-			if limitedTags != nil {
-				inLimit = false
-				for _, name := range limited {
-					if name == dsName {
-						inLimit = true
-						break
-					}
+			filtered = append(filtered, dsName)
+		}
+	}
+	return filtered
+}
+
+//Lookup return a list of *Datasource that correspond to the
+// list of tag expression
+func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags []string, dsTypes []Type, engines []Engine) []Datasourcer {
+	logLookup := log.WithField("lookup", "tags")
+	var selected []string
+	limited := make([]string, 0)
+	if limitedTags != nil {
+		logLookup.Debug("Lookup limited tag list")
+		limited = dss.getDsNameFromTagList(logLookup, limitedTags, dsTypes, engines)
+		logLookup.Warn(limited)
+		if len(limited) == 0 {
+			allNegation := true
+			for _, tag := range limitedTags {
+				if !strings.HasPrefix(tag, "!") {
+					allNegation = false
+					break
 				}
 			}
-			if inLimit {
-				finalDsList = append(finalDsList, dsName)
-				selectedDs = append(selectedDs, dss.datasources[dsName])
+			if allNegation {
+				limited = dss.getDsNameFromTagList(logLookup, append(tagList, limitedTags...), dsTypes, engines)
 			}
+		}
+	}
+	if len(tagList) == 0 {
+		logLookup.Debug("No tag provided, will only lookup on type and engines")
+		// The selection is not based on tag, lookup for all of them
+		selected = dss.lookupWithoutTag(dsTypes, engines)
+	} else {
+		selected = dss.getDsNameFromTagList(logLookup, tagList, dsTypes, engines)
+	}
+
+	logLookup.Debug("Final datasources list:")
+	finalDsList := make([]string, 0, len(selected))
+
+	selectedDs := make([]Datasourcer, 0, len(selected))
+	for _, dsName := range selected {
+		inLimit := true
+		if limitedTags != nil {
+			inLimit = false
+			for _, name := range limited {
+				if name == dsName {
+					inLimit = true
+					break
+				}
+			}
+		}
+		if inLimit {
+			finalDsList = append(finalDsList, dsName)
+			selectedDs = append(selectedDs, dss.datasources[dsName])
 		}
 	}
 	logLookup.Debug(strings.Join(finalDsList, ","))

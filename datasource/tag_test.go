@@ -36,6 +36,7 @@ func setupLookupDatastore() *Datasources {
 	dss.tagToDatasource = map[string][]string{
 		"tag1":           {"ds1", "ds2"},
 		"tag2":           {"ds1", "ds3", "ds4"},
+		"tag3":           {"ds3", "ds4"},
 		"environment:us": {"ds5", "ds6"},
 		"environment:fr": {"ds7", "ds2", "ds4"},
 		"":               {"notag"},
@@ -342,4 +343,76 @@ func TestLookup(t *testing.T) {
 		},
 	)
 
+	helperTestLookup(
+		t,
+		dss,
+		[]string{"tag1", "tag2"},
+		[]string{"tag1", "tag2", "!tag1.environment:fr"},
+		nil,
+		nil,
+		[]*Datasource{
+			dss.datasources["ds1"],
+			dss.datasources["ds3"],
+			dss.datasources["ds4"],
+		},
+	)
+
+	helperTestLookup(
+		t,
+		dss,
+		[]string{"tag1", "tag2"},
+		[]string{"!tag1.environment:fr"},
+		nil,
+		nil,
+		[]*Datasource{
+			dss.datasources["ds1"],
+			dss.datasources["ds3"],
+			dss.datasources["ds4"],
+		},
+	)
+
+	helperTestLookup(
+		t,
+		dss,
+		[]string{"tag1", "tag2"},
+		[]string{"!tag1.environment:fr", "!tag3"},
+		nil,
+		nil,
+		[]*Datasource{
+			dss.datasources["ds1"],
+		},
+	)
+
+	helperTestLookup(
+		t,
+		dss,
+		[]string{"tag1", "tag2"},
+		[]string{"!tag1.environment:fr", "tag3"},
+		nil,
+		nil,
+		[]*Datasource{
+			dss.datasources["ds3"],
+			dss.datasources["ds4"],
+		},
+	)
+
+	helperTestLookup(
+		t,
+		dss,
+		[]string{"tag1", "tag2"},
+		[]string{"!tag1.environment:fr", "environment:us"},
+		nil,
+		nil,
+		[]*Datasource{},
+	)
+
+	helperTestLookup(
+		t,
+		dss,
+		[]string{"tag1", "tag2"},
+		[]string{"!tag1.environment:fr", "environment:uk"},
+		nil,
+		nil,
+		[]*Datasource{},
+	)
 }
