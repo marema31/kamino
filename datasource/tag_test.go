@@ -124,11 +124,11 @@ func TestLookupOneTag(t *testing.T) {
 
 }
 
-func helperTestLookup(t *testing.T, dss *Datasources, tags []string, dsTypes []Type, engines []Engine, awaited []*Datasource) {
+func helperTestLookup(t *testing.T, dss *Datasources, tags []string, limitedTags []string, dsTypes []Type, engines []Engine, awaited []*Datasource) {
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
 
-	result := dss.Lookup(log, tags, nil, dsTypes, engines)
+	result := dss.Lookup(log, tags, limitedTags, dsTypes, engines)
 
 	anames := []string{}
 	for _, ds := range awaited {
@@ -146,7 +146,7 @@ func helperTestLookup(t *testing.T, dss *Datasources, tags []string, dsTypes []T
 	rw := strings.Join(rnames, " ")
 
 	if rw != aw {
-		t.Errorf("'%v, %v, %v' should returns [%s] but returned [%s]", tags, dsTypes, engines, aw, rw)
+		t.Errorf("'%v, %v, %v, %v' should returns [%s] but returned [%s]", tags, limitedTags, dsTypes, engines, aw, rw)
 	}
 
 }
@@ -159,6 +159,7 @@ func TestLookup(t *testing.T) {
 		t,
 		dss,
 		[]string{"tag1", "tag2"},
+		nil,
 		nil,
 		nil,
 		[]*Datasource{
@@ -175,6 +176,7 @@ func TestLookup(t *testing.T) {
 		[]string{"tag1", "!tag2"},
 		nil,
 		nil,
+		nil,
 		[]*Datasource{
 			dss.datasources["ds2"],
 		},
@@ -184,6 +186,7 @@ func TestLookup(t *testing.T) {
 		t,
 		dss,
 		[]string{"tag1.tag2"},
+		nil,
 		nil,
 		nil,
 		[]*Datasource{
@@ -197,6 +200,7 @@ func TestLookup(t *testing.T) {
 		[]string{"tag1.environment:fr"},
 		nil,
 		nil,
+		nil,
 		[]*Datasource{dss.datasources["ds2"]},
 	)
 
@@ -206,6 +210,7 @@ func TestLookup(t *testing.T) {
 		[]string{"tag2.environment:us"},
 		nil,
 		nil,
+		nil,
 		[]*Datasource{},
 	)
 
@@ -213,6 +218,7 @@ func TestLookup(t *testing.T) {
 		t,
 		dss,
 		[]string{"tag1.tag2", "tag2.environment:fr"},
+		nil,
 		nil,
 		nil,
 		[]*Datasource{
@@ -227,6 +233,7 @@ func TestLookup(t *testing.T) {
 		[]string{"tag1.tag2", "!tag2.environment:fr"},
 		nil,
 		nil,
+		nil,
 		[]*Datasource{
 			dss.datasources["ds1"],
 		},
@@ -236,6 +243,7 @@ func TestLookup(t *testing.T) {
 		t,
 		dss,
 		[]string{"tag1.tag2", "tag2.environment:fr"},
+		nil,
 		[]Type{Database},
 		nil,
 		[]*Datasource{
@@ -247,6 +255,7 @@ func TestLookup(t *testing.T) {
 		t,
 		dss,
 		[]string{"tag1.tag2", "tag2.environment:fr"},
+		nil,
 		[]Type{Database},
 		[]Engine{Mysql},
 		[]*Datasource{
@@ -259,6 +268,7 @@ func TestLookup(t *testing.T) {
 		dss,
 		[]string{"tag1.tag2", "tag2.environment:fr"},
 		nil,
+		nil,
 		[]Engine{JSON, YAML},
 		[]*Datasource{
 			dss.datasources["ds4"],
@@ -269,6 +279,7 @@ func TestLookup(t *testing.T) {
 		t,
 		dss,
 		[]string{},
+		nil,
 		[]Type{Database},
 		nil,
 		[]*Datasource{
@@ -281,6 +292,7 @@ func TestLookup(t *testing.T) {
 		t,
 		dss,
 		[]string{},
+		nil,
 		[]Type{Database},
 		[]Engine{Mysql},
 		[]*Datasource{
@@ -293,6 +305,7 @@ func TestLookup(t *testing.T) {
 		dss,
 		[]string{},
 		nil,
+		nil,
 		[]Engine{JSON, YAML},
 		[]*Datasource{
 			dss.datasources["ds3"],
@@ -303,4 +316,30 @@ func TestLookup(t *testing.T) {
 			dss.datasources["notag"],
 		},
 	)
+
+	helperTestLookup(
+		t,
+		dss,
+		[]string{"tag1", "tag2"},
+		[]string{"environment:fr"},
+		nil,
+		nil,
+		[]*Datasource{
+			dss.datasources["ds2"],
+			dss.datasources["ds4"],
+		},
+	)
+
+	helperTestLookup(
+		t,
+		dss,
+		[]string{"tag1", "tag2"},
+		[]string{"tag1.environment:fr"},
+		nil,
+		nil,
+		[]*Datasource{
+			dss.datasources["ds2"],
+		},
+	)
+
 }
