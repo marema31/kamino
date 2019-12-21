@@ -95,3 +95,36 @@ func TestFindRecipeFolderIncomplete(t *testing.T) {
 		t.Fatalf("Recipes %v found, none should have been found", recipes)
 	}
 }
+
+func TestFindRecipeGlobArgs(t *testing.T) {
+	common.CfgFolder = "testdata/good"
+	recipes, err := common.FindRecipes(logrus.New().WithField("k", "v"), []string{"rec*"})
+	if err != nil {
+		t.Fatalf("Should not return error, returned %v", err)
+	}
+	if len(recipes) == 0 {
+		t.Fatalf("No recipes found")
+	}
+	if len(recipes) != 3 {
+		t.Fatalf("Waiting for 'rec1','rec2' returned %v", recipes)
+	}
+}
+
+func TestFindRecipeGlobArgsWrong(t *testing.T) {
+	common.CfgFolder = "testdata/good"
+	recipes, err := common.FindRecipes(logrus.New().WithField("k", "v"), []string{"rea*c", "rec2"})
+	if err == nil {
+		t.Fatalf("Should return error")
+	}
+	if len(recipes) != 0 {
+		t.Fatalf("Recipes %v found, none should have been found", recipes)
+	}
+	_, err = common.FindRecipes(logrus.New().WithField("k", "v"), []string{"../rec", "rec2"})
+	if err == nil {
+		t.Fatalf("Should return error")
+	}
+	_, err = common.FindRecipes(logrus.New().WithField("k", "v"), []string{"/etc", "rec2"})
+	if err == nil {
+		t.Fatalf("Should return error")
+	}
+}
