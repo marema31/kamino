@@ -15,6 +15,7 @@ engine        | All *          | Provider use for the datasource ( mysql, postgr
 file          | File *         | File path for the datasource. Path are relative to recipe folder.
 gzip          | File           | If true the source is gziped | false
 host          | Database       | Database server (default: localhost)
+options       | Database       | Options to the connection string (e.g. sslmode=disable for postgres, tls=skip-verify for mysql)
 password      | Database       | Password of database user
 port          | Database       | Database server TCP port | 3306 (mysql) / 5432 (postgres)
 shema         | Database       | Name of the database schema

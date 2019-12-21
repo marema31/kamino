@@ -8,6 +8,7 @@
     "adminpassword": "adminpw",
     "user":          "bobschema",
     "password":      "123soleil",
+    "options":       ["sslmode=disable"],
     "transaction":   true,
     "tags":          [ "pokemon","copy", "us", "az1","subschema", "zone:northamerica"]
  }

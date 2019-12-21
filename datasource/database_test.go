@@ -34,15 +34,15 @@ func TestLoadMysqlCompleteEngine(t *testing.T) {
 		t.Errorf("The schema is '%s'", ds.schema)
 	}
 
-	if ds.url != "bob:123soleil@tcp(hmc:1234)/dbmc?parseTime=true" {
+	if ds.url != "bob:123soleil@tcp(hmc:1234)/dbmc?parseTime=true&tls=false&option2=value2" {
 		t.Errorf("The user url is '%s'", ds.url)
 	}
 
-	if ds.urlAdmin != "super:adminpw@tcp(hmc:1234)/dbmc?parseTime=true" {
+	if ds.urlAdmin != "super:adminpw@tcp(hmc:1234)/dbmc?parseTime=true&tls=false&option2=value2" {
 		t.Errorf("The admin url is '%s'", ds.urlAdmin)
 	}
 
-	if ds.urlNoDb != "super:adminpw@tcp(hmc:1234)/mysql?parseTime=true" {
+	if ds.urlNoDb != "super:adminpw@tcp(hmc:1234)/mysql?parseTime=true&tls=false&option2=value2" {
 		t.Errorf("The nodb url is '%s'", ds.urlNoDb)
 	}
 
@@ -122,15 +122,15 @@ func TestLoadPostgresCompleteEngine(t *testing.T) {
 		t.Errorf("The schema is '%s'", ds.schema)
 	}
 
-	if ds.url != "host=hpc port=1234 user=bob password=123soleil dbname=dbpc sslmode=disable" {
+	if ds.url != "host=hpc port=1234 user=bob password=123soleil dbname=dbpc sslmode=disable option2=value2" {
 		t.Errorf("The user url is '%s'", ds.url)
 	}
 
-	if ds.urlAdmin != "host=hpc port=1234 user=super password=adminpw dbname=dbpc sslmode=disable" {
+	if ds.urlAdmin != "host=hpc port=1234 user=super password=adminpw dbname=dbpc sslmode=disable option2=value2" {
 		t.Errorf("The admin url is '%s'", ds.urlAdmin)
 	}
 
-	if ds.urlNoDb != "host=hpc port=1234 user=super password=adminpw sslmode=disable" {
+	if ds.urlNoDb != "host=hpc port=1234 user=super password=adminpw sslmode=disable option2=value2" {
 		t.Errorf("The nodb url is '%s'", ds.urlNoDb)
 	}
 
@@ -166,15 +166,15 @@ func TestLoadPostgresMinimalEngine(t *testing.T) {
 		t.Errorf("The schema is '%s'", ds.schema)
 	}
 
-	if ds.url != "host=127.0.0.1 port=5432 user=postgres password=adminpw dbname=dbpm sslmode=disable" {
+	if ds.url != "host=127.0.0.1 port=5432 user=postgres password=adminpw dbname=dbpm " {
 		t.Errorf("The user url is '%s'", ds.url)
 	}
 
-	if ds.urlAdmin != "host=127.0.0.1 port=5432 user=postgres password=adminpw dbname=dbpm sslmode=disable" {
+	if ds.urlAdmin != "host=127.0.0.1 port=5432 user=postgres password=adminpw dbname=dbpm " {
 		t.Errorf("The admin url is '%s'", ds.urlAdmin)
 	}
 
-	if ds.urlNoDb != "host=127.0.0.1 port=5432 user=postgres password=adminpw sslmode=disable" {
+	if ds.urlNoDb != "host=127.0.0.1 port=5432 user=postgres password=adminpw " {
 		t.Errorf("The nodb url is '%s'", ds.urlNoDb)
 	}
 

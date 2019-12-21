@@ -7,6 +7,7 @@
     "adminpassword": "adminpw",
     "user":          "bob",
     "password":      "123soleil",
+    "options":       ["tls=false"],
     "transaction":   true,
     "tags":          [ "pokemon", "copy2", "fr", "az1", "zone:europe"]
 }
