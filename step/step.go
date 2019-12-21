@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/mb0/glob"
 	"github.com/spf13/viper"
 
 	"github.com/marema31/kamino/datasource"
@@ -48,6 +49,30 @@ func normalizeStepType(stepType string) (string, error) {
 
 }
 
+func (sf *Factory) nameInStepNames(log *logrus.Entry, name string, stepNames []string) (bool, error) {
+	g, err := glob.New(glob.Default())
+	if err != nil {
+		log.Errorf("Unable to initialize the globbing engine: %v", err)
+		return false, err
+	}
+	for _, testedName := range stepNames {
+		n := strings.ToLower(name)
+		t := strings.ToLower(testedName)
+		if strings.EqualFold(t, n) {
+			return true, nil
+		}
+		matched, err := g.Match(t, n)
+		if err != nil {
+			log.Errorf("Using the step name %s failed: %v", stepNames, err)
+			return false, err
+		}
+		if matched {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // Load the step file and returns the priority and a list of steper for this file
 func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider, limitedTags []string, stepNames []string, stepTypes []string, force bool, dryRun bool) (priority uint, stepList []common.Steper, err error) {
 	v := viper.New()
@@ -66,14 +91,11 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 	}
 
 	if len(stepNames) != 0 {
-		found := false
-		for _, testedName := range stepNames {
-			if strings.EqualFold(strings.ToLower(name), strings.ToLower(testedName)) {
-				found = true
-			}
-			//TODO: Implement globbing in name (*migration* for example)
+		matched, err := sf.nameInStepNames(log, name, stepNames)
+		if err != nil {
+			return 0, nil, err
 		}
-		if !found {
+		if !matched {
 			return 0, make([]common.Steper, 0), nil
 		}
 	}

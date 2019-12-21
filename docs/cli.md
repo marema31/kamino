@@ -43,7 +43,7 @@ and the next priorities will not be executed.
 
 By default all steps of a recipe will be executed (or skipped), the `apply` action had two options to limit the list of steps:
 
-* `--name <stepName1>,<stepName2>... (-n)` Only execute the step of provided names
+* `--name <stepName1>,<stepName2>... (-n)` Only execute the step of provided names, the name can contains "globbing characters" (like in shell), you may have to protect them from your shell (for example ` --name '*synchronization[123]*' ` )
 * `--type <type1>,<type2>... (-t)` Only execute the step of provided types
 
 
