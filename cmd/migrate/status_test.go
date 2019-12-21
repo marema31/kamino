@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/marema31/kamino/cmd/common"
 	"github.com/marema31/kamino/cmd/migrate"
 )
 
 func TestStatusOk(t *testing.T) {
+	common.CfgFolder = "testdata/good"
 	ck := &mockedCookbook{}
 	migrate.Admin = false
 	migrate.User = false
@@ -22,6 +24,7 @@ func TestStatusOk(t *testing.T) {
 }
 
 func TestStatusFindRecipesError(t *testing.T) {
+	common.CfgFolder = "testdata"
 	ck := &mockedCookbook{}
 	err := migrate.Status(ck, []string{})
 	if err == nil {
@@ -34,6 +37,7 @@ func TestStatusFindRecipesError(t *testing.T) {
 }
 
 func TestStatuscreateSStatuserseedError(t *testing.T) {
+	common.CfgFolder = "testdata/good"
 	ck := &mockedCookbook{}
 	migrate.Admin = true
 	migrate.User = true
@@ -47,6 +51,7 @@ func TestStatuscreateSStatuserseedError(t *testing.T) {
 	}
 }
 func TestStatusLoadError(t *testing.T) {
+	common.CfgFolder = "testdata/good"
 	ck := &mockedCookbook{}
 	migrate.Admin = false
 	migrate.User = false
@@ -62,6 +67,7 @@ func TestStatusLoadError(t *testing.T) {
 }
 
 func TestStatusPostLoadError(t *testing.T) {
+	common.CfgFolder = "testdata/good"
 	ck := &mockedCookbook{}
 	migrate.Admin = false
 	migrate.User = false
@@ -76,6 +82,7 @@ func TestStatusPostLoadError(t *testing.T) {
 	}
 }
 func TestStatusDoError(t *testing.T) {
+	common.CfgFolder = "testdata/good"
 	ck := &mockedCookbook{}
 	migrate.Admin = false
 	migrate.User = false
