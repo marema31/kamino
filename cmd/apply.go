@@ -34,7 +34,7 @@ func init() {
 func Apply(cookbook recipe.Cooker, names []string, types []string, args []string) error {
 	log := common.Logger.WithField("action", "apply")
 
-	recipes, err := common.FindRecipes(args)
+	recipes, err := common.FindRecipes(log, args)
 	if err != nil {
 		return err
 	}

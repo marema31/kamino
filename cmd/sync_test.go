@@ -5,9 +5,11 @@ import (
 	"testing"
 
 	"github.com/marema31/kamino/cmd"
+	"github.com/marema31/kamino/cmd/common"
 )
 
 func TestSyncOk(t *testing.T) {
+	common.CfgFolder = "testdata/good"
 	ck := &mockedCookbook{}
 	err := cmd.Sync(ck, nil, []string{"recipe1ok", "recipe2ok"})
 	if err != nil {
@@ -16,6 +18,7 @@ func TestSyncOk(t *testing.T) {
 }
 
 func TestSyncLoadError(t *testing.T) {
+	common.CfgFolder = "testdata/good"
 	ck := &mockedCookbook{}
 	ck.errorLoad = fmt.Errorf("fake error")
 	err := cmd.Sync(ck, nil, []string{"recipe1ok", "recipe2ok"})
@@ -29,6 +32,7 @@ func TestSyncLoadError(t *testing.T) {
 }
 
 func TestSyncPostLoadError(t *testing.T) {
+	common.CfgFolder = "testdata/good"
 	ck := &mockedCookbook{}
 	ck.errorPostLoad = fmt.Errorf("fake error")
 	err := cmd.Sync(ck, nil, []string{"recipe1ok", "recipe2ok"})
@@ -42,6 +46,7 @@ func TestSyncPostLoadError(t *testing.T) {
 }
 
 func TestSyncSuperseed(t *testing.T) {
+	common.CfgFolder = "testdata/good"
 	ck := &mockedCookbook{}
 	cmd.CacheOnly = false
 	err := cmd.Sync(ck, nil, []string{"recipe1ok", "recipe2ok"})
@@ -69,6 +74,7 @@ func TestSyncSuperseed(t *testing.T) {
 }
 
 func TestSyncDoError(t *testing.T) {
+	common.CfgFolder = "testdata/good"
 	ck := &mockedCookbook{}
 	ck.doReturnValue = true
 	err := cmd.Sync(ck, nil, []string{"recipe1ok", "recipe2ok"})
@@ -82,6 +88,7 @@ func TestSyncDoError(t *testing.T) {
 }
 
 func TestSyncFindRecipesError(t *testing.T) {
+	common.CfgFolder = "testdata"
 	ck := &mockedCookbook{}
 	err := cmd.Sync(ck, nil, []string{})
 	if err == nil {

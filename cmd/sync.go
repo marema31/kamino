@@ -33,7 +33,7 @@ func init() {
 func Sync(cookbook recipe.Cooker, names []string, args []string) error {
 	log := common.Logger.WithField("action", "sync")
 
-	recipes, err := common.FindRecipes(args)
+	recipes, err := common.FindRecipes(log, args)
 	if err != nil {
 		return err
 	}

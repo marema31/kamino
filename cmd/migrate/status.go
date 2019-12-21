@@ -34,7 +34,7 @@ func Status(cookbook recipe.Cooker, args []string) error {
 	}
 	superseed["migration.dir"] = "status"
 
-	recipes, err := common.FindRecipes(args)
+	recipes, err := common.FindRecipes(log, args)
 	if err != nil {
 		return err
 	}

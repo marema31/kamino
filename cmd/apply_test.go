@@ -5,9 +5,11 @@ import (
 	"testing"
 
 	"github.com/marema31/kamino/cmd"
+	"github.com/marema31/kamino/cmd/common"
 )
 
 func TestApplyOk(t *testing.T) {
+	common.CfgFolder = "testdata/good"
 	ck := &mockedCookbook{}
 	err := cmd.Apply(ck, nil, nil, []string{"recipe1ok", "recipe2ok"})
 	if err != nil {
@@ -20,6 +22,7 @@ func TestApplyOk(t *testing.T) {
 }
 
 func TestApplyLoadError(t *testing.T) {
+	common.CfgFolder = "testdata/good"
 	ck := &mockedCookbook{}
 	ck.errorLoad = fmt.Errorf("fake error")
 	err := cmd.Apply(ck, nil, nil, []string{"recipe1ok", "recipe2ok"})
@@ -33,6 +36,7 @@ func TestApplyLoadError(t *testing.T) {
 }
 
 func TestApplyDoError(t *testing.T) {
+	common.CfgFolder = "testdata/good"
 	ck := &mockedCookbook{}
 	ck.doReturnValue = true
 	err := cmd.Apply(ck, nil, nil, []string{"recipe1ok", "recipe2ok"})
@@ -46,6 +50,7 @@ func TestApplyDoError(t *testing.T) {
 }
 
 func TestApplyFindRecipesError(t *testing.T) {
+	common.CfgFolder = "testdata"
 	ck := &mockedCookbook{}
 	err := cmd.Apply(ck, nil, nil, []string{})
 	if err == nil {
