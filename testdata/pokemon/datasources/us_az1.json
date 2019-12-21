@@ -9,5 +9,5 @@
     "user":          "bobschema",
     "password":      "123soleil",
     "transaction":   true,
-    "tags":          [ "pokemon","copy", "us", "az1","subschema"]
+    "tags":          [ "pokemon","copy", "us", "az1","subschema", "zone:northamerica"]
  }

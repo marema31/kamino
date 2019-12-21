@@ -15,14 +15,14 @@ func setupLookupDatastore() *Datasources {
 	dss := Datasources{}
 
 	dss.datasources = make(map[string]*Datasource)
-	ds1 := Datasource{name: "ds1", dstype: Database, engine: Mysql}
-	ds2 := Datasource{name: "ds2", dstype: Database, engine: Postgres}
-	ds3 := Datasource{name: "ds3", dstype: File, engine: JSON}
-	ds4 := Datasource{name: "ds4", dstype: File, engine: YAML}
-	ds5 := Datasource{name: "ds5", dstype: File, engine: YAML}
-	ds6 := Datasource{name: "ds6", dstype: File, engine: YAML}
-	ds7 := Datasource{name: "ds7", dstype: File, engine: YAML}
-	notag := Datasource{name: "notag", dstype: File, engine: YAML}
+	ds1 := Datasource{name: "ds1", dstype: Database, engine: Mysql, tags: []string{"tag1", "tag2"}}
+	ds2 := Datasource{name: "ds2", dstype: Database, engine: Postgres, tags: []string{"tag1", "environment:fr"}}
+	ds3 := Datasource{name: "ds3", dstype: File, engine: JSON, tags: []string{"tag2", "tag3"}}
+	ds4 := Datasource{name: "ds4", dstype: File, engine: YAML, tags: []string{"tag2", "tag3", "environment:fr"}}
+	ds5 := Datasource{name: "ds5", dstype: File, engine: YAML, tags: []string{"environment:us"}}
+	ds6 := Datasource{name: "ds6", dstype: File, engine: YAML, tags: []string{"environment:us"}}
+	ds7 := Datasource{name: "ds7", dstype: File, engine: YAML, tags: []string{"environment:fr"}}
+	notag := Datasource{name: "notag", dstype: File, engine: YAML, tags: []string{""}}
 
 	dss.datasources["ds1"] = &ds1
 	dss.datasources["ds2"] = &ds2
