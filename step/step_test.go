@@ -227,6 +227,23 @@ func TestStepNameFound(t *testing.T) {
 	}
 }
 
+func TestGlobbedStepNameFound(t *testing.T) {
+	ctx, log, dss, prov, sf := setupLoad()
+
+	priority, steps, err := sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{"nametmpl*"}, []string{}, true, false)
+	if err != nil {
+		t.Errorf("Load should not returns an error, returned: %v", err)
+	}
+
+	if len(steps) != 3 {
+		t.Fatalf("It should have been 3 steps created but it was created: %d", len(steps))
+	}
+
+	if priority != 42 {
+		t.Errorf("The priority should be 42, it was: %v", priority)
+	}
+}
+
 func TestStepNameNotFound(t *testing.T) {
 	ctx, log, dss, prov, sf := setupLoad()
 

@@ -2,10 +2,12 @@
 
 `kamino [Flags] <command> [command-options] [recipe1 recipe2 ... recipen]`
 
+The recipes can contains "globbing characters" (like in shell), you may have to protect them from your shell (for example ` '*dev[123]*' ` ). It is not possible to use path as recipe names (for example `../myOtherRecipe` or `/tmp/myOtherRecipe`). The recipes must be in the config path (by default the current directory).
+
 ## Flags
 Flags (short form)              | meaning
 --------------------------------|----------------------------------------------------------
-`--config <path> (-c)          `| Lookup for recipe in the provided path
+`--config <path> (-c)          `| Lookup for recipe in the provided path (default current directory)
 `--connection-retry nb         `| Maximum number of database connection retries (default 1)
 `--connection-timeout duration `| Timeout of each database connection retry (default 2ms)
 `--dry-run (-d)                `| List action that should be done but do not do them
@@ -43,7 +45,7 @@ and the next priorities will not be executed.
 
 By default all steps of a recipe will be executed (or skipped), the `apply` action had two options to limit the list of steps:
 
-* `--name <stepName1>,<stepName2>... (-n)` Only execute the step of provided names
+* `--name <stepName1>,<stepName2>... (-n)` Only execute the step of provided names, the name can contains "globbing characters" (like in shell), you may have to protect them from your shell (for example ` --name '*synchronization[123]*' ` )
 * `--type <type1>,<type2>... (-t)` Only execute the step of provided types
 
 

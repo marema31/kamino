@@ -80,7 +80,6 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 // ToSkip return true if the step must be skipped
 func (st *Step) ToSkip(ctx context.Context, log *logrus.Entry) (bool, error) {
 	logStep := log.WithField("name", st.Name).WithField("type", "shell")
-	//TODO: Determine which kind of condition can trigger a skip (query, run of a script ?)
 	logStep.Debug("Do we need to skip the step ?")
 	return false, nil
 }
