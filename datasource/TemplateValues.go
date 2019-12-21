@@ -1,5 +1,7 @@
 package datasource
 
+import "strings"
+
 // TmplValues structure use for template rendering to avoid exposing the datasource structure to the template
 type TmplValues struct {
 	Name        string
@@ -14,7 +16,7 @@ type TmplValues struct {
 	Engine      string
 	FilePath    string
 	Transaction bool
-	//TODO: add named tags
+	NamedTags   map[string]string
 }
 
 // FillTmplValues return a struct for template operation with value corresponding to the provided datasource
@@ -32,5 +34,14 @@ func (ds *Datasource) FillTmplValues() TmplValues {
 	tv.Type = TypeToString(ds.dstype)
 	tv.Engine = EngineToString(ds.engine)
 	tv.FilePath = ds.file.FilePath
+	tv.NamedTags = make(map[string]string)
+	for _, tag := range ds.tags {
+		if strings.Contains(tag, ":") {
+			splitted := strings.Split(tag, ":")
+			if len(splitted) > 1 {
+				tv.NamedTags[splitted[0]] = strings.Join(splitted[1:], ":")
+			}
+		}
+	}
 	return tv
 }

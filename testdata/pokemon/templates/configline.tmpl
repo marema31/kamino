@@ -1,1 +1,1 @@
-{{.Name}}:{{.Database}}:{{.User}}:{{.Password}}:{{.Host}}:{{.Port}}:{{.Tags | join ","}}
+{{.Name}}:{{.Database}}:{{.User}}:{{.Password}}:{{.Host}}:{{.Port}}:{{.Tags | join ","}}:{{index .NamedTags "zone"}}

@@ -30,7 +30,7 @@ The template file and the attributes `destination`, `query` and `template` of th
 
 ## Template format
 
-For template, Kamino provides variables corresponding to the current datasource. To use a variable, the template should only contains `{{.MyVariable}}`. Available variables are:
+For template, Kamino provides variables corresponding to the current datasource. To use a variable, the template should only contains `{{.MyVariable}}`, for the NamedTags you should use {{ index .NamedTags "myKey"}}. Available variables are:
 
 
 Name        | Definition
@@ -40,6 +40,7 @@ Engine      | Datasource engine ( CSV, JSON, MySQL, Postgres, YAML)
 FilePath    | Path of the datasource (if it is a file)
 Host        | Database server hostname
 Name        | Datasource name
+NamedTags   | Map of named tags
 Password    | Database user password
 Port        | Database server TCP port
 Schema      | Schema name if relevant

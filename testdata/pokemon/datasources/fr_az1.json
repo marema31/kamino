@@ -8,5 +8,5 @@
     "user":          "bob",
     "password":      "123soleil",
     "transaction":   true,
-    "tags":          [ "pokemon", "copy2", "fr", "az1"]
+    "tags":          [ "pokemon", "copy2", "fr", "az1", "zone:europe"]
 }

@@ -67,6 +67,7 @@ Each datasource have _tags_ (list of tag) that can be shared among them. These t
 
 Steps can have a list of _tag_ selectors, if a datasource correspond to one selector of the list, it will be choosed by the step, the negation will remove datasource from the list of choosen ones.
 
+Tags containing one ":" character will be considered has "named tags", their usage for selection is not different, but for template they can be referenced by Tags array or by the NamedTags map where the tag is splitted in two (name of tag before the ":", value of tag after).
 
 A tag selector can be:
 * A single tag (myTag): All datasources with this tag will be selected
