@@ -3,6 +3,7 @@ package datasource
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -52,7 +53,8 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, conn
 		ds.userPw = ds.adminPw
 	}
 
-	//TODO: Allow the user to define options for the DSN (like MySql allowOldPasswords=1 use for some very old DB)
+	dbOptions := v.GetStringSlice("options")
+
 	switch ds.engine {
 	case Mysql:
 		if ds.user == "" {
@@ -64,11 +66,14 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, conn
 		if ds.port == "" {
 			ds.port = "3306"
 		}
-
+		urlOptions := ""
+		if len(dbOptions) > 0 {
+			urlOptions = fmt.Sprintf("&%s", strings.Join(dbOptions, "&"))
+		}
 		//use parseTime=true to force date and time conversion
-		ds.url = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", ds.user, ds.userPw, ds.host, ds.port, ds.database)
-		ds.urlAdmin = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", ds.admin, ds.adminPw, ds.host, ds.port, ds.database)
-		ds.urlNoDb = fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql?parseTime=true", ds.admin, ds.adminPw, ds.host, ds.port)
+		ds.url = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true%s", ds.user, ds.userPw, ds.host, ds.port, ds.database, urlOptions)
+		ds.urlAdmin = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true%s", ds.admin, ds.adminPw, ds.host, ds.port, ds.database, urlOptions)
+		ds.urlNoDb = fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql?parseTime=true%s", ds.admin, ds.adminPw, ds.host, ds.port, urlOptions)
 
 	case Postgres:
 		ds.user = v.GetString("user")
@@ -82,11 +87,14 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, conn
 		if ds.port == "" {
 			ds.port = "5432"
 		}
-		//TODO: try without ssldisable or make it a option on datasource (for testing see: https://gist.github.com/mrw34/c97bb03ea1054afb551886ffc8b63c3b)
-		//TODO: manage ds.Schema
-		ds.url = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", ds.host, ds.port, ds.user, ds.userPw, ds.database)
-		ds.urlAdmin = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", ds.host, ds.port, ds.admin, ds.adminPw, ds.database)
-		ds.urlNoDb = fmt.Sprintf("host=%s port=%s user=%s password=%s sslmode=disable", ds.host, ds.port, ds.admin, ds.adminPw)
+
+		urlOptions := ""
+		if len(dbOptions) > 0 {
+			urlOptions = strings.Join(dbOptions, " ")
+		}
+		ds.url = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s %s", ds.host, ds.port, ds.user, ds.userPw, ds.database, urlOptions)
+		ds.urlAdmin = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s %s", ds.host, ds.port, ds.admin, ds.adminPw, ds.database, urlOptions)
+		ds.urlNoDb = fmt.Sprintf("host=%s port=%s user=%s password=%s %s", ds.host, ds.port, ds.admin, ds.adminPw, urlOptions)
 	}
 	return ds, nil
 }

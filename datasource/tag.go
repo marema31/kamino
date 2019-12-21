@@ -149,7 +149,6 @@ func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags 
 	if limitedTags != nil {
 		logLookup.Debug("Lookup limited tag list")
 		limited = dss.getDsNameFromTagList(logLookup, limitedTags, dsTypes, engines)
-		logLookup.Warn(limited)
 		if len(limited) == 0 {
 			allNegation := true
 			for _, tag := range limitedTags {
