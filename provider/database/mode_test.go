@@ -32,7 +32,7 @@ func TestOnlyIfEmptyOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id", "title", "body"}).
 		AddRow(3, "post 3", "good").
 		AddRow(2, "post 2", "world")
-	dmockfull.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmockfull.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmockfull.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	destfull := mockdatasource.MockDatasource{MockedDb: ddbfull, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 	logger := logrus.New()
@@ -49,7 +49,7 @@ func TestOnlyIfEmptyOk(t *testing.T) {
 	}
 
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmockempty.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmockempty.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmockempty.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmockempty.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmockempty.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -124,7 +124,7 @@ func TestInsertOk(t *testing.T) {
 	}
 
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -190,7 +190,7 @@ func TestTruncateOk(t *testing.T) {
 	}
 
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("RUNCATE TABLE dtable").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -258,7 +258,7 @@ func TestTruncateTransactionOk(t *testing.T) {
 
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
 	dmock.ExpectBegin()
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("TRUNCATE TABLE dtable").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -328,11 +328,11 @@ func TestUpdateOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(3).
 		AddRow(2)
-	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"}).
 		AddRow(3, "post 3", "good").
 		AddRow(2, "post 2 bis", "planet")
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?")
 	dmock.ExpectExec("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -400,11 +400,11 @@ func TestReplaceOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(3).
 		AddRow(2)
-	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"}).
 		AddRow(3, "post 3", "good").
 		AddRow(2, "post 2 bis", "planet")
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -472,20 +472,17 @@ func TestExactCopyOk(t *testing.T) {
 
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(3).
-		AddRow(2).
-		AddRow(4)
-	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
+		AddRow(2)
+	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"}).
 		AddRow(3, "post 3", "good").
-		AddRow(4, "post 4", "bye").
 		AddRow(2, "post 2 bis", "planet")
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
-	dmock.ExpectExec("DELETE from dtable WHERE id=.+").WillReturnResult(sqlmock.NewResult(1, 1))
-	dmock.ExpectExec("DELETE from dtable WHERE id=.+").WillReturnResult(sqlmock.NewResult(1, 1))
+	dmock.ExpectExec("DELETE from \\? WHERE \\?=\\?").WithArgs("dtable", "id", "3").WillReturnResult(sqlmock.NewResult(1, 1))
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
@@ -549,21 +546,18 @@ func TestExactCopyTransactionOk(t *testing.T) {
 
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(3).
-		AddRow(2).
-		AddRow(4)
-	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
+		AddRow(2)
+	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"}).
 		AddRow(3, "post 3", "good").
-		AddRow(4, "post 4", "bye").
 		AddRow(2, "post 2 bis", "planet")
 	dmock.ExpectBegin()
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
-	dmock.ExpectExec("DELETE from dtable WHERE id=.+").WillReturnResult(sqlmock.NewResult(1, 1))
-	dmock.ExpectExec("DELETE from dtable WHERE id=.+").WillReturnResult(sqlmock.NewResult(1, 1))
+	dmock.ExpectExec("DELETE from \\? WHERE \\?=\\?").WithArgs("dtable", "id", "3").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectCommit()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
 	logger := logrus.New()

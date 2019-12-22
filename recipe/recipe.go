@@ -50,9 +50,8 @@ type Cookbook struct {
 
 // New returns a new
 func New(sf step.Creater, connectionTimeout time.Duration, connectionRetry int, force bool, sequential bool, validate bool, dryRun bool) *Cookbook {
-	rs := make(map[string]recipe)
 	return &Cookbook{
-		Recipes:     rs,
+		Recipes:     make(map[string]recipe),
 		stepFactory: sf,
 		conTimeout:  connectionTimeout,
 		conRetry:    connectionRetry,
@@ -66,20 +65,27 @@ func New(sf step.Creater, connectionTimeout time.Duration, connectionRetry int, 
 // Statistics return number of step by priority by recipes and total number of steps
 func (ck *Cookbook) Statistics() (map[string][]int, int) {
 	result := make(map[string][]int)
+
 	var total int
+
 	for rname := range ck.Recipes {
 		s := make([]int, 0, len(ck.Recipes[rname].steps))
 		priorities := make([]int, 0, len(ck.Recipes[rname].steps))
+
 		for priority := range ck.Recipes[rname].steps {
 			priorities = append(priorities, int(priority))
 		}
+
 		sort.Ints(priorities)
+
 		for _, priority := range priorities {
 			nb := len(ck.Recipes[rname].steps[uint(priority)])
 			s = append(s, nb)
 			total += nb
 		}
+
 		result[rname] = s
 	}
+
 	return result, total
 }

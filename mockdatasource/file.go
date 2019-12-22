@@ -28,6 +28,7 @@ func (ds *MockDatasource) OpenReadFile(log *logrus.Entry) (io.ReadCloser, error)
 
 	ds.Filewriter = false
 	ds.FileHandle = reader
+
 	return reader, ds.ErrorOpenFile
 }
 
@@ -36,6 +37,7 @@ func (ds *MockDatasource) OpenWriteFile(log *logrus.Entry) (io.WriteCloser, erro
 	writer := NopWriteCloser(&ds.WriteBuf)
 	ds.Filewriter = true
 	ds.FileHandle = writer
+
 	return writer, ds.ErrorOpenFile
 }
 
@@ -49,6 +51,7 @@ func (ds *MockDatasource) CloseFile(log *logrus.Entry) error {
 	if ds.FileHandle != nil {
 		ds.FileHandle.Close()
 	}
+
 	return ds.ErrorClose
 }
 
@@ -57,5 +60,6 @@ func (ds *MockDatasource) Stat() (os.FileInfo, error) {
 	if ds.FileNotExists {
 		return os.Stat("...")
 	}
+
 	return os.Stat(".")
 }

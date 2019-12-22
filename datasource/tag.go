@@ -16,6 +16,7 @@ func (ds *Datasource) isSelectedEngine(engines []Engine) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -29,6 +30,7 @@ func (ds *Datasource) isSelectedType(dsTypes []Type) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -41,11 +43,13 @@ func (dss *Datasources) lookupOneTag(tag string, dsTypes []Type, engines []Engin
 			selected = append(selected, name)
 		}
 	}
+
 	return selected
 }
 
 func (dss *Datasources) lookupWithoutTag(dsTypes []Type, engines []Engine) (selectedNames []string) {
 	selected := make(map[string]bool) // Use map to emulate a "set" to avoid duplicates
+
 	for _, names := range dss.tagToDatasource {
 		for _, name := range names {
 			ds := dss.datasources[name]
@@ -54,22 +58,29 @@ func (dss *Datasources) lookupWithoutTag(dsTypes []Type, engines []Engine) (sele
 			}
 		}
 	}
+
 	selectedNames = make([]string, 0, len(selected))
+
 	for dsName := range selected {
 		selectedNames = append(selectedNames, dsName)
 	}
+
 	return selectedNames
 }
 
 func (dss *Datasources) getDsNameFromTagList(log *logrus.Entry, tagList []string, dsTypes []Type, engines []Engine) []string {
 	selected := make(map[string]bool) // Use map to emulate a "set" to avoid duplicates
 	unselectedNames := make([]string, 0)
+
 	for _, tagElement := range tagList {
 		log.Debugf("Lookup %s", tagElement)
+
 		if !strings.Contains(tagElement, ".") {
 			log.Debug("Simple tag")
+
 			if strings.HasPrefix(tagElement, "!") {
 				log.Debug("Negative tag")
+
 				unselectedNames = append(unselectedNames, dss.lookupOneTag(tagElement, dsTypes, engines)...)
 			} else {
 				for _, name := range dss.lookupOneTag(tagElement, dsTypes, engines) {
@@ -121,22 +132,26 @@ func (dss *Datasources) getDsNameFromTagList(log *logrus.Entry, tagList []string
 	for dsName := range selected {
 		selectedNames = append(selectedNames, dsName)
 	}
+
 	return removeFromList(selectedNames, unselectedNames)
 }
 
 func removeFromList(selected []string, unselected []string) (filtered []string) {
 	for _, dsName := range selected {
 		found := false
+
 		for _, name := range unselected {
 			if name == dsName {
 				found = true
 				break
 			}
 		}
+
 		if !found {
 			filtered = append(filtered, dsName)
 		}
 	}
+
 	return filtered
 }
 
@@ -144,24 +159,31 @@ func removeFromList(selected []string, unselected []string) (filtered []string) 
 // list of tag expression
 func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags []string, dsTypes []Type, engines []Engine) []Datasourcer {
 	logLookup := log.WithField("lookup", "tags")
+
 	var selected []string
+
 	limited := make([]string, 0)
+
 	if limitedTags != nil {
 		logLookup.Debug("Lookup limited tag list")
+
 		limited = dss.getDsNameFromTagList(logLookup, limitedTags, dsTypes, engines)
 		if len(limited) == 0 {
 			allNegation := true
+
 			for _, tag := range limitedTags {
 				if !strings.HasPrefix(tag, "!") {
 					allNegation = false
 					break
 				}
 			}
+
 			if allNegation {
 				limited = dss.getDsNameFromTagList(logLookup, append(tagList, limitedTags...), dsTypes, engines)
 			}
 		}
 	}
+
 	if len(tagList) == 0 {
 		logLookup.Debug("No tag provided, will only lookup on type and engines")
 		// The selection is not based on tag, lookup for all of them
@@ -171,13 +193,15 @@ func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags 
 	}
 
 	logLookup.Debug("Final datasources list:")
-	finalDsList := make([]string, 0, len(selected))
 
+	finalDsList := make([]string, 0, len(selected))
 	selectedDs := make([]Datasourcer, 0, len(selected))
+
 	for _, dsName := range selected {
 		inLimit := true
 		if limitedTags != nil {
 			inLimit = false
+
 			for _, name := range limited {
 				if name == dsName {
 					inLimit = true
@@ -185,11 +209,14 @@ func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags 
 				}
 			}
 		}
+
 		if inLimit {
 			finalDsList = append(finalDsList, dsName)
 			selectedDs = append(selectedDs, dss.datasources[dsName])
 		}
 	}
+
 	logLookup.Debug(strings.Join(finalDsList, ","))
+
 	return selectedDs
 }

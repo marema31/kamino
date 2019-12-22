@@ -13,5 +13,6 @@ func (ck *Cookbook) Do(ctx context.Context, log *logrus.Entry) bool {
 	if ck.sequential {
 		return ck.sequentialDo(ctx, log)
 	}
+
 	return ck.parallelDo(ctx, log)
 }

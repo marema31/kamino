@@ -26,12 +26,14 @@ func (ml *MockLoader) Load(log *logrus.Entry) (types.Record, error) {
 	if ml.ErrorLoad != nil {
 		return nil, ml.ErrorLoad
 	}
+
 	if ml.CurrentRow >= len(ml.Content) {
 		return nil, fmt.Errorf("no more data to read")
 	}
 
 	record := ml.Content[ml.CurrentRow]
 	ml.CurrentRow++
+
 	return record, nil
 }
 

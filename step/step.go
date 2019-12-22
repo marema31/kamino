@@ -46,7 +46,6 @@ func normalizeStepType(stepType string) (string, error) {
 	default:
 		return "", fmt.Errorf("does not how to manage %s step type", stepType)
 	}
-
 }
 
 func (sf *Factory) nameInStepNames(log *logrus.Entry, name string, stepNames []string) (bool, error) {
@@ -55,30 +54,37 @@ func (sf *Factory) nameInStepNames(log *logrus.Entry, name string, stepNames []s
 		log.Errorf("Unable to initialize the globbing engine: %v", err)
 		return false, err
 	}
+
 	for _, testedName := range stepNames {
 		n := strings.ToLower(name)
 		t := strings.ToLower(testedName)
+
 		if strings.EqualFold(t, n) {
 			return true, nil
 		}
+
 		matched, err := g.Match(t, n)
 		if err != nil {
 			log.Errorf("Using the step name %s failed: %v", stepNames, err)
 			return false, err
 		}
+
 		if matched {
 			return true, nil
 		}
 	}
+
 	return false, nil
 }
 
 // Load the step file and returns the priority and a list of steper for this file
 func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider, limitedTags []string, stepNames []string, stepTypes []string, force bool, dryRun bool) (priority uint, stepList []common.Steper, err error) {
 	v := viper.New()
-	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
 	stepsFolder := filepath.Join(recipePath, "steps")
+
+	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
 	v.AddConfigPath(stepsFolder)
+
 	err = v.ReadInConfig()
 	if err != nil {
 		log.Errorf("Unable to parse configuration: %v", err)
@@ -86,6 +92,7 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 	}
 
 	name := v.GetString("name")
+
 	if sf.indexes == nil {
 		sf.indexes = make(map[string]int)
 	}
@@ -95,6 +102,7 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 		if err != nil {
 			return 0, nil, err
 		}
+
 		if !matched {
 			return 0, make([]common.Steper, 0), nil
 		}
@@ -110,6 +118,7 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 		log.Errorf("Step type is empty")
 		return 0, nil, fmt.Errorf("the step %s does not provide the type", filename)
 	}
+
 	if stepType, err = normalizeStepType(stepType); err != nil {
 		log.Errorf("Do not know how to manage %s step type", stepType)
 		return 0, nil, err
@@ -117,25 +126,31 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 
 	if len(stepTypes) != 0 {
 		normalizedStepTypes := make([]string, 0, len(stepTypes))
+
 		for _, testedType := range stepTypes {
 			if testedType, err = normalizeStepType(testedType); err != nil {
 				log.Errorf("Do not know how to filter on %s step type", testedType)
 				return 0, nil, err
 			}
+
 			normalizedStepTypes = append(normalizedStepTypes, testedType)
 		}
+
 		found := false
+
 		for _, testedType := range normalizedStepTypes {
 			if strings.EqualFold(strings.ToLower(stepType), strings.ToLower(testedType)) {
 				found = true
 			}
 		}
+
 		if !found {
 			return 0, make([]common.Steper, 0), nil
 		}
 	}
 
 	logStep := log.WithField("type", stepType)
+
 	switch stepType {
 	case "shell":
 		priority, stepList, err = shell.Load(ctx, logStep, recipePath, name, nameIndex, v, dss, force, dryRun, limitedTags)
@@ -148,10 +163,13 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 	case "sqlscript":
 		priority, stepList, err = sqlscript.Load(ctx, logStep, recipePath, name, nameIndex, v, dss, force, dryRun, limitedTags)
 	}
+
 	if err != nil {
 		logStep.Error("Parsing step configuration failed")
 	}
+
 	logStep.Debugf("Created %d steps at priority %d", len(stepList), priority)
 	sf.indexes[name] = nameIndex + len(stepList)
+
 	return priority, stepList, err
 }

@@ -1,7 +1,6 @@
 package filter
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
@@ -13,18 +12,20 @@ type OnlyFilter struct {
 	columns []string
 }
 
-func newOnlyFilter(ctx context.Context, log *logrus.Entry, AParam []string) (Filter, error) {
+func newOnlyFilter(log *logrus.Entry, aParam []string) (Filter, error) {
 	logFilter := log.WithField("filter", "only")
-	if AParam == nil {
+
+	if aParam == nil {
 		logFilter.Error("Missing AParameters")
 		return nil, fmt.Errorf("no parameter to filter only")
 	}
-	if len(AParam) == 0 {
+
+	if len(aParam) == 0 {
 		logFilter.Error("Refuse to filter everything")
 		return nil, fmt.Errorf("filter only refuse to filter everything")
 	}
 
-	return &OnlyFilter{columns: AParam}, nil
+	return &OnlyFilter{columns: aParam}, nil
 }
 
 // Filter : Only the content of column by provided values (insert the column if not present)
@@ -37,5 +38,6 @@ func (of *OnlyFilter) Filter(in types.Record) (types.Record, error) {
 			out[col] = value
 		}
 	}
+
 	return out, nil
 }

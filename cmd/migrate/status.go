@@ -32,12 +32,14 @@ func Status(cookbook recipe.Cooker, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	superseed["migration.dir"] = "status"
 
 	recipes, err := common.FindRecipes(log, args)
 	if err != nil {
 		return err
 	}
+
 	err = cookbook.Load(common.Ctx, log, common.CfgFolder, recipes, common.Tags, nil, []string{"migration"})
 	if err != nil {
 		return fmt.Errorf("error while loading the recipes: %v", err)
@@ -51,5 +53,6 @@ func Status(cookbook recipe.Cooker, args []string) error {
 	if cookbook.Do(common.Ctx, log) {
 		return fmt.Errorf("a step had an error")
 	}
+
 	return nil
 }

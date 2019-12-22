@@ -21,7 +21,7 @@ M = $(shell printf "\033[34;1m▶\033[0m")
 export GO111MODULE=on
 
 .PHONY: all
-all: fmt lint vet staticcheck cyclo | $(BIN) ; $(info $(M) building executable…) @ ## Build program binary
+all: fmt lint vet golangci-lint cyclo | $(BIN) ; $(info $(M) building executable…) @ ## Build program binary
 	$Q $(GO) build \
 		-tags release \
 		-ldflags '-X $(MODULE)/cmd.version=$(VERSION) -X $(MODULE)/cmd.date=$(DATE) -X $(MODULE)/cmd.commit=$(COMMIT)' \
@@ -31,6 +31,11 @@ all: fmt lint vet staticcheck cyclo | $(BIN) ; $(info $(M) building executable�
 
 $(BIN):
 	@mkdir -p $@
+
+GOLANGCI = $(BIN)/golangci-lint
+$(BIN)/golangci-lint: 
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(BIN) v1.21.0
+
 $(BIN)/%: | $(BIN) ; $(info $(M) building $(PACKAGE)…)
 	$Q tmp=$$(mktemp -d); \
 	   env GO111MODULE=off GOPATH=$$tmp GOBIN=$(BIN) $(GO) get $(PACKAGE) \
@@ -39,9 +44,6 @@ $(BIN)/%: | $(BIN) ; $(info $(M) building $(PACKAGE)…)
 
 GOLINT = $(BIN)/golint
 $(BIN)/golint: PACKAGE=golang.org/x/lint/golint
-
-STATICCHECK = $(BIN)/staticcheck
-$(BIN)/staticcheck: PACKAGE=honnef.co/go/tools/cmd/staticcheck
 
 GOCYCLO = $(BIN)/gocyclo
 $(BIN)/gocyclo: PACKAGE=github.com/fzipp/gocyclo
@@ -100,14 +102,13 @@ test-coverage-travis: test-coverage-tools ; $(info $(M) running coverage tests�
 		-covermode=$(COVERAGE_MODE) \
 		-coverprofile="$(COVERAGE_PROFILE)" $(TESTPKGS)
 
-
 .PHONY: cyclo
 cyclo: | $(GOCYCLO) ; $(info $(M) running gocyclo…) @ ## Run gocyclo
 	$Q $(GOCYCLO) -over 22 $(GO_FILES)
 
-.PHONY: staticheck
-staticcheck: | $(STATICCHECK) ; $(info $(M) running staticcheck_) @ ## Run staticcheck
-	$Q $(STATICCHECK) $(PKGS)
+.PHONY: golangci-lint
+golangci-lint: | $(GOLANGCI) ; $(info $(M) running golangci-lint_) @ ## Run golangci-lint
+	$Q $(GOLANGCI) run
 
 .PHONY: vet
 vet: ; $(info $(M) running govet…) @ ## Run go vet

@@ -21,13 +21,15 @@ type KaminoJSONSaver struct {
 //NewSaver open the encoding process on provider file and return a Saver compatible object
 func NewSaver(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer) (*KaminoJSONSaver, error) {
 	logFile := log.WithField("datasource", ds.GetName())
+
 	file, err := ds.OpenWriteFile(logFile)
 	if err != nil {
 		return nil, err
 	}
-	content := make([]map[string]string, 0)
 
+	content := make([]map[string]string, 0)
 	tv := ds.FillTmplValues()
+
 	return &KaminoJSONSaver{file: file, ds: ds, name: tv.FilePath, content: content}, nil
 }
 
@@ -40,18 +42,23 @@ func (js *KaminoJSONSaver) Save(log *logrus.Entry, record types.Record) error {
 //Close closes the destination
 func (js *KaminoJSONSaver) Close(log *logrus.Entry) error {
 	logFile := log.WithField("datasource", js.ds.GetName())
+
 	jsonStr, err := json.MarshalIndent(js.content, "", "    ")
 	if err != nil {
 		logFile.Error("Converting to JSON failed")
 		logFile.Error(err)
+
 		return err
 	}
+
 	_, err = js.file.Write(jsonStr)
 	if err != nil {
 		logFile.Error("Writing file failed")
 		logFile.Error(err)
+
 		return err
 	}
+
 	return js.ds.CloseFile(logFile)
 }
 

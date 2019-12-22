@@ -25,6 +25,7 @@ type DbLoader struct {
 //NewLoader open the database connection, make the data query and return a Loader compatible object
 func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer, table string, where string) (*DbLoader, error) {
 	logDb := log.WithField("datasource", ds.GetName())
+
 	if table == "" {
 		logDb.Error("No source table provided")
 		return nil, fmt.Errorf("source of sync does not provided a table name")
@@ -37,7 +38,7 @@ func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer
 	}
 
 	if where != "" {
-		where = fmt.Sprintf("WHERE %s", where)
+		where = fmt.Sprintf("WHERE %s", where) //nolint:gosec
 	}
 
 	db, err := ds.OpenDatabase(logDb, false, false)
@@ -46,10 +47,12 @@ func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer
 	}
 
 	logDb.Debugf("Load query: SELECT * from %s %s", table, where)
-	rows, err := db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s %s", table, where))
+
+	rows, err := db.QueryContext(ctx, fmt.Sprintf("SELECT * from %s %s", table, where)) //nolint:gosec
 	if err != nil {
 		logDb.Error("Source query failed")
 		logDb.Error(err)
+
 		return nil, err
 	}
 
@@ -57,15 +60,19 @@ func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer
 	if err != nil {
 		logDb.Error("Determining column names failed")
 		logDb.Error(err)
+
 		return nil, err
 	}
+
 	columnsname := make([]string, len(columns))
+
 	for i, col := range columns {
 		columnsname[i] = col.Name()
 	}
 
 	rawBytes := make([]sql.RawBytes, len(columns)) // Buffers for each column
-	scanned := make([]interface{}, len(columns))   // Adress of each Buffers since sql.QueryContext needs pointer to each column buffers
+	scanned := make([]interface{}, len(columns))   // Address of each Buffers since sql.QueryContext needs pointer to each column buffers
+
 	for i := range rawBytes {
 		scanned[i] = &rawBytes[i]
 	}
@@ -89,10 +96,12 @@ func (dl *DbLoader) Next() bool {
 //Load reads the next record and return it
 func (dl *DbLoader) Load(log *logrus.Entry) (types.Record, error) {
 	logDb := log.WithField("datasource", dl.ds.GetName())
+
 	err := dl.rows.Scan(dl.scanned...)
 	if err != nil {
 		logDb.Error("Getting next row failed")
 		logDb.Error(err)
+
 		return nil, err
 	}
 
@@ -100,6 +109,7 @@ func (dl *DbLoader) Load(log *logrus.Entry) (types.Record, error) {
 	if err = dl.rows.Err(); err != nil {
 		logDb.Error("Getting next row failed")
 		logDb.Error(err)
+
 		return nil, err
 	}
 

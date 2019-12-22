@@ -1,7 +1,6 @@
 package filter
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
@@ -14,12 +13,12 @@ type Filter interface {
 }
 
 //NewFilter analyze the config map and return object implemnting Filter of the asked type
-func NewFilter(ctx context.Context, log *logrus.Entry, filterType string, AParam []string, MParam map[string]string) (Filter, error) {
+func NewFilter(log *logrus.Entry, filterType string, aParam []string, mParam map[string]string) (Filter, error) {
 	switch filterType {
 	case "replace":
-		return newReplaceFilter(ctx, log, MParam)
+		return newReplaceFilter(log, mParam)
 	case "only":
-		return newOnlyFilter(ctx, log, AParam)
+		return newOnlyFilter(log, aParam)
 	default:
 		log.Errorf("Don't know how to filter %s", filterType)
 		return nil, fmt.Errorf("don't know how to filter %s", filterType)

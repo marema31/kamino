@@ -22,12 +22,15 @@ type KaminoYAMLSaver struct {
 //NewSaver open the encoding process on provider file and return a Saver compatible object
 func NewSaver(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer) (*KaminoYAMLSaver, error) {
 	logFile := log.WithField("datasource", ds.GetName())
+
 	file, err := ds.OpenWriteFile(logFile)
 	if err != nil {
 		return nil, err
 	}
+
 	content := make([]map[string]string, 0)
 	tv := ds.FillTmplValues()
+
 	return &KaminoYAMLSaver{file: file, ds: ds, name: tv.FilePath, content: content}, nil
 }
 
@@ -40,18 +43,23 @@ func (ys *KaminoYAMLSaver) Save(log *logrus.Entry, record types.Record) error {
 //Close closes the destination
 func (ys *KaminoYAMLSaver) Close(log *logrus.Entry) error {
 	logFile := log.WithField("datasource", ys.ds.GetName())
+
 	yamlStr, err := yaml.Marshal(ys.content)
 	if err != nil {
 		logFile.Error("Converting to YAML failed")
 		logFile.Error(err)
+
 		return err
 	}
+
 	_, err = ys.file.Write(yamlStr)
 	if err != nil {
 		logFile.Error("Writing file failed")
 		logFile.Error(err)
+
 		return err
 	}
+
 	return ys.ds.CloseFile(logFile)
 }
 

@@ -19,7 +19,9 @@ func (ms *MockSaver) Save(log *logrus.Entry, record types.Record) error {
 	if ms.ErrorSave != nil {
 		return ms.ErrorSave
 	}
+
 	ms.Content = append(ms.Content, record)
+
 	return nil
 }
 

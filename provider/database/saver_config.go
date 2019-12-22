@@ -1,14 +1,12 @@
 package database
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
 )
 
 func stringToMode(modestr string) dbSaverMode {
-
 	switch strings.ToLower(modestr) {
 	case "onlyifempty":
 		return onlyIfEmpty
@@ -30,10 +28,12 @@ func stringToMode(modestr string) dbSaverMode {
 //createIdsList store in the instance the list of all values of column described in 'key' configuration entry
 func (saver *DbSaver) createIdsList(log *logrus.Entry) error {
 	log.Debugf("SELECT %s from %s", saver.key, saver.table)
-	rows, err := saver.db.QueryContext(saver.ctx, fmt.Sprintf("SELECT %s from %s", saver.key, saver.table))
+
+	rows, err := saver.db.QueryContext(saver.ctx, "SELECT ? from ?", saver.key, saver.table)
 	if err != nil {
 		return err
 	}
+
 	defer rows.Close()
 
 	for rows.Next() {
@@ -41,7 +41,9 @@ func (saver *DbSaver) createIdsList(log *logrus.Entry) error {
 		if err := rows.Scan(&id); err != nil {
 			return err
 		}
+
 		saver.ids[id] = false
 	}
+
 	return nil
 }

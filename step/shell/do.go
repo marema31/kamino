@@ -37,6 +37,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	if err != nil {
 		logStep.Error("Script output gathering failed")
 		logStep.Error(err)
+
 		return err
 	}
 
@@ -44,6 +45,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	if err != nil {
 		logStep.Error("Script output gathering failed")
 		logStep.Error(err)
+
 		return err
 	}
 
@@ -51,20 +53,26 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	if err != nil {
 		logStep.Error("Script execution failed")
 		logStep.Error(err)
+
 		return err
 	}
 
 	logStep.Debug("Waiting for command to finish...")
 
 	wg.Add(2)
+
 	go func() {
 		defer wg.Done()
-		io.Copy(os.Stdout, stdout)
+		if _, err := io.Copy(os.Stdout, stdout); err != nil {
+			logrus.Error(err)
+		}
 	}()
 
 	go func() {
 		defer wg.Done()
-		io.Copy(os.Stderr, stderr)
+		if _, err := io.Copy(os.Stderr, stderr); err != nil {
+			logrus.Error(err)
+		}
 	}()
 
 	wg.Wait()
@@ -74,6 +82,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 		logStep.Error("Script finished with error")
 		logStep.Error(err)
 	}
+
 	return err
 }
 
@@ -81,5 +90,6 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 func (st *Step) ToSkip(ctx context.Context, log *logrus.Entry) (bool, error) {
 	logStep := log.WithField("name", st.Name).WithField("type", "shell")
 	logStep.Debug("Do we need to skip the step ?")
+
 	return false, nil
 }

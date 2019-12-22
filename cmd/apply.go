@@ -52,5 +52,6 @@ func Apply(cookbook recipe.Cooker, names []string, types []string, args []string
 	if cookbook.Do(common.Ctx, log) {
 		return fmt.Errorf("a step had an error")
 	}
+
 	return nil
 }

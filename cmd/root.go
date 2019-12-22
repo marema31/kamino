@@ -67,36 +67,36 @@ func InitConfig() {
 	Formatter.FullTimestamp = true
 	common.Logger.SetFormatter(Formatter)
 
+	/* TODO: Configuration file ?
+	if cfgFolder != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+	} else {
+		// Find home directory.
+		home, err := homedir.Dir()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		viper.SetDefault("KAMINOPATH", "~/.kaminorc")
+		// Search config in home directory with name ".kaminorc" (without extension).
+		viper.AddConfigPath(home)
+		viper.SetConfigName(".kaminorc")
+	}
+
+	viper.AutomaticEnv() // read in environment variables that match
+
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err == nil {
+		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
+	*/
 	if common.Verbose {
 		common.Logger.SetLevel(logrus.DebugLevel)
 	}
+
 	if common.Quiet {
 		common.Logger.SetLevel(logrus.PanicLevel)
 	}
-
-	/*
-		if cfgFolder != "" {
-			// Use config file from the flag.
-			viper.SetConfigFile(cfgFile)
-		} else {
-			// Find home directory.
-			home, err := homedir.Dir()
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-
-			viper.SetDefault("SAMPATH", "~/.sam")
-			// Search config in home directory with name ".sam" (without extension).
-			viper.AddConfigPath(home)
-			viper.SetConfigName(".sam")
-		}
-
-		viper.AutomaticEnv() // read in environment variables that match
-
-		// If a config file is found, read it in.
-		if err := viper.ReadInConfig(); err == nil {
-			fmt.Println("Using config file:", viper.ConfigFileUsed())
-		}
-	*/
 }

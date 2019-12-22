@@ -30,7 +30,7 @@ func TestPostgresOk(t *testing.T) {
 	}
 
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\$1,\\$2,\\$3 \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -111,7 +111,7 @@ func TestPostgresTransactionOk(t *testing.T) {
 
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
 	dmock.ExpectBegin()
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\$1,\\$2,\\$3 \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -193,7 +193,7 @@ func TestPostgresSchemaOk(t *testing.T) {
 	}
 
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmock.ExpectQuery("SELECT \\* from greatbob.dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("greatbob.dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO greatbob.dtable \\( title,body,id\\) VALUES \\( \\$1,\\$2,\\$3 \\)")
 	dmock.ExpectExec("INSERT INTO greatbob.dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO greatbob.dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))

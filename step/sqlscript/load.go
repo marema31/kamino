@@ -26,10 +26,10 @@ func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) error {
 }
 
 //Load data from step file using its viper representation a return priority and list of steps
-func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, force bool, dryRun bool, limitedTags []string) (priority uint, steps []common.Steper, err error) {
+func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, force bool, dryRun bool, limitedTags []string) (priority uint, steps []common.Steper, err error) { //nolint: funlen
 	steps = make([]common.Steper, 0, 1)
-
 	priority = v.GetUint("priority")
+
 	tags := v.GetStringSlice("tags")
 	if len(tags) == 0 {
 		tags = []string{""}
@@ -40,6 +40,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 	templateFile := v.GetString("template")
 	if templateFile == "" {
 		logStep.Error("No SQL script template filename provided")
+
 		return 0, nil, fmt.Errorf("the step %s must have a SQL script template to render", name)
 	}
 
@@ -51,18 +52,22 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 	if err != nil {
 		logStep.Error("Parsing the SQL script template failed:")
 		logStep.Error(err)
+
 		return 0, nil, fmt.Errorf("error parsing the template file %s of %s step: %v", templateFile, name, err)
 	}
 
 	queryTmpl := v.GetString("query")
 	if queryTmpl == "" {
 		logStep.Error("No SQL query provided")
+
 		return 0, nil, fmt.Errorf("the step %s must have a query to be executed", name)
 	}
+
 	tquery, err := template.New("query").Funcs(sprig.FuncMap()).Parse(queryTmpl)
 	if err != nil {
 		logStep.Error("Parsing the SQL query template failed:")
 		logStep.Error(err)
+
 		return 0, nil, fmt.Errorf("error parsing the query of %s step: %v", name, err)
 	}
 
@@ -72,6 +77,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 	wantTransaction := v.GetBool("transaction")
 
 	engines := v.GetStringSlice("engines")
+
 	e, err := datasource.StringsToEngines(engines)
 	if err != nil {
 		logStep.Error(err)
@@ -90,23 +96,30 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		step.datasource = datasource
 		step.admin = admin
 		step.noDb = noDb
+
 		if datasource.IsTransaction() {
 			step.transaction = wantTransaction
 		}
 
 		tmplValue := datasource.FillTmplValues()
+
 		err = tquery.Execute(renderedQuery, tmplValue)
 		if err != nil {
 			logStep.Error("Rendering the query template failed")
 			logStep.Error(err)
+
 			return 0, nil, err
 		}
+
 		step.query = renderedQuery.String()
+
 		renderedQuery.Reset()
+
 		err = tsqlscript.Execute(renderedSQLScript, tmplValue)
 		if err != nil {
 			logStep.Error("Rendering the sql script template failed")
 			logStep.Error(err)
+
 			return 0, nil, err
 		}
 
@@ -114,16 +127,18 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		if err != nil {
 			return 0, nil, err
 		}
+
 		renderedSQLScript.Reset()
+
 		steps = append(steps, &step)
 	}
+
 	return priority, steps, nil
 }
 
 // Checks the line to see if the line has a statement-ending semicolon
 // or if the line contains a double-dash comment.
 func endsWithSemicolon(line string) bool {
-
 	prev := ""
 	scanner := bufio.NewScanner(strings.NewReader(line))
 	scanner.Split(bufio.ScanWords)
@@ -133,6 +148,7 @@ func endsWithSemicolon(line string) bool {
 		if strings.HasPrefix(word, "--") {
 			break
 		}
+
 		prev = word
 	}
 
@@ -151,13 +167,12 @@ func endsWithSemicolon(line string) bool {
 func splitSQLStatements(log *logrus.Entry, r io.Reader) (stmts []string, err error) {
 	// buffer for the current statement that can be in multiple lines
 	var buf bytes.Buffer
-	scanner := bufio.NewScanner(r)
 
+	scanner := bufio.NewScanner(r)
 	statementEnded := false
 	ignoreSemicolons := false
 
 	for scanner.Scan() {
-
 		line := scanner.Text()
 
 		// handle any goose-specific commands
@@ -174,13 +189,12 @@ func splitSQLStatements(log *logrus.Entry, r io.Reader) (stmts []string, err err
 					statementEnded = false
 				}
 			}
-		} else {
+		} else if _, err := buf.WriteString(line + "\n"); err != nil {
 			// Add the line to the current statement
-			if _, err := buf.WriteString(line + "\n"); err != nil {
-				log.Error("Splitting SQL script failed")
-				log.Error(err)
-				return nil, err
-			}
+			log.Error("Splitting SQL script failed")
+			log.Error(err)
+
+			return nil, err
 		}
 
 		// Wrap up the two supported cases: 1) basic with semicolon; 2) psql statement
@@ -189,6 +203,7 @@ func splitSQLStatements(log *logrus.Entry, r io.Reader) (stmts []string, err err
 		// add the statement to the slice, and empty the buffer
 		if (!ignoreSemicolons && endsWithSemicolon(line)) || statementEnded {
 			statementEnded = false
+
 			stmts = append(stmts, buf.String())
 			buf.Reset()
 		}
@@ -197,6 +212,7 @@ func splitSQLStatements(log *logrus.Entry, r io.Reader) (stmts []string, err err
 	if err := scanner.Err(); err != nil {
 		log.Error("Splitting SQL script failed")
 		log.Error(err)
+
 		return nil, err
 	}
 

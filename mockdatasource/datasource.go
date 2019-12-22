@@ -66,6 +66,7 @@ func (ds *MockDatasource) GetNamedTag(name string) string {
 			return tag[len(name)+1:]
 		}
 	}
+
 	return ""
 }
 
