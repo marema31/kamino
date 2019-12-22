@@ -25,11 +25,14 @@ func (p *MockProvider) NewLoader(ctx context.Context, log *logrus.Entry, ds data
 	if p.ErrorLoader != nil && p.CurrentLoader == p.LoaderToFail {
 		err := p.ErrorLoader
 		p.CurrentLoader++
+
 		return nil, err
 	}
+
 	k := &MockLoader{}
 	p.Loader = k
 	p.CurrentLoader++
+
 	return k, nil
 }
 
@@ -39,8 +42,10 @@ func (p *MockProvider) NewSaver(ctx context.Context, log *logrus.Entry, ds datas
 		p.CurrentSaver++
 		return nil, p.ErrorSaver
 	}
+
 	k := MockSaver{}
 	p.Savers = append(p.Savers, &k)
 	p.CurrentSaver++
+
 	return &k, nil
 }

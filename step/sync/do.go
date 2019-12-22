@@ -16,18 +16,20 @@ func (st *Step) Finish(log *logrus.Entry) {
 	if st.source != nil {
 		st.source.Close(logStep)
 	}
+
 	if st.cacheLoader != nil {
 		st.cacheLoader.Close(logStep)
 	}
+
 	if st.cacheSaver != nil {
 		st.cacheSaver.Close(logStep)
 	}
 
 	for _, d := range st.destinations {
-		d.Close(logStep)
-
+		if err := d.Close(logStep); err != nil {
+			logStep.Error(err)
+		}
 	}
-
 }
 
 //Cancel manage the cancellation of the step
@@ -38,15 +40,21 @@ func (st *Step) Cancel(log *logrus.Entry) {
 	if st.source != nil {
 		st.source.Close(logStep)
 	}
+
 	if st.cacheLoader != nil {
 		st.cacheLoader.Close(logStep)
 	}
-	if st.cacheSaver != nil {
-		st.cacheSaver.Reset(logStep)
-	}
-	for _, d := range st.destinations {
-		d.Reset(logStep)
 
+	if st.cacheSaver != nil {
+		if err := st.cacheSaver.Reset(logStep); err != nil {
+			logStep.Error(err)
+		}
+	}
+
+	for _, d := range st.destinations {
+		if err := d.Reset(logStep); err != nil {
+			logStep.Error(err)
+		}
 	}
 }
 
@@ -57,6 +65,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 
 	if st.cacheCfg.ds != nil {
 		ttlExpired := false
+
 		cacheStat, errFile := st.cacheCfg.ds.Stat()
 		if errFile == nil {
 			ttlExpired = time.Since(cacheStat.ModTime()) > st.cacheTTL
@@ -64,11 +73,14 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 
 		if os.IsNotExist(errFile) || ttlExpired {
 			logStep.Info("Cache file does not exist or too old, recreating it")
+
 			var err error
+
 			st.cacheSaver, err = st.prov.NewSaver(ctx, log, st.cacheCfg.ds, st.cacheCfg.table, "", "")
 			if err != nil {
 				return err
 			}
+
 			err = st.copyData(ctx, logStep)
 			if err == nil {
 				logStep.Info("Synchronization ok, cache file created")
@@ -76,16 +88,24 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 			}
 
 			// Something goes wrong, we will try from the cache even it is expired
-			st.cacheSaver.Reset(logStep) // reset it will only remove the temporary file
-			st.cacheSaver = nil          //Since we closed it, ensure that it will not be closed afterwards
+			err = st.cacheSaver.Reset(logStep) // reset it will only remove the temporary file
+			if err != nil {
+				return err
+			}
+
+			st.cacheSaver = nil //Since we closed it, ensure that it will not be closed afterwards
+
 			logStep.Info("Cache refresh failed")
 		}
+
 		// Generation of cache file failed we will try to use the old one if it exists
 		if _, err := st.cacheCfg.ds.Stat(); os.IsNotExist(err) {
 			logStep.Error("Cache does not exist, and synchronization from source failed")
 			return err
 		}
+
 		logStep.Info("Using cache as source")
+
 		cacheLoader, err := st.prov.NewLoader(ctx, logStep, st.cacheCfg.ds, st.cacheCfg.table, "")
 		if err != nil {
 			logStep.Error("Opening cache file failed .. skipping it")
@@ -94,6 +114,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 			st.cacheLoader = cacheLoader
 		}
 	}
+
 	err := st.copyData(ctx, logStep)
 	if err != nil {
 		logStep.Error("Synchronization failed")
@@ -105,6 +126,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	} else {
 		logStep.Info("Synchronization ok")
 	}
+
 	return nil
 }
 
@@ -112,5 +134,6 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 func (st *Step) ToSkip(ctx context.Context, log *logrus.Entry) (bool, error) {
 	logStep := log.WithField("name", st.Name).WithField("type", "sync")
 	logStep.Debug("Step always executed, the synchronization mode will determine if something will be done")
+
 	return false, nil
 }

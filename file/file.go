@@ -30,40 +30,52 @@ type File struct {
 //OpenReadFile open and return a io.ReadCloser used by datasource, providers and template destination
 func (fi *File) OpenReadFile(log *logrus.Entry) (io.ReadCloser, error) {
 	logFile := log.WithField("file", fi.FilePath)
-	var reader io.ReadCloser
-	var err error
+
+	var (
+		reader io.ReadCloser
+		err    error
+	)
+
 	fi.tmpFilePath = ""
 
 	logFile.Debugf("Opening %s in read mode", fi.FilePath)
-	if fi.FilePath == "-" {
+
+	switch {
+	case fi.FilePath == "-":
 		reader = NewStdinReaderCloser()
-	} else if fi.FilePath != "" {
+	case fi.FilePath != "":
 		if fi.Zip {
 			logFile.Debug("Opening as zip")
+
 			archive, err := zip.OpenReader(fi.FilePath)
 			if err != nil {
 				logFile.Errorf("Opening zip file %s failed", fi.FilePath)
 				logFile.Error(err)
+
 				return nil, err
 			}
+
 			return archive.File[0].Open()
 		}
+
 		reader, err = os.Open(fi.FilePath)
 		if err != nil {
 			logFile.Errorf("Opening file %s failed", fi.FilePath)
 			logFile.Error(err)
+
 			return nil, err
 		}
-	} else if fi.URL != "" {
+	case fi.URL != "":
 		resp, err := http.Get(fi.URL)
 		if err != nil {
 			logFile.Errorf("Opening URL %s failed", fi.URL)
 			logFile.Error(err)
+
 			return nil, err
 		}
 
 		reader = resp.Body
-	} else if fi.Inline != "" {
+	case fi.Inline != "":
 		//string.NewReader returns a io.Reader, ioutil.NopCloser returns a io.ReadCloser with a Close implementation that do nothing
 		reader = ioutil.NopCloser(strings.NewReader(fi.Inline))
 	}
@@ -75,28 +87,32 @@ func (fi *File) OpenReadFile(log *logrus.Entry) (io.ReadCloser, error) {
 
 	if fi.Gzip {
 		logFile.Debug("Opening as gzip")
+
 		reader, err = gzip.NewReader(reader)
 		if err != nil {
 			logFile.Error("Opening gzip file")
 			logFile.Error(err)
+
 			return nil, err
 		}
 	}
 
 	fi.filewriter = false
 	fi.fileHandle = reader
+
 	return reader, nil
 }
 
 //OpenWriteFile open and return a io.WriteCloser corresponding to the datasource to be used by providers
 func (fi *File) OpenWriteFile(log *logrus.Entry) (io.WriteCloser, error) {
 	logFile := log.WithField("file", fi.FilePath)
+
 	var writer io.WriteCloser
 
 	logFile.Debugf("Opening %s in write mode", fi.FilePath)
+
 	if fi.FilePath == "-" {
 		writer = NewStdoutWriterCloser()
-
 	} else {
 		dir, pattern := filepath.Split(fi.FilePath)
 		cache, err := ioutil.TempFile(dir, pattern+".")
@@ -112,11 +128,13 @@ func (fi *File) OpenWriteFile(log *logrus.Entry) (io.WriteCloser, error) {
 
 	if fi.Gzip {
 		logFile.Debug("Opening as gzip")
+
 		writer = gzip.NewWriter(writer)
 	}
 
 	fi.filewriter = true
 	fi.fileHandle = writer
+
 	return writer, nil
 }
 
@@ -129,6 +147,7 @@ func (fi *File) ResetFile(log *logrus.Entry) error {
 		logFile.Debug("Skipping already closed")
 		return nil
 	}
+
 	fi.Close()
 
 	if fi.filewriter && fi.tmpFilePath != "" {
@@ -136,44 +155,54 @@ func (fi *File) ResetFile(log *logrus.Entry) error {
 		if err != nil {
 			logFile.Error("Resetting file failed")
 			logFile.Error(err)
+
 			return err
 		}
 	}
+
 	fi.tmpFilePath = ""
+
 	return nil
 }
 
 //CloseFile close the file and rename the temporary file to real name (if exists)
 func (fi *File) CloseFile(log *logrus.Entry) error {
 	logFile := log.WithField("file", fi.FilePath)
+
 	if fi.fileHandle == nil {
 		logFile.Debug("Skipping already closed")
 		return nil
 	}
+
 	fi.Close()
 
 	if !fi.filewriter || fi.tmpFilePath == "" || fi.FilePath == "-" {
 		logFile.Debugf("Closing %s", fi.FilePath)
 		return nil // For file opened for read or stdin/stdout nothing more to do
 	}
+
 	logFile.Debugf("Closing temporary file %s", fi.tmpFilePath)
 
 	logFile.Debugf("Removing destination file %s", fi.FilePath)
+
 	if _, err := os.Stat(fi.FilePath); !os.IsNotExist(err) {
 		err = os.Remove(fi.FilePath)
 		if err != nil {
 			logFile.Error("Removing file failed")
 			logFile.Error(err)
+
 			return err
 		}
 	}
 
 	if fi.Zip {
 		logFile.Debug("Creating zip archive")
+
 		archivew, err := os.Create(fi.FilePath)
 		if err != nil {
 			logFile.Error("Creating zip file failed")
 			logFile.Error(err)
+
 			return err
 		}
 
@@ -183,14 +212,17 @@ func (fi *File) CloseFile(log *logrus.Entry) error {
 		if err != nil {
 			logFile.Errorf("Opening temporary file %s failed", fi.tmpFilePath)
 			logFile.Error(err)
+
 			return err
 		}
 
 		name := filepath.Base(strings.TrimSuffix(fi.FilePath, "zip"))
+
 		writer, err := archive.Create(name + fi.ZippedExt)
 		if err != nil {
 			logFile.Error("Creating archive entry zip file failed")
 			logFile.Error(err)
+
 			return err
 		}
 
@@ -198,6 +230,7 @@ func (fi *File) CloseFile(log *logrus.Entry) error {
 		if err != nil {
 			logFile.Error("Compression failed")
 			logFile.Error(err)
+
 			return err
 		}
 
@@ -205,6 +238,7 @@ func (fi *File) CloseFile(log *logrus.Entry) error {
 		if err != nil {
 			logFile.Error("Closing zip file failed")
 			logFile.Error(err)
+
 			return err
 		}
 
@@ -212,13 +246,17 @@ func (fi *File) CloseFile(log *logrus.Entry) error {
 	}
 
 	logFile.Debugf("Renaming the temporary file %s to destination file %s", fi.tmpFilePath, fi.FilePath)
+
 	err := os.Rename(fi.tmpFilePath, fi.FilePath)
 	if err != nil {
 		logFile.Errorf("Renaming temporary file %s to destination file %s", fi.tmpFilePath, fi.FilePath)
 		logFile.Error(err)
+
 		return err
 	}
+
 	fi.tmpFilePath = ""
+
 	return nil
 }
 

@@ -22,7 +22,9 @@ func ToSkipDatabase(ctx context.Context, log *logrus.Entry, ds datasource.Dataso
 	if err != nil {
 		log.Error("Query of skip phase failed")
 		log.Error(err)
+
 		return false, err
 	}
+
 	return needskip != 0, nil
 }

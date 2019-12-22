@@ -5,6 +5,7 @@ import "strings"
 // TmplValues structure use for template rendering to avoid exposing the datasource structure to the template
 type TmplValues struct {
 	Name        string
+	Datasource  string
 	Database    string
 	User        string
 	Password    string
@@ -23,6 +24,7 @@ type TmplValues struct {
 func (ds *Datasource) FillTmplValues() TmplValues {
 	var tv TmplValues
 	tv.Name = ds.name
+	tv.Datasource = ds.name
 	tv.Transaction = ds.transaction
 	tv.Database = ds.database
 	tv.User = ds.user
@@ -35,6 +37,7 @@ func (ds *Datasource) FillTmplValues() TmplValues {
 	tv.Engine = EngineToString(ds.engine)
 	tv.FilePath = ds.file.FilePath
 	tv.NamedTags = make(map[string]string)
+
 	for _, tag := range ds.tags {
 		if strings.Contains(tag, ":") {
 			splitted := strings.Split(tag, ":")
@@ -43,5 +46,6 @@ func (ds *Datasource) FillTmplValues() TmplValues {
 			}
 		}
 	}
+
 	return tv
 }

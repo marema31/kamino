@@ -68,7 +68,7 @@ func TestCreateIdsListError(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	dmock.ExpectQuery("SELECT id from dtable").WillReturnError(fmt.Errorf("fake error"))
+	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnError(fmt.Errorf("fake error"))
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
@@ -106,7 +106,7 @@ func TestGetColNamesError(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnError(fmt.Errorf("fake error"))
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnError(fmt.Errorf("fake error"))
 
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
@@ -158,7 +158,7 @@ func TestDestHasMoreColsOk(t *testing.T) {
 	}
 
 	rows = sqlmock.NewRows([]string{"id", "title", "body", "summary"})
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -209,7 +209,7 @@ func TestDestHasLessColsOk(t *testing.T) {
 	}
 
 	rows = sqlmock.NewRows([]string{"id", "title"})
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,id\\) VALUES \\( \\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "2").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -243,7 +243,7 @@ func TestKeyNotExistsDestError(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	dmock.ExpectQuery("SELECT id from dtable").WillReturnError(fmt.Errorf("fake error"))
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnError(fmt.Errorf("fake error"))
 	rows := sqlmock.NewRows([]string{"title", "body"})
 	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
@@ -280,9 +280,9 @@ func TestKeyNotExistsSourceError(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(3).
 		AddRow(2)
-	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -330,7 +330,7 @@ func TestPrepareInsertError(t *testing.T) {
 	}
 
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)").WillReturnError(fmt.Errorf("fake error"))
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 	logger := logrus.New()
@@ -377,9 +377,9 @@ func TestPrepareUpdateError(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(1).
 		AddRow(2)
-	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WillReturnError(fmt.Errorf("fake error"))
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
@@ -427,7 +427,7 @@ func TestBeginTransactionError(t *testing.T) {
 
 	dmock.ExpectBegin().WillReturnError(fmt.Errorf("fake error"))
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectCommit()
@@ -480,7 +480,7 @@ func TestEndTransactionError(t *testing.T) {
 
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
 	dmock.ExpectBegin()
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -533,7 +533,7 @@ func TestRollbackTransactionError(t *testing.T) {
 
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
 	dmock.ExpectBegin()
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -593,7 +593,7 @@ func TestTruncateError(t *testing.T) {
 	}
 
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	//	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WillReturnError(fmt.Errorf("fake error"))
 	dmock.ExpectQuery("TRUNCATE TABLE dtable").WillReturnError(fmt.Errorf("fake error"))
@@ -640,7 +640,7 @@ func TestColsListError(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnError(fmt.Errorf("fake error"))
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnError(fmt.Errorf("fake error"))
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
 	_, err = database.NewSaver(context.Background(), log, &dest, "dtable", "id", "insert")
@@ -673,9 +673,9 @@ func TestInsertError(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(1).
 		AddRow(2)
-	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnError(fmt.Errorf("fake error"))
@@ -724,9 +724,9 @@ func TestDeleteError(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(1).
 		AddRow(2)
-	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmock.ExpectQuery("SELECT \\* from dtable LIMIT 1").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?")
 	dmock.ExpectExec("UPDATE dtable SET title=\\?,body=\\? WHERE id = \\?").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))

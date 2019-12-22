@@ -10,7 +10,7 @@ import (
 type Datasources struct {
 	//Dictionnary of datasource indexed by name
 	datasources map[string]*Datasource
-	// Datasource tag dictionnary for lookup
+	// Datasource tag dictionary for lookup
 	tagToDatasource map[string][]string
 	// Timeout of each database ping try
 	conTimeout time.Duration
@@ -25,6 +25,7 @@ func New(connectionTimeout time.Duration, connectionRetry int) *Datasources {
 	dss.tagToDatasource = make(map[string][]string)
 	dss.conTimeout = connectionTimeout
 	dss.conRetry = connectionRetry
+
 	return &dss
 }
 
@@ -40,15 +41,17 @@ func (dss *Datasources) CloseAll(log *logrus.Entry) {
 	for _, ds := range dss.datasources {
 		log.Debugf("Closing %s", ds.name)
 		ds.file.Close()
+
 		if ds.db != nil {
 			ds.db.Close()
 		}
+
 		if ds.dbAdmin != nil {
 			ds.dbAdmin.Close()
 		}
+
 		if ds.dbNoDb != nil {
 			ds.dbNoDb.Close()
 		}
-
 	}
 }

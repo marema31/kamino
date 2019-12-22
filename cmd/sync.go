@@ -56,5 +56,6 @@ func Sync(cookbook recipe.Cooker, names []string, args []string) error {
 	if cookbook.Do(common.Ctx, log) {
 		return fmt.Errorf("a step had an error")
 	}
+
 	return nil
 }

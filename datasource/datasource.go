@@ -90,19 +90,23 @@ func StringToType(dsType string) (Type, error) {
 	case "file", "files":
 		return File, nil
 	}
+
 	return File, fmt.Errorf("does not how to manage %s datasource type", dsType)
 }
 
 //StringsToTypes convert string slice to an slice of corresponding Type typed values
 func StringsToTypes(dsTypes []string) ([]Type, error) {
 	typeSlice := make([]Type, 0)
+
 	for _, dsType := range dsTypes {
 		t, err := StringToType(dsType)
 		if err != nil {
 			return nil, err
 		}
+
 		typeSlice = append(typeSlice, t)
 	}
+
 	return typeSlice, nil
 }
 
@@ -120,19 +124,23 @@ func StringToEngine(engine string) (Engine, error) {
 	case "csv":
 		return CSV, nil
 	}
+
 	return CSV, fmt.Errorf("does not how to manage %s datasource engine", engine)
 }
 
 //StringsToEngines convert string slice to an slice of corresponding Engine typed values
 func StringsToEngines(engines []string) ([]Engine, error) {
 	engineSlice := make([]Engine, 0)
+
 	for _, engine := range engines {
 		e, err := StringToEngine(engine)
 		if err != nil {
 			return nil, err
 		}
+
 		engineSlice = append(engineSlice, e)
 	}
+
 	return engineSlice, nil
 }
 
@@ -150,6 +158,7 @@ func EngineToString(engine Engine) string {
 	case CSV:
 		return "csv"
 	}
+
 	return "Unknown" // We will never arrive here
 }
 
@@ -161,6 +170,7 @@ func TypeToString(dsType Type) string {
 	case File:
 		return "file"
 	}
+
 	return "Unknown" // We will never arrive here
 }
 
@@ -186,6 +196,7 @@ func (ds *Datasource) GetNamedTag(name string) string {
 			return tag[len(name)+1:]
 		}
 	}
+
 	return ""
 }
 

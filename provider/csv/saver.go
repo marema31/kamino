@@ -23,12 +23,15 @@ type KaminoCsvSaver struct {
 //NewSaver open the encoding process on provider file and return a Saver compatible object
 func NewSaver(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer) (*KaminoCsvSaver, error) {
 	logFile := log.WithField("datasource", ds.GetName())
+
 	file, err := ds.OpenWriteFile(logFile)
 	if err != nil {
 		return nil, err
 	}
+
 	writer := csv.NewWriter(file)
 	tv := ds.FillTmplValues()
+
 	return &KaminoCsvSaver{file: file, ds: ds, name: tv.FilePath, writer: *writer, colNames: nil}, nil
 }
 
@@ -44,12 +47,15 @@ func (cs *KaminoCsvSaver) Save(log *logrus.Entry, record types.Record) error {
 		for col := range record {
 			keys = append(keys, col)
 		}
+
 		sort.Strings(keys)
 		cs.colNames = keys
+
 		err := cs.writer.Write(cs.colNames)
 		if err != nil {
 			logFile.Error("Writing file failed")
 			logFile.Error(err)
+
 			return nil
 		}
 	}
@@ -67,6 +73,7 @@ func (cs *KaminoCsvSaver) Save(log *logrus.Entry, record types.Record) error {
 func (cs *KaminoCsvSaver) Close(log *logrus.Entry) error {
 	logFile := log.WithField("datasource", cs.ds.GetName())
 	cs.writer.Flush()
+
 	return cs.ds.CloseFile(logFile)
 }
 

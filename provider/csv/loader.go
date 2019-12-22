@@ -30,14 +30,19 @@ func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer
 	if err != nil {
 		return nil, err
 	}
+
 	reader := csv.NewReader(file)
+
 	logFile.Debug("Reading the header to determine the column order")
+
 	row, err := reader.Read()
 	if err != nil {
 		logFile.Error("Reading CSV header failed")
 		logFile.Error(err)
+
 		return nil, err
 	}
+
 	tv := ds.FillTmplValues()
 
 	return &KaminoCsvLoader{ds: ds, file: file, name: tv.FilePath, reader: *reader, colNames: row, currentRow: nil, currentError: nil}, nil
@@ -53,19 +58,23 @@ func (cl *KaminoCsvLoader) Next() bool {
 		// To conserve the interface, we can not return the error here but in Load call
 		cl.currentRow = nil
 		cl.currentError = err
+
 		return true
 	}
 
 	cl.currentRow = row
+
 	return true
 }
 
 //Load reads the next record and return it
 func (cl *KaminoCsvLoader) Load(log *logrus.Entry) (types.Record, error) {
 	logFile := log.WithField("datasource", cl.ds.GetName())
+
 	if cl.currentError != nil {
 		logFile.Error("Reading CSV next line failed")
 		logFile.Error(cl.currentError)
+
 		return nil, cl.currentError
 	}
 
@@ -73,13 +82,14 @@ func (cl *KaminoCsvLoader) Load(log *logrus.Entry) (types.Record, error) {
 		logFile.Error("EOF reached")
 		return nil, fmt.Errorf("EOF reached")
 	}
+
 	record := make(types.Record, len(cl.colNames))
+
 	for i, col := range cl.colNames {
-		record[col] = string(cl.currentRow[i])
+		record[col] = cl.currentRow[i]
 	}
 
 	return record, nil
-
 }
 
 //Close closes the datasource

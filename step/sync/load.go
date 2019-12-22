@@ -41,7 +41,7 @@ type FilterConfig struct {
 	Type        string
 }
 
-func getDatasources(log *logrus.Entry, dss datasource.Datasourcers, tags []string, engines []string, dsTypes []string, objectType string, unique bool, dryRun bool, limitedTags []string) ([]datasource.Datasourcer, error) {
+func getDatasources(log *logrus.Entry, dss datasource.Datasourcers, tags []string, engines []string, dsTypes []string, objectType string, unique bool, limitedTags []string) ([]datasource.Datasourcer, error) {
 	if len(tags) == 0 {
 		tags = []string{""}
 	}
@@ -57,12 +57,16 @@ func getDatasources(log *logrus.Entry, dss datasource.Datasourcers, tags []strin
 		log.Error(err)
 		return nil, err
 	}
+
 	datasources := dss.Lookup(log, tags, limitedTags, t, e)
+
 	log.Debugf("Found %d %s", len(datasources), objectType)
+
 	if len(datasources) == 0 {
 		log.Errorf("no %s found", objectType)
 		return nil, fmt.Errorf("no %s found", objectType)
 	}
+
 	if unique && len(datasources) != 1 {
 		log.Errorf("too many %ss found", objectType)
 		return nil, fmt.Errorf("too many %ss found", objectType)
@@ -71,27 +75,33 @@ func getDatasources(log *logrus.Entry, dss datasource.Datasourcers, tags []strin
 	return datasources, nil
 }
 
-func parseSourceConfig(ctx context.Context, log *logrus.Entry, objectType string, v *viper.Viper, dss datasource.Datasourcers, dryRun bool) (parsedSourceConfig, error) {
-	var parsedSource parsedSourceConfig
-	var source SourceConfig
+func parseSourceConfig(log *logrus.Entry, objectType string, v *viper.Viper, dss datasource.Datasourcers) (parsedSourceConfig, error) {
+	var (
+		parsedSource parsedSourceConfig
+		source       SourceConfig
+	)
+
 	err := v.Unmarshal(&source)
 	if err != nil {
 		log.Error(err)
 		return parsedSource, err
 	}
 
-	datasources, err := getDatasources(log, dss, source.Tags, source.Engines, source.Types, objectType, true, dryRun, nil)
+	datasources, err := getDatasources(log, dss, source.Tags, source.Engines, source.Types, objectType, true, nil)
 	if err != nil {
 		return parsedSource, err
 	}
+
 	parsedSource.ds = datasources[0]
 	parsedSource.table = source.Table
 	parsedSource.where = source.Where
+
 	return parsedSource, nil
 }
 
-func parseDestConfig(ctx context.Context, log *logrus.Entry, v *viper.Viper, dss datasource.Datasourcers, force bool, dryRun bool, limitedTags []string) ([]parsedDestConfig, error) {
+func parseDestConfig(log *logrus.Entry, v *viper.Viper, dss datasource.Datasourcers, force bool, limitedTags []string) ([]parsedDestConfig, error) {
 	var dests []DestinationConfig
+
 	parsedDests := make([]parsedDestConfig, 0)
 
 	err := v.UnmarshalKey("destinations", &dests)
@@ -101,7 +111,7 @@ func parseDestConfig(ctx context.Context, log *logrus.Entry, v *viper.Viper, dss
 	}
 
 	for _, dest := range dests {
-		datasources, err := getDatasources(log, dss, dest.Tags, dest.Engines, dest.Types, "destination", false, dryRun, limitedTags)
+		datasources, err := getDatasources(log, dss, dest.Tags, dest.Engines, dest.Types, "destination", false, limitedTags)
 		if err != nil {
 			return nil, err
 		}
@@ -111,19 +121,23 @@ func parseDestConfig(ctx context.Context, log *logrus.Entry, v *viper.Viper, dss
 			p.ds = datasource
 			p.table = dest.Table
 			p.key = dest.Key
+
 			p.mode = strings.ToLower(dest.Mode)
 			if p.mode == "onlyifempty" && force {
 				p.mode = "truncate"
 			}
+
 			parsedDests = append(parsedDests, p)
 		}
 	}
+
 	return parsedDests, nil
 }
 
-func getFilters(ctx context.Context, log *logrus.Entry, v *viper.Viper) ([]filter.Filter, error) {
+func getFilters(log *logrus.Entry, v *viper.Viper) ([]filter.Filter, error) {
 	fcs := make([]FilterConfig, 0)
 	filters := make([]filter.Filter, 0)
+
 	err := v.UnmarshalKey("filters", &fcs)
 	if err != nil {
 		log.Error(err)
@@ -131,14 +145,16 @@ func getFilters(ctx context.Context, log *logrus.Entry, v *viper.Viper) ([]filte
 	}
 
 	for _, fc := range fcs {
-		f, err := filter.NewFilter(ctx, log, fc.Type, fc.Aparameters, fc.Mparameters)
+		f, err := filter.NewFilter(log, fc.Type, fc.Aparameters, fc.Mparameters)
 		if err != nil {
 			return nil, err
 		}
-		filters = append(filters, f)
 
+		filters = append(filters, f)
 	}
+
 	log.Debugf("Found %d filters", len(filters))
+
 	return filters, nil
 }
 
@@ -147,6 +163,7 @@ func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) (err er
 	if value, ok := superseed["sync.forceCacheOnly"]; ok {
 		st.forceCacheOnly, err = strconv.ParseBool(value)
 	}
+
 	return err
 }
 
@@ -166,46 +183,52 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		logStep.Error("No source provided")
 		return 0, nil, fmt.Errorf("no source definition")
 	}
+
 	if !v.IsSet("destinations") {
 		logStep.Error("No destinations provided")
 		return 0, nil, fmt.Errorf("no destinations definition")
 	}
 
 	logStep.Debug("Lookup source")
+
 	sub := v.Sub("source")
 
-	step.sourceCfg, err = parseSourceConfig(ctx, logStep, "source", sub, dss, dryRun)
+	step.sourceCfg, err = parseSourceConfig(logStep, "source", sub, dss)
 	if err != nil {
 		return 0, nil, err
 	}
 
 	logStep.Debug("Lookup cache")
+
 	if v.IsSet("cache") {
 		step.cacheTTL = v.GetDuration("cache.ttl")
 		step.allowCacheOnly = v.GetBool("cache.allowonly")
 		sub = v.Sub("cache")
-		step.cacheCfg, err = parseSourceConfig(ctx, logStep, "cache", sub, dss, dryRun)
+
+		step.cacheCfg, err = parseSourceConfig(logStep, "cache", sub, dss)
 		if err != nil {
 			return 0, nil, err
 		}
-
 	}
 
 	log.Debug("Lookup filters")
+
 	if v.IsSet("filters") {
-		step.filters, err = getFilters(ctx, logStep, v)
+		step.filters, err = getFilters(logStep, v)
 		if err != nil {
 			return 0, nil, err
 		}
 	}
 
 	log.Debug("Lookup destinations")
-	step.destsCfg, err = parseDestConfig(ctx, logStep, v, dss, force, dryRun, limitedTags)
+
+	step.destsCfg, err = parseDestConfig(logStep, v, dss, force, limitedTags)
 	if err != nil {
 		return 0, nil, err
 	}
 
 	steps = make([]common.Steper, 0, 1)
 	steps = append(steps, &step)
+
 	return priority, steps, nil
 }

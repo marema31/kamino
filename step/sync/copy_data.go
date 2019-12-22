@@ -8,10 +8,10 @@ import (
 )
 
 func (st *Step) copyData(ctx context.Context, log *logrus.Entry) error {
-
+	source := st.source
 	destinations := make([]provider.Saver, len(st.destinations))
 	copy(destinations, st.destinations)
-	source := st.source
+
 	if st.cacheSaver != nil {
 		destinations = append(destinations, st.cacheSaver)
 	} else if st.cacheLoader != nil {
@@ -19,6 +19,7 @@ func (st *Step) copyData(ctx context.Context, log *logrus.Entry) error {
 	}
 
 	log.Infof("Will synchronize %s to", source.Name())
+
 	for _, d := range destinations {
 		log.Infof("   - %s", d.Name())
 	}
@@ -32,6 +33,7 @@ func (st *Step) copyData(ctx context.Context, log *logrus.Entry) error {
 		if err != nil {
 			log.Error("Source reading failed:")
 			log.Error(err)
+
 			return err
 		}
 
@@ -39,13 +41,16 @@ func (st *Step) copyData(ctx context.Context, log *logrus.Entry) error {
 			if record, err = f.Filter(record); err != nil {
 				log.Error("Filtering failed:")
 				log.Error(err)
+
 				return err
 			}
 		}
+
 		for _, d := range destinations {
 			if err = d.Save(log, record); err != nil {
 				log.Error("Destination writing failed:")
 				log.Error(err)
+
 				return err
 			}
 		}
@@ -56,9 +61,9 @@ func (st *Step) copyData(ctx context.Context, log *logrus.Entry) error {
 			log.Debug("Synchronization cancelled")
 			return nil
 
-		default: // Make the poll to ctx.Done() non blocking
-			// Do nothing
+		default: // Make the poll to ctx.Done() non blocking. Do nothing
 		}
 	}
+
 	return nil
 }

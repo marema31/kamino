@@ -23,6 +23,7 @@ func (ck *Cookbook) PostLoad(log *logrus.Entry, superseed map[string]string) err
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -30,42 +31,53 @@ func (ck *Cookbook) PostLoad(log *logrus.Entry, superseed map[string]string) err
 // For each recipe, it will load all datasources and the selected steps
 func (ck *Cookbook) Load(ctx context.Context, log *logrus.Entry, configPath string, recipes []string, limitedTags []string, stepNames []string, stepTypes []string) error {
 	var firstError error
+
 	for _, rname := range recipes {
 		logRecipe := log.WithField("recipe", rname)
+
 		err := ck.loadOneRecipe(ctx, logRecipe, configPath, rname, limitedTags, stepNames, stepTypes)
 		if err != nil {
 			if !ck.validate {
 				return err
 			}
+
 			if firstError == nil {
 				firstError = err
 			}
 		}
 	}
+
 	return firstError
 }
 
 func (ck *Cookbook) loadOneRecipe(ctx context.Context, log *logrus.Entry, configPath string, rname string, limitedTags []string, stepNames []string, stepTypes []string) error {
 	var firstError error
-	prov := &provider.KaminoProvider{}
+
 	log.Info("Reading datasources")
+
+	prov := &provider.KaminoProvider{}
 	dss := datasource.New(ck.conTimeout, ck.conRetry)
 	recipePath := filepath.Join(configPath, rname)
+
 	if err := dss.LoadAll(recipePath, log); err != nil {
 		if !ck.validate {
 			return err
 		}
+
 		if firstError == nil {
 			firstError = err
 		}
 	}
 
 	log.Info("Reading steps")
+
 	stepsFolder := filepath.Join(recipePath, "steps")
+
 	files, err := ioutil.ReadDir(stepsFolder)
 	if err != nil {
 		return err
 	}
+
 	for _, file := range files {
 		if file.Mode().IsRegular() {
 			ext := filepath.Ext(file.Name())
@@ -73,23 +85,28 @@ func (ck *Cookbook) loadOneRecipe(ctx context.Context, log *logrus.Entry, config
 				name := strings.TrimSuffix(file.Name(), ext)
 				logRecipe := log.WithField("step", name)
 				logRecipe.Debug("Parsing step configuration")
+
 				priority, steps, err := ck.stepFactory.Load(ctx, logRecipe, recipePath, name, dss, prov, limitedTags, stepNames, stepTypes, ck.force, ck.dryRun)
 				if err != nil {
 					if !ck.validate {
 						return err
 					}
+
 					if firstError == nil {
 						firstError = err
 					}
 				}
+
 				if _, ok := ck.Recipes[rname]; !ok {
 					s := make(map[uint][]common.Steper)
 					s[priority] = make([]common.Steper, 0)
 					ck.Recipes[rname] = recipe{name: rname, steps: s, currentPriority: 0, dss: dss}
 				}
+
 				ck.Recipes[rname].steps[priority] = append(ck.Recipes[rname].steps[priority], steps...)
 			}
 		}
 	}
+
 	return firstError
 }

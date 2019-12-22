@@ -35,11 +35,14 @@ var (
 // CreateSuperseed creates the postload configuration map
 func CreateSuperseed() map[string]string {
 	superseed := make(map[string]string)
+
 	if Force {
 		superseed["kamino.force"] = "true"
 	}
+
 	if DryRun {
 		superseed["kamino.dryrun"] = "true"
 	}
+
 	return superseed
 }

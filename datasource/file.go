@@ -18,6 +18,7 @@ func loadFileDatasource(recipePath string, filename string, v *viper.Viper, engi
 	ds.name = filename
 	ds.file.Inline = v.GetString("inline")
 	ds.file.FilePath = v.GetString("file")
+
 	if ds.file.FilePath != "" && ds.file.FilePath != "-" && ds.file.FilePath[0] != '/' {
 		ds.file.FilePath = filepath.Join(recipePath, ds.file.FilePath)
 	}
@@ -35,6 +36,7 @@ func loadFileDatasource(recipePath string, filename string, v *viper.Viper, engi
 	ds.file.Zip = v.GetBool("zip")
 	ds.file.Gzip = v.GetBool("gzip")
 	ds.file.ZippedExt = EngineToString(engine)
+
 	return ds, nil
 }
 

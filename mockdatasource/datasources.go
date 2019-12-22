@@ -10,7 +10,7 @@ import (
 
 // MockDatasources is fake datasources object for test purpose
 type MockDatasources struct {
-	// Datasource tag dictionnary for lookup
+	// Datasource tag dictionary for lookup
 	precordedAnswers map[string][]*MockDatasource
 }
 
@@ -19,6 +19,7 @@ func New() *MockDatasources {
 	var dss MockDatasources
 
 	dss.precordedAnswers = make(map[string][]*MockDatasource)
+
 	return &dss
 }
 
@@ -27,6 +28,7 @@ func (dss *MockDatasources) LoadAll(path string, log *logrus.Entry) error {
 	if path == "" {
 		return fmt.Errorf("empty path")
 	}
+
 	return nil
 }
 
@@ -36,14 +38,18 @@ func (dss *MockDatasources) CloseAll(log *logrus.Entry) {
 
 func getIndex(tags []string, dsTypes []datasource.Type, engines []datasource.Engine) string {
 	index := strings.Join(tags, "@")
-	index = index + "&"
+	index += "&"
+
 	for _, t := range dsTypes {
 		index = index + "@" + datasource.TypeToString(t)
 	}
-	index = index + "&"
+
+	index += "&"
+
 	for _, t := range engines {
 		index = index + "@" + datasource.EngineToString(t)
 	}
+
 	return index
 }
 
@@ -52,9 +58,11 @@ func getIndex(tags []string, dsTypes []datasource.Type, engines []datasource.Eng
 func (dss *MockDatasources) Lookup(log *logrus.Entry, tags []string, limitedTags []string, dsTypes []datasource.Type, engines []datasource.Engine) []datasource.Datasourcer {
 	index := getIndex(tags, dsTypes, engines)
 	dsr := make([]datasource.Datasourcer, 0, len(dss.precordedAnswers[index]))
+
 	for _, ds := range dss.precordedAnswers[index] {
 		dsr = append(dsr, ds)
 	}
+
 	return dsr
 }
 

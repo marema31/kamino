@@ -18,15 +18,14 @@ import (
 
 //PostLoad modify the loaded step values with the values provided in the map in argument
 func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) error {
-
 	return nil
 }
 
 //Load data from step file using its viper representation a return priority and list of steps
-func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, force bool, dryRun bool, limitedTags []string) (priority uint, steps []common.Steper, err error) {
+func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, force bool, dryRun bool, limitedTags []string) (priority uint, steps []common.Steper, err error) { //nolint: funlen
 	steps = make([]common.Steper, 0, 1)
-
 	priority = v.GetUint("priority")
+
 	tags := v.GetStringSlice("tags")
 	if len(tags) == 0 {
 		tags = []string{""}
@@ -48,9 +47,11 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		if err != nil {
 			logStep.Errorf("Parsing the %dth environment failed:", i)
 			logStep.Error(err)
+
 			return 0, nil, fmt.Errorf("error parsing the environment of %s step: %v", name, err)
 		}
 	}
+
 	rendered := bytes.NewBuffer(make([]byte, 0, 1024))
 
 	path := v.GetString("path")
@@ -64,21 +65,25 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 	if err != nil {
 		logStep.Error("Parsing the path failed:")
 		logStep.Error(err)
+
 		return 0, nil, fmt.Errorf("error parsing the path of %s step: %v", name, err)
 	}
 
 	envs := v.GetStringSlice("environment")
 	tenvs := make([]*template.Template, len(envs))
+
 	for i, env := range envs {
 		tenvs[i], err = template.New(fmt.Sprintf("env%d", i)).Parse(env)
 		if err != nil {
 			logStep.Errorf("Parsing the %dth environment failed:", i)
 			logStep.Error(err)
+
 			return 0, nil, fmt.Errorf("error parsing the environment of %s step: %v", name, err)
 		}
 	}
 
 	engines := v.GetStringSlice("engines")
+
 	e, err := datasource.StringsToEngines(engines)
 	if err != nil {
 		logStep.Error(err)
@@ -93,25 +98,39 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		cmdPath := script
 
 		tmplValues := datasource.FillTmplValues()
-		tpath.Execute(rendered, tmplValues)
+
+		if err := tpath.Execute(rendered, tmplValues); err != nil {
+			return 0, nil, err
+		}
+
 		cmdDir := rendered.String()
 		rendered.Reset()
 
 		args = make([]string, 1)
 		args[0] = cmdPath
+
 		for _, targ := range targs {
-			targ.Execute(rendered, tmplValues)
+			if err := targ.Execute(rendered, tmplValues); err != nil {
+				return 0, nil, err
+			}
+
 			args = append(args, rendered.String())
 			rendered.Reset()
 		}
+
 		cmdArgs := args
 
 		envs = make([]string, 0)
+
 		for _, tenv := range tenvs {
-			tenv.Execute(rendered, tmplValues)
+			if err := tenv.Execute(rendered, tmplValues); err != nil {
+				return 0, nil, err
+			}
+
 			envs = append(envs, rendered.String())
 			rendered.Reset()
 		}
+
 		cmdEnv := envs
 
 		step.cmd = &exec.Cmd{
@@ -131,7 +150,6 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		step.datasource = datasource
 
 		steps = append(steps, &step)
-
 	}
 
 	return priority, steps, nil

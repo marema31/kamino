@@ -11,8 +11,11 @@ import (
 func (st *Step) Finish(log *logrus.Entry) {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
 	logStep.Info("Finishing step")
+
 	if st.tx != nil {
-		st.tx.Commit()
+		if err := st.tx.Commit(); err != nil {
+			logStep.Error(err)
+		}
 	}
 }
 
@@ -20,8 +23,11 @@ func (st *Step) Finish(log *logrus.Entry) {
 func (st *Step) Cancel(log *logrus.Entry) {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
 	logStep.Info("Cancelling step")
+
 	if st.tx != nil {
-		st.tx.Rollback()
+		if err := st.tx.Rollback(); err != nil {
+			logStep.Error(err)
+		}
 	}
 }
 
@@ -34,6 +40,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 		for _, stmt := range st.sqlCmds {
 			log.Infof("Will run %s", stmt)
 		}
+
 		return nil
 	}
 
@@ -45,19 +52,24 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	for _, stmt := range st.sqlCmds {
 		logStep.Debug("Executing: ")
 		logStep.Debug(stmt)
+
 		if st.tx != nil {
 			_, err = st.tx.ExecContext(ctx, stmt)
 		} else {
 			_, err = db.ExecContext(ctx, stmt)
 		}
+
 		if err != nil {
 			logStep.Error("Execution of one statement failed:")
 			logStep.Error(stmt)
 			logStep.Error(err)
+
 			return err
 		}
 	}
+
 	logStep.Info("Ending step")
+
 	return nil
 }
 

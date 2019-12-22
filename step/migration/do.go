@@ -29,14 +29,17 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	logStep.Debug("Beginning step")
 
 	limit := st.limit
+
 	if !st.noAdmin && (st.dir == migrate.Up || st.printOnly) {
 		logStep.Debug("Applying admin migration")
+
 		applied, err := st.applyOrPrint(logStep.WithField("kind", "admin"), true, limit)
 		if err != nil {
 			return err
 		}
+
 		if limit > 0 {
-			limit = limit - applied
+			limit -= applied
 			if 0 >= limit && !st.printOnly {
 				//Everything was applied
 				return nil
@@ -46,12 +49,14 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 
 	if !st.noUser {
 		logStep.Debug("Applying user migration")
+
 		applied, err := st.applyOrPrint(logStep.WithField("kind", "user"), false, limit)
 		if err != nil {
 			return err
 		}
+
 		if limit > 0 {
-			limit = limit - applied
+			limit -= applied
 			if 0 >= limit {
 				//Everything was applied
 				return nil
@@ -66,18 +71,21 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 
 	if !st.noAdmin && st.dir == migrate.Down {
 		logStep.Debug("Applying admin migration")
+
 		_, err := st.apply(logStep.WithField("kind", "admin"), true, limit)
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
 func (st *Step) applyOrPrint(log *logrus.Entry, admin bool, limit int) (int, error) {
 	if st.printOnly {
-		return st.print(log, admin, limit)
+		return st.print(log, admin)
 	}
+
 	return st.apply(log, admin, limit)
 }
 

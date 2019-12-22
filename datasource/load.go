@@ -13,6 +13,7 @@ import (
 //LoadAll Lookup the provided folder for datasource configuration files
 func (dss *Datasources) LoadAll(recipePath string, log *logrus.Entry) error {
 	var firstError error
+
 	dsfolder := filepath.Join(recipePath, "datasources")
 
 	files, err := ioutil.ReadDir(dsfolder)
@@ -28,15 +29,17 @@ func (dss *Datasources) LoadAll(recipePath string, log *logrus.Entry) error {
 				name := strings.TrimSuffix(file.Name(), ext)
 				logDatasource := log.WithField("datasource", name)
 				logDatasource.Debug("Parsing datasource configuration")
+
 				ds, err := dss.load(recipePath, name)
 				if err != nil {
 					logDatasource.Errorf("Unable to parse configuration: %v", err)
+
 					if firstError == nil {
 						firstError = err
 					}
 				}
-				dss.datasources[name] = &ds
 
+				dss.datasources[name] = &ds
 			}
 		}
 	}
@@ -45,7 +48,7 @@ func (dss *Datasources) LoadAll(recipePath string, log *logrus.Entry) error {
 		log.Errorf("no datasources configuration files found in %s", dsfolder)
 		return fmt.Errorf("no datasources configuration files found in %s", dsfolder)
 	}
-	// Insert the datasource name in all entry of the dictionnary
+	// Insert the datasource name in all entry of the dictionary
 	// that correspond to one tag of the tag list
 	for _, ds := range dss.datasources {
 		for _, tag := range ds.tags {
@@ -58,15 +61,17 @@ func (dss *Datasources) LoadAll(recipePath string, log *logrus.Entry) error {
 			}
 		}
 	}
+
 	return firstError
 }
 
 func (dss *Datasources) load(recipePath string, filename string) (Datasource, error) {
 	v := viper.New()
+	dsfolder := filepath.Join(recipePath, "datasources")
 
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
-	dsfolder := filepath.Join(recipePath, "datasources")
 	v.AddConfigPath(dsfolder)
+
 	err := v.ReadInConfig()
 	if err != nil {
 		return Datasource{}, err

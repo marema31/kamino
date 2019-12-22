@@ -10,6 +10,7 @@ import (
 func (st *Step) Init(ctx context.Context, log *logrus.Entry) error {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
 	logStep.Debug("Initializing step")
+
 	db, err := st.datasource.OpenDatabase(logStep, st.admin, st.noDb)
 	if err != nil {
 		return err
@@ -20,7 +21,9 @@ func (st *Step) Init(ctx context.Context, log *logrus.Entry) error {
 		if err != nil {
 			return err
 		}
+
 		st.tx = tx
 	}
+
 	return nil
 }

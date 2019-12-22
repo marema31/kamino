@@ -11,5 +11,6 @@ func (ds *MockDatasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool)
 	if ds.ErrorOpenDb != nil {
 		return nil, ds.ErrorOpenDb
 	}
+
 	return ds.MockedDb, nil
 }

@@ -1,7 +1,6 @@
 package filter_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/Sirupsen/logrus"
@@ -16,7 +15,7 @@ func TestFilterUnknown(t *testing.T) {
 	log := logger.WithField("appname", "kamino")
 	logger.SetLevel(logrus.PanicLevel)
 
-	_, err := filter.NewFilter(context.Background(), log, "unknown", aParams, mParams)
+	_, err := filter.NewFilter(log, "unknown", aParams, mParams)
 	if err == nil {
 		t.Errorf("NewFilter should returns an error")
 	}
@@ -28,7 +27,7 @@ func TestFilterOnlyOk(t *testing.T) {
 	logger.SetLevel(logrus.PanicLevel)
 	aParams := []string{"id", "name", "sex"}
 	mParams := make(map[string]string)
-	f, err := filter.NewFilter(context.Background(), log, "only", aParams, mParams)
+	f, err := filter.NewFilter(log, "only", aParams, mParams)
 	if err != nil {
 		t.Errorf("NewFilter should not returns an error, returned: %v", err)
 	}
@@ -73,11 +72,11 @@ func TestFilterOnlyFail(t *testing.T) {
 	logger.SetLevel(logrus.PanicLevel)
 	aParams := []string{}
 	mParams := make(map[string]string)
-	_, err := filter.NewFilter(context.Background(), log, "only", nil, mParams)
+	_, err := filter.NewFilter(log, "only", nil, mParams)
 	if err == nil {
 		t.Errorf("NewFilter only without parameters should returns an error")
 	}
-	_, err = filter.NewFilter(context.Background(), log, "only", aParams, mParams)
+	_, err = filter.NewFilter(log, "only", aParams, mParams)
 	if err == nil {
 		t.Errorf("NewFilter only without parameters should returns an error")
 	}
@@ -93,7 +92,7 @@ func TestFilterReplaceOk(t *testing.T) {
 	mParams["firstname"] = "Jane"
 	mParams["sex"] = "female"
 
-	f, err := filter.NewFilter(context.Background(), log, "replace", aParams, mParams)
+	f, err := filter.NewFilter(log, "replace", aParams, mParams)
 	if err != nil {
 		t.Errorf("NewFilter should not returns an error, returned: %v", err)
 	}
@@ -146,11 +145,11 @@ func TestFilterReplaceFail(t *testing.T) {
 	logger.SetLevel(logrus.PanicLevel)
 	aParams := []string{}
 	mParams := make(map[string]string)
-	_, err := filter.NewFilter(context.Background(), log, "replace", aParams, nil)
+	_, err := filter.NewFilter(log, "replace", aParams, nil)
 	if err == nil {
 		t.Errorf("NewFilter replace without parameters should returns an error")
 	}
-	_, err = filter.NewFilter(context.Background(), log, "replace", aParams, mParams)
+	_, err = filter.NewFilter(log, "replace", aParams, mParams)
 	if err == nil {
 		t.Errorf("NewFilter replace without parameters should returns an error")
 	}

@@ -2,5 +2,31 @@ run:
   skip-dirs:
     - doc
     - testdata
-  skip-files:
-    - ".*_test.go$"
+  tests: false
+
+linters:
+  disable:
+    - lll
+    - maligned
+    - gochecknoglobals
+    - gochecknoinits
+    - godox
+    - goconst
+    - bodyclose
+  presets:
+      - bugs
+      - complexity
+      - format
+      - performance
+      - style
+      - unused
+
+linters-settings:
+  misspell:
+    ignore-words:
+      - creater
+      - creature
+
+  funlen:
+    lines: 100
+    statements: 60

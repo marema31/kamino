@@ -13,7 +13,7 @@ func TestUpOk(t *testing.T) {
 	ck := &mockedCookbook{}
 	migrate.Admin = false
 	migrate.User = false
-	err := migrate.Up(ck, []string{"recipe1ok", "recipe2ok"})
+	err := migrate.UpDown("up", ck, []string{"recipe1ok", "recipe2ok"})
 	if err != nil {
 		t.Errorf("Up should not returns an error, returned: %v", err)
 	}
@@ -26,7 +26,7 @@ func TestUpOk(t *testing.T) {
 func TestUpFindRecipesError(t *testing.T) {
 	common.CfgFolder = "testdata"
 	ck := &mockedCookbook{}
-	err := migrate.Up(ck, []string{})
+	err := migrate.UpDown("up", ck, []string{})
 	if err == nil {
 		t.Errorf("Up should returns an error")
 	}
@@ -41,7 +41,7 @@ func TestUpcreateSuperseedError(t *testing.T) {
 	ck := &mockedCookbook{}
 	migrate.Admin = true
 	migrate.User = true
-	err := migrate.Up(ck, []string{"recipe1ok", "recipe2ok"})
+	err := migrate.UpDown("up", ck, []string{"recipe1ok", "recipe2ok"})
 	if err == nil {
 		t.Errorf("Up should returns an error")
 	}
@@ -56,7 +56,7 @@ func TestUpLoadError(t *testing.T) {
 	migrate.Admin = false
 	migrate.User = false
 	ck.errorLoad = fmt.Errorf("fake error")
-	err := migrate.Up(ck, []string{"recipe1ok", "recipe2ok"})
+	err := migrate.UpDown("up", ck, []string{"recipe1ok", "recipe2ok"})
 	if err == nil {
 		t.Errorf("Up should returns an error")
 	}
@@ -72,7 +72,7 @@ func TestUpPostLoadError(t *testing.T) {
 	migrate.Admin = false
 	migrate.User = false
 	ck.errorPostLoad = fmt.Errorf("fake error")
-	err := migrate.Up(ck, []string{"recipe1ok", "recipe2ok"})
+	err := migrate.UpDown("up", ck, []string{"recipe1ok", "recipe2ok"})
 	if err == nil {
 		t.Errorf("Up should returns an error")
 	}
@@ -87,7 +87,7 @@ func TestUpDoError(t *testing.T) {
 	migrate.Admin = false
 	migrate.User = false
 	ck.doReturnValue = true
-	err := migrate.Up(ck, []string{"recipe1ok", "recipe2ok"})
+	err := migrate.UpDown("up", ck, []string{"recipe1ok", "recipe2ok"})
 	if err == nil {
 		t.Errorf("Up should returns an error")
 	}
