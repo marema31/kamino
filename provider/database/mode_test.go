@@ -472,8 +472,7 @@ func TestExactCopyOk(t *testing.T) {
 
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(3).
-		AddRow(2).
-		AddRow(4)
+		AddRow(2)
 	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"}).
 		AddRow(3, "post 3", "good").
@@ -484,7 +483,6 @@ func TestExactCopyOk(t *testing.T) {
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("DELETE from \\? WHERE \\?=\\?").WithArgs("dtable", "id", "3").WillReturnResult(sqlmock.NewResult(1, 1))
-	dmock.ExpectExec("DELETE from \\? WHERE \\?=\\?").WithArgs("dtable", "id", "4").WillReturnResult(sqlmock.NewResult(1, 1))
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
@@ -548,8 +546,7 @@ func TestExactCopyTransactionOk(t *testing.T) {
 
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(3).
-		AddRow(2).
-		AddRow(4)
+		AddRow(2)
 	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"}).
 		AddRow(3, "post 3", "good").
@@ -561,7 +558,6 @@ func TestExactCopyTransactionOk(t *testing.T) {
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("DELETE from \\? WHERE \\?=\\?").WithArgs("dtable", "id", "3").WillReturnResult(sqlmock.NewResult(1, 1))
-	dmock.ExpectExec("DELETE from \\? WHERE \\?=\\?").WithArgs("dtable", "id", "4").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectCommit()
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
 	logger := logrus.New()
