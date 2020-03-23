@@ -15,6 +15,6 @@ ENTRYPOINT /kamino
 
 FROM scratch
 
-COPY --from=build_img /villip /usr/bin/kamino
+COPY --from=build_img /kamino /usr/bin/kamino
 
 ENTRYPOINT ["/usr/bin/kamino" ]
