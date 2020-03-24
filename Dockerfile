@@ -9,12 +9,13 @@ COPY go.sum .
 RUN go mod download
 COPY . .
 
-RUN go build -o /kamino
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -gcflags "all=-N -l" -o /kamino
 
 ENTRYPOINT /kamino
 
 FROM scratch
 
-COPY --from=build_img /villip /usr/bin/kamino
+COPY --from=build_img /kamino /usr/bin/kamino
 
 ENTRYPOINT ["/usr/bin/kamino" ]
