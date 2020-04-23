@@ -14,8 +14,12 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 
 ENTRYPOINT /kamino
 
-FROM scratch
+FROM alpine
 
+RUN apk --update add git less openssh && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm /var/cache/apk/*
+    
 COPY --from=build_img /kamino /usr/bin/kamino
 
 ENTRYPOINT ["/usr/bin/kamino" ]
