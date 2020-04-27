@@ -24,3 +24,4 @@ transaction   | Database       | If true, some step types will use transaction |
 user          | Database       | Database user with rights needed for non-admin section of steps | root (mysql) / postgres(postgres)
 zip           | File           | If true the source is ziped | false
 
+Most of the Attribute can take Golang template with the possibility to use environment variables values like so `{{ index .Environments "key"}}`

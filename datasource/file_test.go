@@ -13,7 +13,7 @@ func setupFileTest() *Datasources {
 }
 func TestLoadCsvEngine(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good", "csv")
+	ds, err := dss.load("testdata/good", "csv", map[string]string{})
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -44,7 +44,7 @@ func TestLoadCsvEngine(t *testing.T) {
 
 func TestLoadZipCsvEngine(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good", "zipcsv")
+	ds, err := dss.load("testdata/good", "zipcsv", map[string]string{})
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -75,7 +75,7 @@ func TestLoadZipCsvEngine(t *testing.T) {
 
 func TestLoadGzipCsvEngine(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good", "gzipcsv")
+	ds, err := dss.load("testdata/good", "gzipcsv", map[string]string{})
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -106,7 +106,7 @@ func TestLoadGzipCsvEngine(t *testing.T) {
 
 func TestLoadYamlEngine(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good", "yaml")
+	ds, err := dss.load("testdata/good", "yaml", map[string]string{})
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -137,7 +137,7 @@ func TestLoadYamlEngine(t *testing.T) {
 
 func TestLoadJsonEngine(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good", "json")
+	ds, err := dss.load("testdata/good", "json", map[string]string{})
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -168,7 +168,7 @@ func TestLoadJsonEngine(t *testing.T) {
 
 func TestLoadStdio(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good", "stdio")
+	ds, err := dss.load("testdata/good", "stdio", map[string]string{})
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -180,7 +180,7 @@ func TestLoadStdio(t *testing.T) {
 
 func TestLoadURL(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good", "url")
+	ds, err := dss.load("testdata/good", "url", map[string]string{})
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -192,7 +192,7 @@ func TestLoadURL(t *testing.T) {
 
 func TestLoadInline(t *testing.T) {
 	dss := setupFileTest()
-	ds, err := dss.load("testdata/good", "inline")
+	ds, err := dss.load("testdata/good", "inline", map[string]string{})
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -204,7 +204,7 @@ func TestLoadInline(t *testing.T) {
 
 func TestLoadNoPath(t *testing.T) {
 	dss := setupFileTest()
-	_, err := dss.load("testdata/fail", "nopath")
+	_, err := dss.load("testdata/fail", "nopath", map[string]string{})
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -244,7 +244,7 @@ func TestFileCloseAll(t *testing.T) {
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
 	logger.SetLevel(logrus.PanicLevel)
-	ds, err := dss.load("testdata/good", "csv")
+	ds, err := dss.load("testdata/good", "csv", map[string]string{})
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}

@@ -33,20 +33,21 @@ The template file and the attributes `destination`, `query` and `template` of th
 For template, Kamino provides variables corresponding to the current datasource. To use a variable, the template should only contains `{{.MyVariable}}`, for the NamedTags you should use {{ index .NamedTags "myKey"}}. Available variables are:
 
 
-Name        | Definition
-------------|------------
-Database    | Database name
-Engine      | Datasource engine ( CSV, JSON, MySQL, Postgres, YAML)
-FilePath    | Path of the datasource (if it is a file)
-Host        | Database server hostname
-Name        | Datasource name
-NamedTags   | Map of named tags
-Password    | Database user password
-Port        | Database server TCP port
-Schema      | Schema name if relevant
-Tags        | Tags of the datasource
-Transaction | True if datasource database use transaction
-Type        | Datasource type (database or file)
-User        | Database user
+Name         | Definition
+-------------|------------
+Database     | Database name
+Engine       | Datasource engine ( CSV, JSON, MySQL, Postgres, YAML)
+Environments | Environment variables usable by `{{ index .Environments "key"}}`
+FilePath     | Path of the datasource (if it is a file)
+Host         | Database server hostname
+Name         | Datasource name
+NamedTags    | Map of named tags (tags with key:value definition), usable by `{{ index .NamedTags "key"}}`
+Password     | Database user password
+Port         | Database server TCP port
+Schema       | Schema name if relevant
+Tags         | Tags of the datasource
+Transaction  | True if datasource database use transaction
+Type         | Datasource type (database or file)
+User         | Database user
 
 Golang templating system provides [more features](https://golang.org/pkg/html/template/). Kamino also use [Sprig](http://masterminds.github.io/sprig/) library that offer more features to the templating system

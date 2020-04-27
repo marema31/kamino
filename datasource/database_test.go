@@ -13,7 +13,7 @@ func setupDatabaseTest() *Datasources {
 
 func TestLoadMysqlCompleteEngine(t *testing.T) {
 	dss := setupDatabaseTest()
-	ds, err := dss.load("testdata/good", "mysqlcomplete")
+	ds, err := dss.load("testdata/good", "mysqlcomplete", map[string]string{})
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -57,7 +57,7 @@ func TestLoadMysqlCompleteEngine(t *testing.T) {
 
 func TestLoadMysqlMinimalEngine(t *testing.T) {
 	dss := setupDatabaseTest()
-	ds, err := dss.load("testdata/good", "mysqlminimal")
+	ds, err := dss.load("testdata/good", "mysqlminimal", map[string]string{})
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -101,7 +101,7 @@ func TestLoadMysqlMinimalEngine(t *testing.T) {
 
 func TestLoadPostgresCompleteEngine(t *testing.T) {
 	dss := setupDatabaseTest()
-	ds, err := dss.load("testdata/good", "postgrescomplete")
+	ds, err := dss.load("testdata/good", "postgrescomplete", map[string]string{})
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -145,7 +145,7 @@ func TestLoadPostgresCompleteEngine(t *testing.T) {
 
 func TestLoadPostgresMinimalEngine(t *testing.T) {
 	dss := setupDatabaseTest()
-	ds, err := dss.load("testdata/good", "postgresminimal")
+	ds, err := dss.load("testdata/good", "postgresminimal", map[string]string{})
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -192,7 +192,7 @@ func TestLoadPostgresMinimalEngine(t *testing.T) {
 
 func TestLoadNoDatabase(t *testing.T) {
 	dss := setupDatabaseTest()
-	_, err := dss.load("testdata/fail", "nodatabase")
+	_, err := dss.load("testdata/fail", "nodatabase", map[string]string{})
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -268,7 +268,7 @@ func TestDatabaseReOpen(t *testing.T) {
 }
 func TestLoadNoTags(t *testing.T) {
 	dss := setupDatabaseTest()
-	_, err := dss.load("testdata/good", "mysqlnotag")
+	_, err := dss.load("testdata/good", "mysqlnotag", map[string]string{})
 	if err != nil {
 		t.Errorf("Load should not returns an error")
 	}
@@ -277,7 +277,7 @@ func TestLoadNoTags(t *testing.T) {
 func TestDatabaseCloseAll(t *testing.T) {
 	mockingSQL = true
 	dss := setupDatabaseTest()
-	ds, err := dss.load("testdata/good", "postgresminimal")
+	ds, err := dss.load("testdata/good", "postgresminimal", map[string]string{})
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}

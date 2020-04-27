@@ -104,7 +104,7 @@ test-coverage-travis: test-coverage-tools ; $(info $(M) running coverage testsâ€
 
 .PHONY: cyclo
 cyclo: | $(GOCYCLO) ; $(info $(M) running gocycloâ€¦) @ ## Run gocyclo
-	$Q $(GOCYCLO) -over 22 $(GO_FILES)
+	$Q $(GOCYCLO) -over 30 $(GO_FILES)
 
 .PHONY: golangci-lint
 golangci-lint: | $(GOLANGCI) ; $(info $(M) running golangci-lint_) @ ## Run golangci-lint
