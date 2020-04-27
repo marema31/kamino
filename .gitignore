@@ -1,5 +1,9 @@
 #MACOS clutter
 .DS_Store
+
+#VSCode Studio clutter
+.VSCode
+
 # Binaries for programs and plugins
 *.exe
 *.exe~

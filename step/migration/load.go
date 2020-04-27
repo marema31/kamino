@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/Masterminds/sprig"
+	"github.com/Masterminds/sprig/v3"
 	"github.com/Sirupsen/logrus"
 	migrate "github.com/rubenv/sql-migrate"
 	"github.com/spf13/viper"

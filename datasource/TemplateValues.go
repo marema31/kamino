@@ -1,23 +1,27 @@
 package datasource
 
-import "strings"
+import (
+	"os"
+	"strings"
+)
 
 // TmplValues structure use for template rendering to avoid exposing the datasource structure to the template
 type TmplValues struct {
-	Name        string
-	Datasource  string
-	Database    string
-	User        string
-	Password    string
-	Schema      string
-	Host        string
-	Port        string
-	Tags        []string
-	Type        string
-	Engine      string
-	FilePath    string
-	Transaction bool
-	NamedTags   map[string]string
+	Name         string
+	Datasource   string
+	Database     string
+	User         string
+	Password     string
+	Schema       string
+	Host         string
+	Port         string
+	Tags         []string
+	Type         string
+	Engine       string
+	FilePath     string
+	Transaction  bool
+	NamedTags    map[string]string
+	Environments map[string]string
 }
 
 // FillTmplValues return a struct for template operation with value corresponding to the provided datasource
@@ -36,6 +40,7 @@ func (ds *Datasource) FillTmplValues() TmplValues {
 	tv.Type = TypeToString(ds.dstype)
 	tv.Engine = EngineToString(ds.engine)
 	tv.FilePath = ds.file.FilePath
+
 	tv.NamedTags = make(map[string]string)
 
 	for _, tag := range ds.tags {
@@ -45,6 +50,13 @@ func (ds *Datasource) FillTmplValues() TmplValues {
 				tv.NamedTags[splitted[0]] = strings.Join(splitted[1:], ":")
 			}
 		}
+	}
+
+	tv.Environments = make(map[string]string)
+
+	for _, v := range os.Environ() {
+		splitV := strings.Split(v, "=")
+		tv.Environments[splitV[0]] = splitV[1]
 	}
 
 	return tv

@@ -3,6 +3,7 @@ package datasource
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -22,6 +23,13 @@ func (dss *Datasources) LoadAll(recipePath string, log *logrus.Entry) error {
 		return err
 	}
 
+	envVar := make(map[string]string)
+
+	for _, v := range os.Environ() {
+		splitV := strings.Split(v, "=")
+		envVar[splitV[0]] = splitV[1]
+	}
+
 	for _, file := range files {
 		if file.Mode().IsRegular() {
 			ext := filepath.Ext(file.Name())
@@ -30,7 +38,7 @@ func (dss *Datasources) LoadAll(recipePath string, log *logrus.Entry) error {
 				logDatasource := log.WithField("datasource", name)
 				logDatasource.Debug("Parsing datasource configuration")
 
-				ds, err := dss.load(recipePath, name)
+				ds, err := dss.load(recipePath, name, envVar)
 				if err != nil {
 					logDatasource.Errorf("Unable to parse configuration: %v", err)
 
@@ -65,7 +73,7 @@ func (dss *Datasources) LoadAll(recipePath string, log *logrus.Entry) error {
 	return firstError
 }
 
-func (dss *Datasources) load(recipePath string, filename string) (Datasource, error) {
+func (dss *Datasources) load(recipePath string, filename string, envVar map[string]string) (Datasource, error) {
 	v := viper.New()
 	dsfolder := filepath.Join(recipePath, "datasources")
 
@@ -89,9 +97,9 @@ func (dss *Datasources) load(recipePath string, filename string) (Datasource, er
 
 	switch e {
 	case Mysql, Postgres:
-		return loadDatabaseDatasource(filename, v, e, dss.conTimeout, dss.conRetry)
+		return loadDatabaseDatasource(filename, v, e, envVar, dss.conTimeout, dss.conRetry)
 	case JSON, YAML, CSV:
-		return loadFileDatasource(recipePath, filename, v, e)
+		return loadFileDatasource(recipePath, filename, v, e, envVar)
 	}
 	//Should never come here, error will be raised by StringToEngine
 	return Datasource{}, fmt.Errorf("does not how to manage %s datasource engine", engine)

@@ -1,12 +1,15 @@
 package datasource
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
+	"html/template"
 	"strings"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/Masterminds/sprig/v3"
 	"github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql" // Mysql library dynamically called by database/sql
 	_ "github.com/lib/pq"              //Postgres library dynamically called by database/sql
@@ -14,13 +17,30 @@ import (
 )
 
 // load a database type datasource from the viper configuration
-func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, connectionTimeout time.Duration, connectionRetry int) (Datasource, error) {
+//nolint: funlen
+func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, envVar map[string]string, connectionTimeout time.Duration, connectionRetry int) (Datasource, error) {
 	var ds Datasource
 	ds.dstype = Database
 	ds.engine = engine
 	ds.name = filename
 
-	ds.database = v.GetString("database")
+	type tmplEnv struct {
+		Environments map[string]string
+	}
+
+	data := tmplEnv{Environments: envVar}
+
+	databaseTmpl, err := template.New("database").Funcs(sprig.FuncMap()).Parse(v.GetString("database"))
+	if err != nil {
+		return Datasource{}, fmt.Errorf("parsing database name provided")
+	}
+
+	var database bytes.Buffer
+	if err = databaseTmpl.Execute(&database, data); err != nil {
+		return Datasource{}, fmt.Errorf("expanding database name provided")
+	}
+
+	ds.database = database.String()
 	if ds.database == "" {
 		return Datasource{}, fmt.Errorf("no database name provided")
 	}
@@ -37,17 +57,80 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, conn
 
 	ds.transaction = v.GetBool("transaction")
 
-	ds.host = v.GetString("host")
+	hostTmpl, err := template.New("host").Funcs(sprig.FuncMap()).Parse(v.GetString("host"))
+	if err != nil {
+		return Datasource{}, fmt.Errorf("parsing host name provided")
+	}
+
+	var host bytes.Buffer
+	if err = hostTmpl.Execute(&host, data); err != nil {
+		return Datasource{}, fmt.Errorf("expanding host name provided")
+	}
+
+	ds.host = host.String()
 	if ds.host == "" {
 		ds.host = "127.0.0.1"
 	}
 
-	ds.port = v.GetString("port")
+	portTmpl, err := template.New("port").Funcs(sprig.FuncMap()).Parse(v.GetString("port"))
+	if err != nil {
+		return Datasource{}, fmt.Errorf("parsing port provided")
+	}
 
-	ds.user = v.GetString("user")
-	ds.admin = v.GetString("admin")
-	ds.userPw = v.GetString("password")
-	ds.adminPw = v.GetString("adminpassword")
+	var port bytes.Buffer
+	if err = portTmpl.Execute(&port, data); err != nil {
+		return Datasource{}, fmt.Errorf("expanding port provided")
+	}
+
+	ds.port = port.String()
+
+	userTmpl, err := template.New("user").Funcs(sprig.FuncMap()).Parse(v.GetString("user"))
+	if err != nil {
+		return Datasource{}, fmt.Errorf("parsing user name provided")
+	}
+
+	var user bytes.Buffer
+	if err = userTmpl.Execute(&user, data); err != nil {
+		return Datasource{}, fmt.Errorf("expanding user name provided")
+	}
+
+	ds.user = user.String()
+
+	adminTmpl, err := template.New("admin").Funcs(sprig.FuncMap()).Parse(v.GetString("admin"))
+	if err != nil {
+		return Datasource{}, fmt.Errorf("parsing admin name provided")
+	}
+
+	var admin bytes.Buffer
+	if err = adminTmpl.Execute(&admin, data); err != nil {
+		return Datasource{}, fmt.Errorf("expanding admin name provided")
+	}
+
+	ds.admin = admin.String()
+
+	userPwTmpl, err := template.New("userPw").Funcs(sprig.FuncMap()).Parse(v.GetString("password"))
+	if err != nil {
+		return Datasource{}, fmt.Errorf("parsing user password provided")
+	}
+
+	var userPw bytes.Buffer
+	if err = userPwTmpl.Execute(&userPw, data); err != nil {
+		return Datasource{}, fmt.Errorf("expanding user password provided")
+	}
+
+	ds.userPw = userPw.String()
+
+	adminPwTmpl, err := template.New("adminPw").Funcs(sprig.FuncMap()).Parse(v.GetString("adminpassword"))
+	if err != nil {
+		return Datasource{}, fmt.Errorf("parsing admin password provided")
+	}
+
+	var adminPw bytes.Buffer
+	if err = adminPwTmpl.Execute(&adminPw, data); err != nil {
+		return Datasource{}, fmt.Errorf("expanding admin password provided")
+	}
+
+	ds.adminPw = adminPw.String()
 
 	if ds.adminPw == "" {
 		ds.adminPw = ds.userPw

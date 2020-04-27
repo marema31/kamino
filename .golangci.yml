@@ -22,6 +22,8 @@ linters:
       - unused
 
 linters-settings:
+  gocognit:
+    min-complexity: 40
   misspell:
     ignore-words:
       - creater
