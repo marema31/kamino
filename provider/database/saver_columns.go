@@ -25,45 +25,48 @@ func (saver *DbSaver) getColNames(log *logrus.Entry, record types.Record) ([]str
 	questionmark := make([]string, 0)
 
 	log.Debug("Retrieving the column names")
-	log.Debugf("SELECT * from %s LIMIT 1", saver.table)
 
-	rows, err := saver.db.QueryContext(saver.ctx, "SELECT * from ? LIMIT 1", saver.table) // We don't need data, we only neesaver the column names
+	query := fmt.Sprintf("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = '%s' AND table_name ='%s';", saver.database, saver.table) //nolint: gosec
+	log.Debug(query)
+
+	rows, err := saver.db.QueryContext(saver.ctx, query)
 	if err != nil {
 		log.Error("Querying for retrieving column names failed")
 		log.Error(err)
 
 		return nil, nil, err
 	}
+	defer rows.Close()
 
-	columns, err := rows.ColumnTypes()
-	if err != nil {
-		log.Error("Retrieving column names failed")
-		log.Error(err)
+	columns := make([]string, 0)
 
-		return nil, nil, err
-	}
+	for rows.Next() {
+		var col string
+		if err := rows.Scan(&col); err != nil {
+			// Check for a scan error.
+			// Query rows will be closed with defer.
+			log.Fatal(err)
+		}
 
-	saver.wasEmpty = !rows.Next()
-	if saver.mode == onlyIfEmpty && !saver.wasEmpty {
-		log.Warnf("Table %s not empty, I will do nothing on it", saver.table)
+		columns = append(columns, col)
 	}
 
 	keyseen := false
 
 	for _, col := range columns {
-		_, ok := record[col.Name()]
+		_, ok := record[col]
 		if !ok {
-			log.Warnf("Column %s does not exist in source, using table default value", col.Name())
+			log.Warnf("Column %s does not exist in source, using table default value", col)
 			continue
 		}
 
-		if strings.EqualFold(col.Name(), saver.key) {
+		if strings.EqualFold(col, saver.key) {
 			keyseen = true
 			continue
 		}
 
-		saver.colNames = append(saver.colNames, col.Name())
-		updateSet = append(updateSet, fmt.Sprintf("%s=%s", col.Name(), saver.questionMarkByEngine(&updateSet)))
+		saver.colNames = append(saver.colNames, col)
+		updateSet = append(updateSet, fmt.Sprintf("%s=%s", col, saver.questionMarkByEngine(&updateSet)))
 		questionmark = append(questionmark, saver.questionMarkByEngine(&questionmark))
 	}
 
@@ -84,7 +87,7 @@ func (saver *DbSaver) getColNames(log *logrus.Entry, record types.Record) ([]str
 		seen := false
 
 		for _, col := range columns {
-			if col.Name() == colr {
+			if col == colr {
 				seen = true
 			}
 		}
@@ -92,6 +95,23 @@ func (saver *DbSaver) getColNames(log *logrus.Entry, record types.Record) ([]str
 		if !seen {
 			log.Warnf("Colum %s does not exist in %s", colr, saver.table)
 		}
+	}
+
+	var count int
+
+	query = fmt.Sprintf("SELECT COUNT(*) FROM %s", saver.table) //nolint: gosec
+	log.Debug(query)
+
+	row := saver.db.QueryRowContext(saver.ctx, query)
+
+	err = row.Scan(&count)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	saver.wasEmpty = (count == 0)
+	if saver.mode == onlyIfEmpty && !saver.wasEmpty {
+		log.Warnf("Table %s not empty, I will do nothing on it", saver.table)
 	}
 
 	return questionmark, updateSet, nil
