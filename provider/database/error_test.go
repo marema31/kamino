@@ -106,7 +106,7 @@ func TestGetColNamesError(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnError(fmt.Errorf("fake error"))
+	dmock.ExpectQuery("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = 'blog' AND table_name ='dtable';").WillReturnError(fmt.Errorf("fake error"))
 
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 
@@ -157,8 +157,16 @@ func TestDestHasMoreColsOk(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	rows = sqlmock.NewRows([]string{"id", "title", "body", "summary"})
-	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
+	rows = sqlmock.NewRows([]string{"name"}).
+		AddRow("id").
+		AddRow("title").
+		AddRow("body").
+		AddRow("summary")
+	dmock.ExpectQuery("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = 'blog' AND table_name ='dtable';").WillReturnRows(rows)
+
+	rows = sqlmock.NewRows([]string{"count"}).
+		AddRow(1)
+	dmock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -208,8 +216,14 @@ func TestDestHasLessColsOk(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	rows = sqlmock.NewRows([]string{"id", "title"})
-	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
+	rows = sqlmock.NewRows([]string{"name"}).
+		AddRow("id").
+		AddRow("title")
+	dmock.ExpectQuery("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = 'blog' AND table_name ='dtable';").WillReturnRows(rows)
+
+	rows = sqlmock.NewRows([]string{"count"}).
+		AddRow(0)
+	dmock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,id\\) VALUES \\( \\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "2").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -478,9 +492,16 @@ func TestEndTransactionError(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	rows = sqlmock.NewRows([]string{"id", "title", "body"})
 	dmock.ExpectBegin()
-	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
+	rows = sqlmock.NewRows([]string{"name"}).
+		AddRow("id").
+		AddRow("title").
+		AddRow("body")
+	dmock.ExpectQuery("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = 'blog' AND table_name ='dtable';").WillReturnRows(rows)
+
+	rows = sqlmock.NewRows([]string{"count"}).
+		AddRow(0)
+	dmock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -531,9 +552,16 @@ func TestRollbackTransactionError(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	rows = sqlmock.NewRows([]string{"id", "title", "body"})
 	dmock.ExpectBegin()
-	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
+	rows = sqlmock.NewRows([]string{"name"}).
+		AddRow("id").
+		AddRow("title").
+		AddRow("body")
+	dmock.ExpectQuery("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = 'blog' AND table_name ='dtable';").WillReturnRows(rows)
+
+	rows = sqlmock.NewRows([]string{"count"}).
+		AddRow(0)
+	dmock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -592,8 +620,15 @@ func TestTruncateError(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
+	dmock.ExpectBegin()
+	rows = sqlmock.NewRows([]string{"name"}).
+		AddRow("id").
+		AddRow("title").
+		AddRow("body")
+	dmock.ExpectQuery("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = 'blog' AND table_name ='dtable';").WillReturnRows(rows)
+
+	rows = sqlmock.NewRows([]string{"count"}).
+		AddRow(0)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	//	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WillReturnError(fmt.Errorf("fake error"))
 	dmock.ExpectQuery("TRUNCATE TABLE dtable").WillReturnError(fmt.Errorf("fake error"))
@@ -674,8 +709,15 @@ func TestInsertError(t *testing.T) {
 		AddRow(1).
 		AddRow(2)
 	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
-	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
+	rows = sqlmock.NewRows([]string{"name"}).
+		AddRow("id").
+		AddRow("title").
+		AddRow("body")
+	dmock.ExpectQuery("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = 'blog' AND table_name ='dtable';").WillReturnRows(rows)
+
+	rows = sqlmock.NewRows([]string{"count"}).
+		AddRow(0)
+	dmock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnError(fmt.Errorf("fake error"))
@@ -725,8 +767,15 @@ func TestDeleteError(t *testing.T) {
 		AddRow(1).
 		AddRow(2)
 	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
-	rows = sqlmock.NewRows([]string{"id", "title", "body"})
-	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
+	rows = sqlmock.NewRows([]string{"name"}).
+		AddRow("id").
+		AddRow("title").
+		AddRow("body")
+	dmock.ExpectQuery("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = 'blog' AND table_name ='dtable';").WillReturnRows(rows)
+
+	rows = sqlmock.NewRows([]string{"count"}).
+		AddRow(0)
+	dmock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?")
 	dmock.ExpectExec("UPDATE dtable SET title=\\?,body=\\? WHERE id = \\?").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
