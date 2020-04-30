@@ -16,6 +16,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var openedDatabase = map[string]*sql.DB{}
+
 // load a database type datasource from the viper configuration
 //nolint: funlen
 func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, envVar map[string]string, connectionTimeout time.Duration, connectionRetry int) (Datasource, error) {
@@ -286,7 +288,16 @@ var mockingSQL = false
 
 func sqlOpen(driver string, url string) (*sql.DB, error) {
 	if !mockingSQL {
-		return sql.Open(driver, url)
+		if db, ok := openedDatabase[url]; ok {
+			return db, nil
+		}
+
+		db, err := sql.Open(driver, url)
+		if err == nil {
+			openedDatabase[url] = db
+		}
+
+		return db, err
 	}
 
 	db, _, err := sqlmock.New()
