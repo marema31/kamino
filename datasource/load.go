@@ -60,7 +60,7 @@ func (dss *Datasources) findRecipes(recipePath string, subpath string, log *logr
 			logDatasource := log.WithField("datasource", name)
 			logDatasource.Debug("Parsing datasource configuration")
 
-			ds, err := dss.load(recipePath, subpath, name)
+			ds, err := dss.load(log, recipePath, subpath, name)
 			if err != nil {
 				logDatasource.Errorf("Unable to parse configuration: %v", err)
 				if firstError == nil {
@@ -75,7 +75,7 @@ func (dss *Datasources) findRecipes(recipePath string, subpath string, log *logr
 	return firstError
 }
 
-func (dss *Datasources) load(recipePath string, subpath string, filename string) (Datasource, error) {
+func (dss *Datasources) load(log *logrus.Entry, recipePath string, subpath string, filename string) (Datasource, error) {
 	v := viper.New()
 
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
@@ -98,9 +98,9 @@ func (dss *Datasources) load(recipePath string, subpath string, filename string)
 
 	switch e {
 	case Mysql, Postgres:
-		return loadDatabaseDatasource(filename, v, e, dss.envVar, dss.conTimeout, dss.conRetry)
+		return loadDatabaseDatasource(log, filename, v, e, dss.envVar, dss.conTimeout, dss.conRetry)
 	case JSON, YAML, CSV:
-		return loadFileDatasource(recipePath, filename, v, e, dss.envVar)
+		return loadFileDatasource(log, recipePath, filename, v, e, dss.envVar)
 	}
 	//Should never come here, error will be raised by StringToEngine
 	return Datasource{}, fmt.Errorf("does not how to manage %s datasource engine: %w", engine, errWrongParameterValue)

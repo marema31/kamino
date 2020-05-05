@@ -14,7 +14,9 @@ import (
 )
 
 // load a dile type datasource from the viper configuration.
-func loadFileDatasource(recipePath string, filename string, v *viper.Viper, engine Engine, envVar map[string]string) (Datasource, error) {
+func loadFileDatasource(log *logrus.Entry, recipePath string, filename string, v *viper.Viper, engine Engine, envVar map[string]string) (Datasource, error) {
+	log.Debugf("Loading %s file datasource", filename)
+
 	var ds Datasource
 	ds.dstype = File
 	ds.engine = engine
