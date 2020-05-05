@@ -15,7 +15,7 @@ import (
 	"github.com/marema31/kamino/file"
 )
 
-//Datasourcer interface for allowing mocking of Datasource object
+//Datasourcer interface for allowing mocking of Datasource object.
 type Datasourcer interface {
 	FillTmplValues() TmplValues
 	OpenDatabase(*logrus.Entry, bool, bool) (*sql.DB, error)
@@ -30,7 +30,7 @@ type Datasourcer interface {
 	Stat() (os.FileInfo, error)
 }
 
-//Engine constants for file/database engine
+//Engine constants for file/database engine.
 type Engine int
 
 const (
@@ -46,7 +46,7 @@ const (
 	CSV Engine = iota
 )
 
-//Type discriminate the type of datasource
+//Type discriminate the type of datasource.
 type Type int
 
 const (
@@ -56,7 +56,7 @@ const (
 	File Type = iota
 )
 
-// Datasource is handle to the corresponding datasource (either file/database)
+// Datasource is handle to the corresponding datasource (either file/database).
 type Datasource struct {
 	name        string
 	dstype      Type
@@ -82,7 +82,7 @@ type Datasource struct {
 	tags        []string
 }
 
-//StringToType convert string to corresponding Type typed value
+//StringToType convert string to corresponding Type typed value.
 func StringToType(dsType string) (Type, error) {
 	switch strings.ToLower(dsType) {
 	case "db", "database", "databases":
@@ -91,10 +91,10 @@ func StringToType(dsType string) (Type, error) {
 		return File, nil
 	}
 
-	return File, fmt.Errorf("does not how to manage %s datasource type", dsType)
+	return File, fmt.Errorf("does not how to manage %s datasource type: %w", dsType, errWrongParameterValue)
 }
 
-//StringsToTypes convert string slice to an slice of corresponding Type typed values
+//StringsToTypes convert string slice to an slice of corresponding Type typed values.
 func StringsToTypes(dsTypes []string) ([]Type, error) {
 	typeSlice := make([]Type, 0)
 
@@ -110,7 +110,7 @@ func StringsToTypes(dsTypes []string) ([]Type, error) {
 	return typeSlice, nil
 }
 
-//StringToEngine convert string to corresponding Engine typed value
+//StringToEngine convert string to corresponding Engine typed value.
 func StringToEngine(engine string) (Engine, error) {
 	switch strings.ToLower(engine) {
 	case "mysql", "maria", "mariadb":
@@ -125,10 +125,10 @@ func StringToEngine(engine string) (Engine, error) {
 		return CSV, nil
 	}
 
-	return CSV, fmt.Errorf("does not how to manage %s datasource engine", engine)
+	return CSV, fmt.Errorf("does not how to manage %s datasource engine: %w", engine, errWrongParameterValue)
 }
 
-//StringsToEngines convert string slice to an slice of corresponding Engine typed values
+//StringsToEngines convert string slice to an slice of corresponding Engine typed values.
 func StringsToEngines(engines []string) ([]Engine, error) {
 	engineSlice := make([]Engine, 0)
 
@@ -144,7 +144,7 @@ func StringsToEngines(engines []string) ([]Engine, error) {
 	return engineSlice, nil
 }
 
-//EngineToString return do the conversion
+//EngineToString return do the conversion.
 func EngineToString(engine Engine) string {
 	switch engine {
 	case Mysql:
@@ -162,7 +162,7 @@ func EngineToString(engine Engine) string {
 	return "Unknown" // We will never arrive here
 }
 
-//TypeToString return do the conversion
+//TypeToString return do the conversion.
 func TypeToString(dsType Type) string {
 	switch dsType {
 	case Database:
@@ -174,22 +174,22 @@ func TypeToString(dsType Type) string {
 	return "Unknown" // We will never arrive here
 }
 
-//GetEngine return the engine enum value
+//GetEngine return the engine enum value.
 func (ds *Datasource) GetEngine() Engine {
 	return ds.engine
 }
 
-//GetType return the type enum value
+//GetType return the type enum value.
 func (ds *Datasource) GetType() Type {
 	return ds.dstype
 }
 
-//IsTransaction return true if the datasource has transaction
+//IsTransaction return true if the datasource has transaction.
 func (ds *Datasource) IsTransaction() bool {
 	return ds.transaction
 }
 
-//GetNamedTag return the value of the tag with the provided name or "" if not exists
+//GetNamedTag return the value of the tag with the provided name or "" if not exists.
 func (ds *Datasource) GetNamedTag(name string) string {
 	for _, tag := range ds.tags {
 		if strings.Contains(tag, name+":") {
@@ -200,7 +200,7 @@ func (ds *Datasource) GetNamedTag(name string) string {
 	return ""
 }
 
-//GetName return the name of the datasource
+//GetName return the name of the datasource.
 func (ds *Datasource) GetName() string {
 	return ds.name
 }

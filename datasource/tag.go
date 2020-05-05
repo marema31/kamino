@@ -68,6 +68,44 @@ func (dss *Datasources) lookupWithoutTag(dsTypes []Type, engines []Engine) (sele
 	return selectedNames
 }
 
+func (dss *Datasources) findCandidatesTags(log *logrus.Entry, tagElement string, dsTypes []Type, engines []Engine) map[string]bool {
+	candidates := make(map[string]bool)
+
+	for i, tag := range strings.Split(tagElement, ".") {
+		log.Debugf("Lookup for sub-tag %s", tag)
+
+		for _, name := range dss.lookupOneTag(tag, dsTypes, engines) {
+			if i == 0 {
+				log.Debugf("Found: %s", name)
+
+				candidates[name] = true
+			} else {
+				if _, ok := candidates[name]; ok {
+					log.Debugf("Found: %s, present from previous sub-tag", name)
+
+					candidates[name] = true
+				} else {
+					log.Debugf("Skipped: %s, not present for previous sub-tag", name)
+				}
+			}
+		}
+
+		log.Debug("Removing datasource not found for this sub-tag")
+
+		for name, viewed := range candidates {
+			if !viewed {
+				log.Debugf("Removing: %s", name)
+				delete(candidates, name)
+			} else {
+				// Prepare the map for the next tag
+				candidates[name] = false
+			}
+		}
+	}
+
+	return candidates
+}
+
 func (dss *Datasources) getDsNameFromTagList(log *logrus.Entry, tagList []string, dsTypes []Type, engines []Engine) []string {
 	selected := make(map[string]bool) // Use map to emulate a "set" to avoid duplicates
 	unselectedNames := make([]string, 0)
@@ -89,33 +127,7 @@ func (dss *Datasources) getDsNameFromTagList(log *logrus.Entry, tagList []string
 			}
 		} else {
 			log.Debug("Composite tag")
-			candidates := make(map[string]bool)
-			for i, tag := range strings.Split(tagElement, ".") {
-				log.Debugf("Lookup for sub-tag %s", tag)
-				for _, name := range dss.lookupOneTag(tag, dsTypes, engines) {
-					if i == 0 {
-						log.Debugf("Found: %s", name)
-						candidates[name] = true
-					} else {
-						if _, ok := candidates[name]; ok {
-							log.Debugf("Found: %s, present from previous sub-tag", name)
-							candidates[name] = true
-						} else {
-							log.Debugf("Skipped: %s, not present for previous sub-tag", name)
-						}
-					}
-				}
-				log.Debug("Removing datasource not found for this sub-tag")
-				for name, viewed := range candidates {
-					if !viewed {
-						log.Debugf("Removing: %s", name)
-						delete(candidates, name)
-					} else {
-						// Prepare the map for the next tag
-						candidates[name] = false
-					}
-				}
-			}
+			candidates := dss.findCandidatesTags(log, tagElement, dsTypes, engines)
 			log.Debugf("Final list for %s", tagElement)
 			for name := range candidates {
 				if strings.HasPrefix(tagElement, "!") {
@@ -155,34 +167,42 @@ func removeFromList(selected []string, unselected []string) (filtered []string) 
 	return filtered
 }
 
+func (dss *Datasources) lookupLimited(log *logrus.Entry, tagList []string, limitedTags []string, dsTypes []Type, engines []Engine) []string {
+	log.Debug("Lookup limited tag list")
+
+	limited := make([]string, 0)
+
+	if limitedTags == nil {
+		return limited
+	}
+
+	limited = dss.getDsNameFromTagList(log, limitedTags, dsTypes, engines)
+	if len(limited) == 0 {
+		allNegation := true
+
+		for _, tag := range limitedTags {
+			if !strings.HasPrefix(tag, "!") {
+				allNegation = false
+				break
+			}
+		}
+
+		if allNegation {
+			limited = dss.getDsNameFromTagList(log, append(tagList, limitedTags...), dsTypes, engines)
+		}
+	}
+
+	return limited
+}
+
 //Lookup return a list of *Datasource that correspond to the
-// list of tag expression
+// list of tag expression.
 func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags []string, dsTypes []Type, engines []Engine) []Datasourcer {
 	logLookup := log.WithField("lookup", "tags")
 
 	var selected []string
 
-	limited := make([]string, 0)
-
-	if limitedTags != nil {
-		logLookup.Debug("Lookup limited tag list")
-
-		limited = dss.getDsNameFromTagList(logLookup, limitedTags, dsTypes, engines)
-		if len(limited) == 0 {
-			allNegation := true
-
-			for _, tag := range limitedTags {
-				if !strings.HasPrefix(tag, "!") {
-					allNegation = false
-					break
-				}
-			}
-
-			if allNegation {
-				limited = dss.getDsNameFromTagList(logLookup, append(tagList, limitedTags...), dsTypes, engines)
-			}
-		}
-	}
+	limited := dss.lookupLimited(logLookup, tagList, limitedTags, dsTypes, engines)
 
 	if len(tagList) == 0 {
 		logLookup.Debug("No tag provided, will only lookup on type and engines")

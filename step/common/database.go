@@ -9,7 +9,7 @@ import (
 )
 
 // ToSkipDatabase run the query (likely a SELECT COUNT) on the datasource
-// return true if the query return a non-zero value in the only column of the only row
+// return true if the query return a non-zero value in the only column of the only row.
 func ToSkipDatabase(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer, admin bool, nodb bool, query string) (bool, error) {
 	var needskip int
 

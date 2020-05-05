@@ -1,12 +1,15 @@
 package migration
 
 import (
+	"errors"
 	"fmt"
 	"path"
 
 	"github.com/Sirupsen/logrus"
 	migrate "github.com/rubenv/sql-migrate"
 )
+
+var errMigrationFailed = errors.New("MIGRATION FAILED")
 
 func (st *Step) apply(log *logrus.Entry, admin bool, limit int) (int, error) {
 	folder := st.folder
@@ -75,12 +78,12 @@ func (st *Step) apply(log *logrus.Entry, admin bool, limit int) (int, error) {
 
 	if limit == 0 && len(migrationsLeft) > 0 {
 		log.Errorf("All migrations should have applied but only %d was applied (%d not applied)", applied, len(migrationsLeft))
-		return applied, fmt.Errorf("all migrations should have applied")
+		return applied, fmt.Errorf("all migrations should have applied :%w", errMigrationFailed)
 	}
 
 	if len(migrationsLeft) > 0 && limit > applied {
 		log.Errorf("%d migrations should have applied but only %d was applied (up to %d could be applied)", limit, applied, len(migrationsLeft))
-		return applied, fmt.Errorf("%d migrations should have applied", limit)
+		return applied, fmt.Errorf("%d migrations should have applied: %w", limit, errMigrationFailed)
 	}
 
 	return applied, nil

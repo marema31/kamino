@@ -1,9 +1,9 @@
 module github.com/marema31/kamino
 
-go 1.13
+go 1.14
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.3.3
+	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/Masterminds/sprig/v3 v3.1.0
 	github.com/Sirupsen/logrus v1.4.0
 	github.com/go-sql-driver/mysql v1.4.1
@@ -18,6 +18,8 @@ require (
 	github.com/spf13/viper v1.4.0
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.hein.dev/go-version v0.1.0
+	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
+	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v2 v2.2.4
 )

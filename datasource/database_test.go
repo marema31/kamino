@@ -7,13 +7,16 @@ import (
 )
 
 // We are using private function, we must be in same package
-func setupDatabaseTest() *Datasources {
-	return &Datasources{datasources: make(map[string]*Datasource)}
+func setupDatabaseTest() (*Datasources, *logrus.Entry) {
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+
+	return &Datasources{datasources: make(map[string]*Datasource)}, log
 }
 
 func TestLoadMysqlCompleteEngine(t *testing.T) {
-	dss := setupDatabaseTest()
-	ds, err := dss.load("testdata/good", "mysqlcomplete", map[string]string{})
+	dss, log := setupDatabaseTest()
+	ds, err := dss.load(log, "testdata/good", "datasources", "mysqlcomplete")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -56,8 +59,8 @@ func TestLoadMysqlCompleteEngine(t *testing.T) {
 }
 
 func TestLoadMysqlMinimalEngine(t *testing.T) {
-	dss := setupDatabaseTest()
-	ds, err := dss.load("testdata/good", "mysqlminimal", map[string]string{})
+	dss, log := setupDatabaseTest()
+	ds, err := dss.load(log, "testdata/good", "datasources", "mysqlminimal")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -100,8 +103,8 @@ func TestLoadMysqlMinimalEngine(t *testing.T) {
 }
 
 func TestLoadPostgresCompleteEngine(t *testing.T) {
-	dss := setupDatabaseTest()
-	ds, err := dss.load("testdata/good", "postgrescomplete", map[string]string{})
+	dss, log := setupDatabaseTest()
+	ds, err := dss.load(log, "testdata/good", "datasources", "postgrescomplete")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -144,8 +147,8 @@ func TestLoadPostgresCompleteEngine(t *testing.T) {
 }
 
 func TestLoadPostgresMinimalEngine(t *testing.T) {
-	dss := setupDatabaseTest()
-	ds, err := dss.load("testdata/good", "postgresminimal", map[string]string{})
+	dss, log := setupDatabaseTest()
+	ds, err := dss.load(log, "testdata/good", "datasources", "postgresminimal")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
@@ -191,8 +194,8 @@ func TestLoadPostgresMinimalEngine(t *testing.T) {
 }
 
 func TestLoadNoDatabase(t *testing.T) {
-	dss := setupDatabaseTest()
-	_, err := dss.load("testdata/fail", "nodatabase", map[string]string{})
+	dss, log := setupDatabaseTest()
+	_, err := dss.load(log, "testdata/fail", "datasources", "nodatabase")
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -267,8 +270,8 @@ func TestDatabaseReOpen(t *testing.T) {
 	}
 }
 func TestLoadNoTags(t *testing.T) {
-	dss := setupDatabaseTest()
-	_, err := dss.load("testdata/good", "mysqlnotag", map[string]string{})
+	dss, log := setupDatabaseTest()
+	_, err := dss.load(log, "testdata/good", "datasources", "mysqlnotag")
 	if err != nil {
 		t.Errorf("Load should not returns an error")
 	}
@@ -276,14 +279,13 @@ func TestLoadNoTags(t *testing.T) {
 
 func TestDatabaseCloseAll(t *testing.T) {
 	mockingSQL = true
-	dss := setupDatabaseTest()
-	ds, err := dss.load("testdata/good", "postgresminimal", map[string]string{})
+	dss, log := setupDatabaseTest()
+	ds, err := dss.load(log, "testdata/good", "datasources", "postgresminimal")
 	if err != nil {
 		t.Errorf("Load returns an error %v", err)
 	}
 	dss.datasources["test"] = &ds
-	logger := logrus.New()
-	log := logger.WithField("appname", "kamino")
+
 	_, err = ds.OpenDatabase(log, false, false)
 	if err != nil {
 		t.Errorf("OpenDatabase should not returns an error, was: %v", err)

@@ -8,10 +8,11 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/provider/common"
 	"github.com/marema31/kamino/provider/types"
 )
 
-//KaminoCsvLoader specifc state for database Saver provider
+//KaminoCsvLoader specifc state for database Saver provider.
 type KaminoCsvLoader struct {
 	ds           datasource.Datasourcer
 	file         io.ReadCloser
@@ -22,7 +23,7 @@ type KaminoCsvLoader struct {
 	currentError error
 }
 
-//NewLoader open the encoding process on provider file, read the header from the first line and return a Loader compatible object
+//NewLoader open the encoding process on provider file, read the header from the first line and return a Loader compatible object.
 func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer) (*KaminoCsvLoader, error) {
 	logFile := log.WithField("datasource", ds.GetName())
 
@@ -48,7 +49,7 @@ func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer
 	return &KaminoCsvLoader{ds: ds, file: file, name: tv.FilePath, reader: *reader, colNames: row, currentRow: nil, currentError: nil}, nil
 }
 
-//Next moves to next record and return false if there is no more records
+//Next moves to next record and return false if there is no more records.
 func (cl *KaminoCsvLoader) Next() bool {
 	row, err := cl.reader.Read()
 	if err == io.EOF {
@@ -67,7 +68,7 @@ func (cl *KaminoCsvLoader) Next() bool {
 	return true
 }
 
-//Load reads the next record and return it
+//Load reads the next record and return it.
 func (cl *KaminoCsvLoader) Load(log *logrus.Entry) (types.Record, error) {
 	logFile := log.WithField("datasource", cl.ds.GetName())
 
@@ -80,7 +81,7 @@ func (cl *KaminoCsvLoader) Load(log *logrus.Entry) (types.Record, error) {
 
 	if cl.currentRow == nil {
 		logFile.Error("EOF reached")
-		return nil, fmt.Errorf("EOF reached")
+		return nil, fmt.Errorf("no more data: %w", common.ErrEOF)
 	}
 
 	record := make(types.Record, len(cl.colNames))
@@ -92,13 +93,13 @@ func (cl *KaminoCsvLoader) Load(log *logrus.Entry) (types.Record, error) {
 	return record, nil
 }
 
-//Close closes the datasource
+//Close closes the datasource.
 func (cl *KaminoCsvLoader) Close(log *logrus.Entry) error {
 	logFile := log.WithField("datasource", cl.ds.GetName())
 	return cl.ds.CloseFile(logFile)
 }
 
-//Name give the name of the destination
+//Name give the name of the destination.
 func (cl *KaminoCsvLoader) Name() string {
 	return cl.name
 }

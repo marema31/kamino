@@ -7,7 +7,7 @@ import (
 	"github.com/marema31/kamino/datasource"
 )
 
-// Step informations
+// Step informations.
 type Step struct {
 	Name         string
 	datasource   datasource.Datasourcer

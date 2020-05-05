@@ -22,6 +22,8 @@ linters:
       - unused
 
 linters-settings:
+  nestif:
+    min-complexity: 6
   gocognit:
     min-complexity: 40
   misspell:

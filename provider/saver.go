@@ -6,6 +6,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/provider/common"
 	"github.com/marema31/kamino/provider/csv"
 	"github.com/marema31/kamino/provider/database"
 	"github.com/marema31/kamino/provider/json"
@@ -13,7 +14,7 @@ import (
 	"github.com/marema31/kamino/provider/yaml"
 )
 
-//Saver provides way to save record by record
+//Saver provides way to save record by record.
 type Saver interface {
 	Save(*logrus.Entry, types.Record) error
 	Close(*logrus.Entry) error
@@ -21,7 +22,7 @@ type Saver interface {
 	Name() string
 }
 
-//NewSaver analyze the datasource and return object implementing Saver of the asked type
+//NewSaver analyze the datasource and return object implementing Saver of the asked type.
 func (p *KaminoProvider) NewSaver(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer, table string, key string, mode string) (Saver, error) {
 	engine := ds.GetEngine()
 
@@ -35,6 +36,6 @@ func (p *KaminoProvider) NewSaver(ctx context.Context, log *logrus.Entry, ds dat
 	case datasource.YAML:
 		return yaml.NewSaver(ctx, log, ds)
 	default:
-		return nil, fmt.Errorf("don't know how to manage this datasource engine")
+		return nil, fmt.Errorf("don't know how to manage this datasource engine: %w", common.ErrWrongParameterValue)
 	}
 }

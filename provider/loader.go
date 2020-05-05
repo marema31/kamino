@@ -6,7 +6,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
-
+	"github.com/marema31/kamino/provider/common"
 	"github.com/marema31/kamino/provider/csv"
 	"github.com/marema31/kamino/provider/database"
 	"github.com/marema31/kamino/provider/json"
@@ -14,7 +14,7 @@ import (
 	"github.com/marema31/kamino/provider/yaml"
 )
 
-//Loader provides way to load record by record
+//Loader provides way to load record by record.
 type Loader interface {
 	Next() bool
 	Load(*logrus.Entry) (types.Record, error)
@@ -22,7 +22,7 @@ type Loader interface {
 	Name() string
 }
 
-//NewLoader analyze the datasource and return object implementing Loader of the asked type
+//NewLoader analyze the datasource and return object implementing Loader of the asked type.
 func (p *KaminoProvider) NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer, table string, where string) (Loader, error) {
 	engine := ds.GetEngine()
 
@@ -36,6 +36,6 @@ func (p *KaminoProvider) NewLoader(ctx context.Context, log *logrus.Entry, ds da
 	case datasource.YAML:
 		return yaml.NewLoader(ctx, log, ds)
 	default:
-		return nil, fmt.Errorf("don't know how to manage this datasource engine")
+		return nil, fmt.Errorf("don't know how to manage this datasource engine: %w", common.ErrWrongParameterValue)
 	}
 }

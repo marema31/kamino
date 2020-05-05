@@ -2,6 +2,7 @@ package sync
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -15,7 +16,7 @@ import (
 	"github.com/marema31/kamino/step/common"
 )
 
-// SourceConfig type for source contain all possible fields without verification
+// SourceConfig type for source contain all possible fields without verification.
 type SourceConfig struct {
 	Tags    []string
 	Engines []string
@@ -24,7 +25,7 @@ type SourceConfig struct {
 	Where   string
 }
 
-// DestinationConfig type for destination contain all possible fields without verification
+// DestinationConfig type for destination contain all possible fields without verification.
 type DestinationConfig struct {
 	Tags    []string
 	Engines []string
@@ -34,12 +35,14 @@ type DestinationConfig struct {
 	Mode    string
 }
 
-// FilterConfig type for filter contain all possible fields without verification
+// FilterConfig type for filter contain all possible fields without verification.
 type FilterConfig struct {
 	Aparameters []string
 	Mparameters map[string]string
 	Type        string
 }
+
+var errDatasource = errors.New("NOT CORRECT NUMBER OF DATASOURCES")
 
 func getDatasources(log *logrus.Entry, dss datasource.Datasourcers, tags []string, engines []string, dsTypes []string, objectType string, unique bool, limitedTags []string) ([]datasource.Datasourcer, error) {
 	if len(tags) == 0 {
@@ -64,12 +67,12 @@ func getDatasources(log *logrus.Entry, dss datasource.Datasourcers, tags []strin
 
 	if len(datasources) == 0 {
 		log.Errorf("no %s found", objectType)
-		return nil, fmt.Errorf("no %s found", objectType)
+		return nil, fmt.Errorf("no %s found: %w", objectType, errDatasource)
 	}
 
 	if unique && len(datasources) != 1 {
 		log.Errorf("too many %ss found", objectType)
-		return nil, fmt.Errorf("too many %ss found", objectType)
+		return nil, fmt.Errorf("too many %ss found: %w", objectType, errDatasource)
 	}
 
 	return datasources, nil
@@ -158,7 +161,7 @@ func getFilters(log *logrus.Entry, v *viper.Viper) ([]filter.Filter, error) {
 	return filters, nil
 }
 
-//PostLoad modify the loaded step values with the values provided in the map in argument
+//PostLoad modify the loaded step values with the values provided in the map in argument.
 func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) (err error) {
 	if value, ok := superseed["sync.forceCacheOnly"]; ok {
 		st.forceCacheOnly, err = strconv.ParseBool(value)
@@ -167,7 +170,7 @@ func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) (err er
 	return err
 }
 
-//Load data from step file using its viper representation a return priority and list of steps
+//Load data from step file using its viper representation a return priority and list of steps.
 func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, provider provider.Provider, force bool, dryRun bool, limitedTags []string) (priority uint, steps []common.Steper, err error) {
 	var step Step
 
@@ -181,12 +184,12 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 
 	if !v.IsSet("source") {
 		logStep.Error("No source provided")
-		return 0, nil, fmt.Errorf("no source definition")
+		return 0, nil, fmt.Errorf("no source definition: %w", common.ErrMissingParameter)
 	}
 
 	if !v.IsSet("destinations") {
 		logStep.Error("No destinations provided")
-		return 0, nil, fmt.Errorf("no destinations definition")
+		return 0, nil, fmt.Errorf("no destinations definition: %w", common.ErrMissingParameter)
 	}
 
 	logStep.Debug("Lookup source")

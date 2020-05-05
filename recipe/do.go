@@ -8,7 +8,7 @@ import (
 
 var hadError bool
 
-// Do will execute the step either in parallel or sequentially (defined by the Cookbook.sequential flags)
+// Do will execute the step either in parallel or sequentially (defined by the Cookbook.sequential flags).
 func (ck *Cookbook) Do(ctx context.Context, log *logrus.Entry) bool {
 	if ck.sequential {
 		return ck.sequentialDo(ctx, log)

@@ -43,7 +43,7 @@ func (st *Step) print(log *logrus.Entry, admin bool) (int, error) {
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Migration", "Applied"})
-	table.SetColWidth(60)
+	table.SetColWidth(60) //nolint:gomnd  // Due to what is displayed this value ie more adapted
 
 	rows := make(map[string]string)
 

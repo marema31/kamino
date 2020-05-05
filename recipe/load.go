@@ -12,7 +12,7 @@ import (
 	"github.com/marema31/kamino/step/common"
 )
 
-//PostLoad modify the loaded step values with the values provided in the map in argument
+//PostLoad modify the loaded step values with the values provided in the map in argument.
 func (ck *Cookbook) PostLoad(log *logrus.Entry, superseed map[string]string) error {
 	for _, recipe := range ck.Recipes {
 		for _, steps := range recipe.steps {
@@ -28,7 +28,7 @@ func (ck *Cookbook) PostLoad(log *logrus.Entry, superseed map[string]string) err
 }
 
 // Load Lookup the provided folder for recipes folder and will return a Cookbook of the selected recipes/steps.
-// For each recipe, it will load all datasources and the selected steps
+// For each recipe, it will load all datasources and the selected steps.
 func (ck *Cookbook) Load(ctx context.Context, log *logrus.Entry, configPath string, recipes []string, limitedTags []string, stepNames []string, stepTypes []string) error {
 	var firstError error
 
@@ -46,6 +46,33 @@ func (ck *Cookbook) Load(ctx context.Context, log *logrus.Entry, configPath stri
 			}
 		}
 	}
+
+	return firstError
+}
+
+func (ck *Cookbook) parseStep(ctx context.Context, log *logrus.Entry, dss datasource.Datasourcers, prov provider.Provider, recipePath string, rname string, limitedTags []string, stepNames []string, stepTypes []string, filename string) error {
+	var firstError error
+
+	log.Debug("Parsing step configuration")
+
+	priority, steps, err := ck.stepFactory.Load(ctx, log, recipePath, filename, dss, prov, limitedTags, stepNames, stepTypes, ck.force, ck.dryRun)
+	if err != nil {
+		if !ck.validate {
+			return err
+		}
+
+		if firstError == nil {
+			firstError = err
+		}
+	}
+
+	if _, ok := ck.Recipes[rname]; !ok {
+		s := make(map[uint][]common.Steper)
+		s[priority] = make([]common.Steper, 0)
+		ck.Recipes[rname] = recipe{name: rname, steps: s, currentPriority: 0, dss: dss}
+	}
+
+	ck.Recipes[rname].steps[priority] = append(ck.Recipes[rname].steps[priority], steps...)
 
 	return firstError
 }
@@ -79,31 +106,18 @@ func (ck *Cookbook) loadOneRecipe(ctx context.Context, log *logrus.Entry, config
 	}
 
 	for _, file := range files {
-		if file.Mode().IsRegular() {
-			ext := filepath.Ext(file.Name())
-			if ext == ".yml" || ext == ".yaml" || ext == ".json" || ext == ".toml" {
-				name := strings.TrimSuffix(file.Name(), ext)
-				logRecipe := log.WithField("step", name)
-				logRecipe.Debug("Parsing step configuration")
+		ext := filepath.Ext(file.Name())
+		if file.Mode().IsRegular() && (ext == ".yml" || ext == ".yaml" || ext == ".json" || ext == ".toml") {
+			name := strings.TrimSuffix(file.Name(), ext)
+			logRecipe := log.WithField("step", name)
 
-				priority, steps, err := ck.stepFactory.Load(ctx, logRecipe, recipePath, name, dss, prov, limitedTags, stepNames, stepTypes, ck.force, ck.dryRun)
-				if err != nil {
-					if !ck.validate {
-						return err
-					}
+			err := ck.parseStep(ctx, logRecipe, dss, prov, recipePath, rname, limitedTags, stepNames, stepTypes, name)
+			if err != nil && !ck.validate {
+				return err
+			}
 
-					if firstError == nil {
-						firstError = err
-					}
-				}
-
-				if _, ok := ck.Recipes[rname]; !ok {
-					s := make(map[uint][]common.Steper)
-					s[priority] = make([]common.Steper, 0)
-					ck.Recipes[rname] = recipe{name: rname, steps: s, currentPriority: 0, dss: dss}
-				}
-
-				ck.Recipes[rname].steps[priority] = append(ck.Recipes[rname].steps[priority], steps...)
+			if err != nil && firstError == nil {
+				firstError = err
 			}
 		}
 	}

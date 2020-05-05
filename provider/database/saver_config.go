@@ -25,7 +25,7 @@ func stringToMode(modestr string) dbSaverMode {
 	}
 }
 
-//createIdsList store in the instance the list of all values of column described in 'key' configuration entry
+//createIdsList store in the instance the list of all values of column described in 'key' configuration entry.
 func (saver *DbSaver) createIdsList(log *logrus.Entry) error {
 	log.Debugf("SELECT %s from %s", saver.key, saver.table)
 

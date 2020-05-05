@@ -16,12 +16,12 @@ import (
 	"github.com/marema31/kamino/step/common"
 )
 
-//PostLoad modify the loaded step values with the values provided in the map in argument
+//PostLoad modify the loaded step values with the values provided in the map in argument.
 func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) error {
 	return nil
 }
 
-//Load data from step file using its viper representation a return priority and list of steps
+//Load data from step file using its viper representation a return priority and list of steps.
 func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, force bool, dryRun bool, limitedTags []string) (priority uint, steps []common.Steper, err error) { //nolint: funlen
 	steps = make([]common.Steper, 0, 1)
 	priority = v.GetUint("priority")
@@ -36,7 +36,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 	script := v.GetString("script")
 	if script == "" {
 		logStep.Error("No script provided")
-		return 0, nil, fmt.Errorf("the step %s must have a script to call", name)
+		return 0, nil, fmt.Errorf("the step %s must have a script to call: %w", name, common.ErrMissingParameter)
 	}
 
 	args := v.GetStringSlice("arguments")
@@ -48,7 +48,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 			logStep.Errorf("Parsing the %dth environment failed:", i)
 			logStep.Error(err)
 
-			return 0, nil, fmt.Errorf("error parsing the environment of %s step: %v", name, err)
+			return 0, nil, fmt.Errorf("error parsing the environment of %s step: %w", name, err)
 		}
 	}
 
@@ -66,7 +66,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		logStep.Error("Parsing the path failed:")
 		logStep.Error(err)
 
-		return 0, nil, fmt.Errorf("error parsing the path of %s step: %v", name, err)
+		return 0, nil, fmt.Errorf("error parsing the path of %s step: %w", name, err)
 	}
 
 	envs := v.GetStringSlice("environment")
@@ -78,7 +78,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 			logStep.Errorf("Parsing the %dth environment failed:", i)
 			logStep.Error(err)
 
-			return 0, nil, fmt.Errorf("error parsing the environment of %s step: %v", name, err)
+			return 0, nil, fmt.Errorf("error parsing the environment of %s step: %w", name, err)
 		}
 	}
 

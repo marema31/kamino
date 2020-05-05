@@ -26,7 +26,7 @@ func init() {
 	rootCmd.AddCommand(validateCmd)
 }
 
-//Validate will validate the datasources and recipes files
+//Validate will validate the datasources and recipes files.
 func Validate(cookbook recipe.Cooker, names []string, args []string) error {
 	log := common.Logger.WithField("action", "sync")
 
@@ -37,7 +37,7 @@ func Validate(cookbook recipe.Cooker, names []string, args []string) error {
 
 	err = cookbook.Load(common.Ctx, log, common.CfgFolder, recipes, common.Tags, names, []string{})
 	if err != nil {
-		return fmt.Errorf("error while loading the recipes: %v", err)
+		return fmt.Errorf("error while loading the recipes: %w", err)
 	}
 
 	return nil

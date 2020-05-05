@@ -6,7 +6,7 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 )
 
-// Step informations
+// Step informations.
 type Step struct {
 	Name       string
 	datasource datasource.Datasourcer

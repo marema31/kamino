@@ -7,7 +7,7 @@ import (
 	"github.com/marema31/kamino/step/common"
 )
 
-//Finish manage the finish of the step (called after all other step of the same priority has ended their Do)
+//Finish manage the finish of the step (called after all other step of the same priority has ended their Do).
 func (st *Step) Finish(log *logrus.Entry) {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
 	logStep.Info("Finishing step")
@@ -19,7 +19,7 @@ func (st *Step) Finish(log *logrus.Entry) {
 	}
 }
 
-//Cancel manage the cancellation of the step
+//Cancel manage the cancellation of the step.
 func (st *Step) Cancel(log *logrus.Entry) {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
 	logStep.Info("Cancelling step")
@@ -31,7 +31,7 @@ func (st *Step) Cancel(log *logrus.Entry) {
 	}
 }
 
-//Do manage the runnning of the step
+//Do manage the runnning of the step.
 func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
 	logStep.Info("Beginning step")
@@ -73,7 +73,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	return nil
 }
 
-// ToSkip return true if the step must be skipped (based on the query parameter
+// ToSkip return true if the step must be skipped (based on the query parameter.
 func (st *Step) ToSkip(ctx context.Context, log *logrus.Entry) (bool, error) {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
 	return common.ToSkipDatabase(ctx, logStep, st.datasource, st.admin, st.noDb, st.query)

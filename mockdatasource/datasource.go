@@ -10,7 +10,7 @@ import (
 	"github.com/marema31/kamino/datasource"
 )
 
-// MockDatasource is fake datasource object for test purpose
+// MockDatasource is fake datasource object for test purpose.
 type MockDatasource struct {
 	Name          string
 	Type          datasource.Type
@@ -44,22 +44,22 @@ type MockDatasource struct {
 	WriteBuf      bytes.Buffer
 }
 
-//GetEngine return the engine enum value
+//GetEngine return the engine enum value.
 func (ds *MockDatasource) GetEngine() datasource.Engine {
 	return ds.Engine
 }
 
-//GetType return the type enum value
+//GetType return the type enum value.
 func (ds *MockDatasource) GetType() datasource.Type {
 	return ds.Type
 }
 
-//IsTransaction return true if the datasource has transaction
+//IsTransaction return true if the datasource has transaction.
 func (ds *MockDatasource) IsTransaction() bool {
 	return ds.Transaction
 }
 
-//GetNamedTag return the value of the tag with the provided name or "" if not exists
+//GetNamedTag return the value of the tag with the provided name or "" if not exists.
 func (ds *MockDatasource) GetNamedTag(name string) string {
 	for _, tag := range ds.Tags {
 		if strings.Contains(tag, name+":") {
@@ -70,7 +70,7 @@ func (ds *MockDatasource) GetNamedTag(name string) string {
 	return ""
 }
 
-//GetName return the name of the datasource
+//GetName return the name of the datasource.
 func (ds *MockDatasource) GetName() string {
 	return ds.Name
 }
