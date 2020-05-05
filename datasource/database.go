@@ -34,17 +34,17 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, envV
 
 	databaseTmpl, err := template.New("database").Funcs(sprig.FuncMap()).Parse(v.GetString("database"))
 	if err != nil {
-		return Datasource{}, fmt.Errorf("parsing database name provided")
+		return Datasource{}, fmt.Errorf("parsing database name provided: %w", err)
 	}
 
 	var database bytes.Buffer
 	if err = databaseTmpl.Execute(&database, data); err != nil {
-		return Datasource{}, fmt.Errorf("expanding database name provided")
+		return Datasource{}, fmt.Errorf("expanding database name provided: %w", err)
 	}
 
 	ds.database = database.String()
 	if ds.database == "" {
-		return Datasource{}, fmt.Errorf("no database name provided")
+		return Datasource{}, fmt.Errorf("no database name provided: %w", errMissingParameter)
 	}
 
 	ds.tags = v.GetStringSlice("tags")
@@ -61,12 +61,12 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, envV
 
 	hostTmpl, err := template.New("host").Funcs(sprig.FuncMap()).Parse(v.GetString("host"))
 	if err != nil {
-		return Datasource{}, fmt.Errorf("parsing host name provided")
+		return Datasource{}, fmt.Errorf("parsing host name provided: %w", err)
 	}
 
 	var host bytes.Buffer
 	if err = hostTmpl.Execute(&host, data); err != nil {
-		return Datasource{}, fmt.Errorf("expanding host name provided")
+		return Datasource{}, fmt.Errorf("expanding host name provided: %w", err)
 	}
 
 	ds.host = host.String()
@@ -76,60 +76,60 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, envV
 
 	portTmpl, err := template.New("port").Funcs(sprig.FuncMap()).Parse(v.GetString("port"))
 	if err != nil {
-		return Datasource{}, fmt.Errorf("parsing port provided")
+		return Datasource{}, fmt.Errorf("parsing port provided: %w", err)
 	}
 
 	var port bytes.Buffer
 	if err = portTmpl.Execute(&port, data); err != nil {
-		return Datasource{}, fmt.Errorf("expanding port provided")
+		return Datasource{}, fmt.Errorf("expanding port provided: %w", err)
 	}
 
 	ds.port = port.String()
 
 	userTmpl, err := template.New("user").Funcs(sprig.FuncMap()).Parse(v.GetString("user"))
 	if err != nil {
-		return Datasource{}, fmt.Errorf("parsing user name provided")
+		return Datasource{}, fmt.Errorf("parsing user name provided: %w", err)
 	}
 
 	var user bytes.Buffer
 	if err = userTmpl.Execute(&user, data); err != nil {
-		return Datasource{}, fmt.Errorf("expanding user name provided")
+		return Datasource{}, fmt.Errorf("expanding user name provided: %w", err)
 	}
 
 	ds.user = user.String()
 
 	adminTmpl, err := template.New("admin").Funcs(sprig.FuncMap()).Parse(v.GetString("admin"))
 	if err != nil {
-		return Datasource{}, fmt.Errorf("parsing admin name provided")
+		return Datasource{}, fmt.Errorf("parsing admin name provided: %w", err)
 	}
 
 	var admin bytes.Buffer
 	if err = adminTmpl.Execute(&admin, data); err != nil {
-		return Datasource{}, fmt.Errorf("expanding admin name provided")
+		return Datasource{}, fmt.Errorf("expanding admin name provided: %w", err)
 	}
 
 	ds.admin = admin.String()
 
 	userPwTmpl, err := template.New("userPw").Funcs(sprig.FuncMap()).Parse(v.GetString("password"))
 	if err != nil {
-		return Datasource{}, fmt.Errorf("parsing user password provided")
+		return Datasource{}, fmt.Errorf("parsing user password provided: %w", err)
 	}
 
 	var userPw bytes.Buffer
 	if err = userPwTmpl.Execute(&userPw, data); err != nil {
-		return Datasource{}, fmt.Errorf("expanding user password provided")
+		return Datasource{}, fmt.Errorf("expanding user password provided: %w", err)
 	}
 
 	ds.userPw = userPw.String()
 
 	adminPwTmpl, err := template.New("adminPw").Funcs(sprig.FuncMap()).Parse(v.GetString("adminpassword"))
 	if err != nil {
-		return Datasource{}, fmt.Errorf("parsing admin password provided")
+		return Datasource{}, fmt.Errorf("parsing admin password provided: %w", err)
 	}
 
 	var adminPw bytes.Buffer
 	if err = adminPwTmpl.Execute(&adminPw, data); err != nil {
-		return Datasource{}, fmt.Errorf("expanding admin password provided")
+		return Datasource{}, fmt.Errorf("expanding admin password provided: %w", err)
 	}
 
 	ds.adminPw = adminPw.String()
@@ -195,13 +195,13 @@ func loadDatabaseDatasource(filename string, v *viper.Viper, engine Engine, envV
 	return ds, nil
 }
 
-//OpenDatabase open connection to the corresponding database
+//OpenDatabase open connection to the corresponding database.
 func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*sql.DB, error) {
 	logDb := log.WithField("engine", EngineToString(ds.engine))
 
 	if ds.dstype != Database {
 		logDb.Error("Can not open as a database")
-		return nil, fmt.Errorf("can not open %s as a database", ds.name)
+		return nil, fmt.Errorf("can not open %s as a database: %w", ds.name, errWrongType)
 	}
 
 	var (
@@ -249,8 +249,8 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 		return nil, err
 	}
 
-	db.SetConnMaxLifetime(time.Minute * 5)
-	db.SetMaxIdleConns(10)
+	db.SetConnMaxLifetime(time.Minute * 5) //nolint:gomnd //for the moment no reason to make it parametrized
+	db.SetMaxIdleConns(10)                 //nolint:gomnd //for the moment no reason to make it parametrized
 
 	for databaseConnectionAttemptLoop := 0; databaseConnectionAttemptLoop < ds.conRetry; databaseConnectionAttemptLoop++ {
 		// Open does not really do a connection and therefore does not test for url is correct, ping will do
@@ -283,7 +283,7 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 	return db, nil
 }
 
-//Only for unit testing of OpenDatabase function
+//Only for unit testing of OpenDatabase function.
 var mockingSQL = false
 
 func sqlOpen(driver string, url string) (*sql.DB, error) {

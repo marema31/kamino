@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// load a dile type datasource from the viper configuration
+// load a dile type datasource from the viper configuration.
 func loadFileDatasource(recipePath string, filename string, v *viper.Viper, engine Engine, envVar map[string]string) (Datasource, error) {
 	var ds Datasource
 	ds.dstype = File
@@ -29,12 +29,12 @@ func loadFileDatasource(recipePath string, filename string, v *viper.Viper, engi
 
 	fileTmpl, err := template.New("file").Funcs(sprig.FuncMap()).Parse(v.GetString("file"))
 	if err != nil {
-		return Datasource{}, fmt.Errorf("parsing file provided")
+		return Datasource{}, fmt.Errorf("parsing file provided: %w", err)
 	}
 
 	var file bytes.Buffer
 	if err = fileTmpl.Execute(&file, data); err != nil {
-		return Datasource{}, fmt.Errorf("expanding file provided")
+		return Datasource{}, fmt.Errorf("expanding file provided: %w", err)
 	}
 
 	ds.file.FilePath = file.String()
@@ -45,18 +45,18 @@ func loadFileDatasource(recipePath string, filename string, v *viper.Viper, engi
 
 	URLTmpl, err := template.New("URL").Funcs(sprig.FuncMap()).Parse(v.GetString("URL"))
 	if err != nil {
-		return Datasource{}, fmt.Errorf("parsing URL provided")
+		return Datasource{}, fmt.Errorf("parsing URL provided: %w", err)
 	}
 
 	var URL bytes.Buffer
 	if err = URLTmpl.Execute(&URL, data); err != nil {
-		return Datasource{}, fmt.Errorf("expanding URL provided")
+		return Datasource{}, fmt.Errorf("expanding URL provided: %w", err)
 	}
 
 	ds.file.URL = URL.String()
 
 	if ds.file.FilePath == "" && ds.file.URL == "" && ds.file.Inline == "" {
-		return Datasource{}, fmt.Errorf("no file path or URL provided")
+		return Datasource{}, fmt.Errorf("no file path or URL provided: %w", err)
 	}
 
 	ds.tags = v.GetStringSlice("tags")
@@ -71,31 +71,31 @@ func loadFileDatasource(recipePath string, filename string, v *viper.Viper, engi
 	return ds, nil
 }
 
-//OpenReadFile open and return a io.ReadCloser corresponding to the datasource to be used by providers
+//OpenReadFile open and return a io.ReadCloser corresponding to the datasource to be used by providers.
 func (ds *Datasource) OpenReadFile(log *logrus.Entry) (io.ReadCloser, error) {
 	logFile := log.WithField("engine", EngineToString(ds.engine))
 	return ds.file.OpenReadFile(logFile)
 }
 
-//OpenWriteFile open and return a io.WriteCloser corresponding to the datasource to be used by providers
+//OpenWriteFile open and return a io.WriteCloser corresponding to the datasource to be used by providers.
 func (ds *Datasource) OpenWriteFile(log *logrus.Entry) (io.WriteCloser, error) {
 	logFile := log.WithField("engine", EngineToString(ds.engine))
 	return ds.file.OpenWriteFile(logFile)
 }
 
-//ResetFile close the file and remove the temporary file
+//ResetFile close the file and remove the temporary file.
 func (ds *Datasource) ResetFile(log *logrus.Entry) error {
 	logFile := log.WithField("engine", EngineToString(ds.engine))
 	return ds.file.ResetFile(logFile)
 }
 
-//CloseFile close the file and rename the temporary file to real name (if exists)
+//CloseFile close the file and rename the temporary file to real name (if exists).
 func (ds *Datasource) CloseFile(log *logrus.Entry) error {
 	logFile := log.WithField("engine", EngineToString(ds.engine))
 	return ds.file.CloseFile(logFile)
 }
 
-// Stat returns os.FileInfo on the file of the datasource
+// Stat returns os.FileInfo on the file of the datasource.
 func (ds *Datasource) Stat() (os.FileInfo, error) {
 	return ds.file.Stat()
 }

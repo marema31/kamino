@@ -23,7 +23,7 @@ type parsedDestConfig struct {
 	mode  string
 }
 
-// Step informations
+// Step informations.
 type Step struct {
 	Name           string
 	baseFolder     string

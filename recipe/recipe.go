@@ -21,7 +21,7 @@ import (
 	"github.com/marema31/kamino/step/common"
 )
 
-// Cooker interface for cookbook testing
+// Cooker interface for cookbook testing.
 type Cooker interface {
 	Statistics() (map[string][]int, int)
 	Load(context.Context, *logrus.Entry, string, []string, []string, []string, []string) error
@@ -36,7 +36,7 @@ type recipe struct {
 	dss             datasource.Datasourcers
 }
 
-// Cookbook is a map of recipe indexed by recipe's name
+// Cookbook is a map of recipe indexed by recipe's name.
 type Cookbook struct {
 	Recipes     map[string]recipe
 	stepFactory step.Creater
@@ -48,7 +48,7 @@ type Cookbook struct {
 	dryRun      bool
 }
 
-// New returns a new
+// New returns a new.
 func New(sf step.Creater, connectionTimeout time.Duration, connectionRetry int, force bool, sequential bool, validate bool, dryRun bool) *Cookbook {
 	return &Cookbook{
 		Recipes:     make(map[string]recipe),
@@ -62,7 +62,7 @@ func New(sf step.Creater, connectionTimeout time.Duration, connectionRetry int, 
 	}
 }
 
-// Statistics return number of step by priority by recipes and total number of steps
+// Statistics return number of step by priority by recipes and total number of steps.
 func (ck *Cookbook) Statistics() (map[string][]int, int) {
 	result := make(map[string][]int)
 

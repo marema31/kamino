@@ -10,10 +10,11 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/provider/common"
 	"github.com/marema31/kamino/provider/types"
 )
 
-//KaminoYAMLLoader specifc state for database Saver provider
+//KaminoYAMLLoader specifc state for database Saver provider.
 type KaminoYAMLLoader struct {
 	ds         datasource.Datasourcer
 	file       io.ReadCloser
@@ -22,7 +23,7 @@ type KaminoYAMLLoader struct {
 	currentRow int
 }
 
-//NewLoader open the encoding process on provider file, read the whole file, unMarshal it and return a Loader compatible object
+//NewLoader open the encoding process on provider file, read the whole file, unMarshal it and return a Loader compatible object.
 func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer) (*KaminoYAMLLoader, error) {
 	logFile := log.WithField("datasource", ds.GetName())
 
@@ -56,18 +57,18 @@ func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer
 	return &k, nil
 }
 
-//Next moves to next record and return false if there is no more records
+//Next moves to next record and return false if there is no more records.
 func (yl *KaminoYAMLLoader) Next() bool {
 	return len(yl.content) > yl.currentRow
 }
 
-//Load reads the next record and return it
+//Load reads the next record and return it.
 func (yl *KaminoYAMLLoader) Load(log *logrus.Entry) (types.Record, error) {
 	logFile := log.WithField("datasource", yl.ds.GetName())
 
 	if yl.currentRow >= len(yl.content) {
 		logFile.Error("no more data to read")
-		return nil, fmt.Errorf("no more data to read")
+		return nil, fmt.Errorf("no more data to read: %w", common.ErrEOF)
 	}
 
 	record := yl.content[yl.currentRow]
@@ -76,13 +77,13 @@ func (yl *KaminoYAMLLoader) Load(log *logrus.Entry) (types.Record, error) {
 	return record, nil
 }
 
-//Close closes the datasource
+//Close closes the datasource.
 func (yl *KaminoYAMLLoader) Close(log *logrus.Entry) error {
 	logFile := log.WithField("datasource", yl.ds.GetName())
 	return yl.ds.CloseFile(logFile)
 }
 
-//Name give the name of the destination
+//Name give the name of the destination.
 func (yl *KaminoYAMLLoader) Name() string {
 	return yl.name
 }

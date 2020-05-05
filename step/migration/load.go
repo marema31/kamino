@@ -23,7 +23,7 @@ var dialects = map[datasource.Engine]string{
 	datasource.Mysql:    "mysql",
 }
 
-//PostLoad modify the loaded step values with the values provided in the map in argument
+//PostLoad modify the loaded step values with the values provided in the map in argument.
 func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) error {
 	var err error
 
@@ -36,7 +36,7 @@ func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) error {
 		case "status":
 			st.printOnly = true
 		default:
-			return fmt.Errorf("%s is not a correct direction for migration", value)
+			return fmt.Errorf("%s is not a correct direction for migration: %w", value, common.ErrWrongParameterValue)
 		}
 	}
 
@@ -56,7 +56,7 @@ func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) error {
 	return err
 }
 
-//Load data from step file using its viper representation a return priority and list of steps
+//Load data from step file using its viper representation a return priority and list of steps.
 func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, force bool, dryRun bool, limitedTags []string) (priority uint, steps []common.Steper, err error) { //nolint: funlen
 	steps = make([]common.Steper, 0, 1)
 	priority = v.GetUint("priority")
@@ -71,7 +71,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 	folderTmpl := v.GetString("folder")
 	if folderTmpl == "" {
 		logStep.Error("No migration folder provided")
-		return 0, nil, fmt.Errorf("the step %s must have a folder that contains the migration files", name)
+		return 0, nil, fmt.Errorf("the step %s must have a folder that contains the migration files: %w", name, common.ErrMissingParameter)
 	}
 
 	if !filepath.IsAbs(folderTmpl) {
@@ -83,7 +83,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		logStep.Error("Parsing the migration folder name failed:")
 		logStep.Error(err)
 
-		return 0, nil, fmt.Errorf("error parsing the folder of %s step: %v", name, err)
+		return 0, nil, fmt.Errorf("error parsing the folder of %s step: %w", name, err)
 	}
 
 	engines := v.GetStringSlice("engines")
@@ -97,7 +97,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 	queryTmpl := v.GetString("query")
 	if queryTmpl == "" {
 		logStep.Error("No SQL query provided")
-		return 0, nil, fmt.Errorf("the step %s must have a query to be executed", name)
+		return 0, nil, fmt.Errorf("the step %s must have a query to be executed: %w", name, common.ErrMissingParameter)
 	}
 
 	tquery, err := template.New("query").Funcs(sprig.FuncMap()).Parse(queryTmpl)
@@ -105,7 +105,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		logStep.Error("Parsing the SQL query template failed:")
 		logStep.Error(err)
 
-		return 0, nil, fmt.Errorf("error parsing the query of %s step: %v", name, err)
+		return 0, nil, fmt.Errorf("error parsing the query of %s step: %w", name, err)
 	}
 
 	noUser := v.GetBool("nouser")

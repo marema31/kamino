@@ -14,14 +14,14 @@ func setupLoadTest() *Datasources {
 
 func TestLoadNoTag(t *testing.T) {
 	dss := setupLoadTest()
-	_, err := dss.load("testdata/good", "notag", map[string]string{})
+	_, err := dss.load("testdata/good", "datasources", "notag")
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
 }
 func TestLoadNoEngine(t *testing.T) {
 	dss := setupLoadTest()
-	_, err := dss.load("testdata/fail", "noengine", map[string]string{})
+	_, err := dss.load("testdata/fail", "datasources", "noengine")
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -29,7 +29,7 @@ func TestLoadNoEngine(t *testing.T) {
 
 func TestLoadWrongEngine(t *testing.T) {
 	dss := setupLoadTest()
-	_, err := dss.load("testdata/fail", "wrongengine", map[string]string{})
+	_, err := dss.load("testdata/fail", "datasources", "wrongengine")
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

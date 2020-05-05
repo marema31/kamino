@@ -32,7 +32,7 @@ var (
 	Verbose bool
 )
 
-// CreateSuperseed creates the postload configuration map
+// CreateSuperseed creates the postload configuration map.
 func CreateSuperseed() map[string]string {
 	superseed := make(map[string]string)
 

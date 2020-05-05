@@ -3,7 +3,6 @@ package datasource
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -11,51 +10,15 @@ import (
 	"github.com/spf13/viper"
 )
 
-//LoadAll Lookup the provided folder for datasource configuration files
+//LoadAll Lookup the provided folder for datasource configuration files.
 func (dss *Datasources) LoadAll(recipePath string, log *logrus.Entry) error {
-	var firstError error
-
-	dsfolder := filepath.Join(recipePath, "datasources")
-
-	files, err := ioutil.ReadDir(dsfolder)
-	if err != nil {
-		log.Errorf("Can not list datasources configuration folder: %v", err)
-		return err
-	}
-
-	envVar := make(map[string]string)
-
-	for _, v := range os.Environ() {
-		splitV := strings.Split(v, "=")
-		envVar[splitV[0]] = splitV[1]
-	}
-
-	for _, file := range files {
-		if file.Mode().IsRegular() {
-			ext := filepath.Ext(file.Name())
-			if ext == ".yml" || ext == ".yaml" || ext == ".json" || ext == ".toml" {
-				name := strings.TrimSuffix(file.Name(), ext)
-				logDatasource := log.WithField("datasource", name)
-				logDatasource.Debug("Parsing datasource configuration")
-
-				ds, err := dss.load(recipePath, name, envVar)
-				if err != nil {
-					logDatasource.Errorf("Unable to parse configuration: %v", err)
-
-					if firstError == nil {
-						firstError = err
-					}
-				}
-
-				dss.datasources[name] = &ds
-			}
-		}
-	}
+	firstError := dss.findRecipes(recipePath, "datasources", log)
 
 	if len(dss.datasources) == 0 {
-		log.Errorf("no datasources configuration files found in %s", dsfolder)
-		return fmt.Errorf("no datasources configuration files found in %s", dsfolder)
+		log.Errorf("no datasources configuration files found in %s/datasources", recipePath)
+		return fmt.Errorf("no datasources configuration files found in %s/datasources: %w", recipePath, errNoConfiguration)
 	}
+
 	// Insert the datasource name in all entry of the dictionary
 	// that correspond to one tag of the tag list
 	for _, ds := range dss.datasources {
@@ -73,12 +36,50 @@ func (dss *Datasources) LoadAll(recipePath string, log *logrus.Entry) error {
 	return firstError
 }
 
-func (dss *Datasources) load(recipePath string, filename string, envVar map[string]string) (Datasource, error) {
+func (dss *Datasources) findRecipes(recipePath string, subpath string, log *logrus.Entry) error {
+	var firstError error = nil
+
+	dsfolder := filepath.Join(recipePath, subpath)
+
+	files, err := ioutil.ReadDir(dsfolder)
+	if err != nil {
+		log.Errorf("Can not list datasources configuration folder: %v", err)
+		return err
+	}
+
+	for _, file := range files {
+		ext := filepath.Ext(file.Name())
+
+		if file.Mode().IsDir() {
+			err = dss.findRecipes(recipePath, filepath.Join(subpath, file.Name()), log)
+			if err != nil && firstError == nil {
+				firstError = err
+			}
+		} else if file.Mode().IsRegular() && ext == ".yml" || ext == ".yaml" || ext == ".json" || ext == ".toml" {
+			name := strings.TrimSuffix(file.Name(), ext)
+			logDatasource := log.WithField("datasource", name)
+			logDatasource.Debug("Parsing datasource configuration")
+
+			ds, err := dss.load(recipePath, subpath, name)
+			if err != nil {
+				logDatasource.Errorf("Unable to parse configuration: %v", err)
+				if firstError == nil {
+					firstError = err
+				}
+			}
+
+			dss.datasources[name] = &ds
+		}
+	}
+
+	return firstError
+}
+
+func (dss *Datasources) load(recipePath string, subpath string, filename string) (Datasource, error) {
 	v := viper.New()
-	dsfolder := filepath.Join(recipePath, "datasources")
 
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
-	v.AddConfigPath(dsfolder)
+	v.AddConfigPath(filepath.Join(recipePath, subpath))
 
 	err := v.ReadInConfig()
 	if err != nil {
@@ -87,7 +88,7 @@ func (dss *Datasources) load(recipePath string, filename string, envVar map[stri
 
 	engine := strings.ToLower(v.GetString("engine"))
 	if engine == "" {
-		return Datasource{}, fmt.Errorf("the datasource %s does not provide the engine name", filename)
+		return Datasource{}, fmt.Errorf("the datasource %s does not provide the engine name: %w", filename, errMissingParameter)
 	}
 
 	e, err := StringToEngine(engine)
@@ -97,10 +98,10 @@ func (dss *Datasources) load(recipePath string, filename string, envVar map[stri
 
 	switch e {
 	case Mysql, Postgres:
-		return loadDatabaseDatasource(filename, v, e, envVar, dss.conTimeout, dss.conRetry)
+		return loadDatabaseDatasource(filename, v, e, dss.envVar, dss.conTimeout, dss.conRetry)
 	case JSON, YAML, CSV:
-		return loadFileDatasource(recipePath, filename, v, e, envVar)
+		return loadFileDatasource(recipePath, filename, v, e, dss.envVar)
 	}
 	//Should never come here, error will be raised by StringToEngine
-	return Datasource{}, fmt.Errorf("does not how to manage %s datasource engine", engine)
+	return Datasource{}, fmt.Errorf("does not how to manage %s datasource engine: %w", engine, errWrongParameterValue)
 }

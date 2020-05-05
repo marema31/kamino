@@ -21,12 +21,12 @@ import (
 	"github.com/marema31/kamino/step/tmpl"
 )
 
-// Creater is an interface to an object able to create Steper from configuration
+// Creater is an interface to an object able to create Steper from configuration.
 type Creater interface {
 	Load(context.Context, *logrus.Entry, string, string, datasource.Datasourcers, provider.Provider, []string, []string, []string, bool, bool) (uint, []common.Steper, error)
 }
 
-// Factory implements the StepCreated and use configuration files to create the steps
+// Factory implements the StepCreated and use configuration files to create the steps.
 type Factory struct {
 	indexes map[string]int
 }
@@ -44,7 +44,7 @@ func normalizeStepType(stepType string) (string, error) {
 	case "sql", "sqlscript":
 		return "sqlscript", nil
 	default:
-		return "", fmt.Errorf("does not how to manage %s step type", stepType)
+		return "", fmt.Errorf("does not how to manage %s step type: %w", stepType, common.ErrWrongParameterValue)
 	}
 }
 
@@ -77,7 +77,7 @@ func (sf *Factory) nameInStepNames(log *logrus.Entry, name string, stepNames []s
 	return false, nil
 }
 
-// Load the step file and returns the priority and a list of steper for this file
+// Load the step file and returns the priority and a list of steper for this file.
 func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider, limitedTags []string, stepNames []string, stepTypes []string, force bool, dryRun bool) (priority uint, stepList []common.Steper, err error) {
 	v := viper.New()
 	stepsFolder := filepath.Join(recipePath, "steps")
@@ -116,7 +116,7 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 	stepType := strings.ToLower(v.GetString("type"))
 	if stepType == "" {
 		log.Errorf("Step type is empty")
-		return 0, nil, fmt.Errorf("the step %s does not provide the type", filename)
+		return 0, nil, fmt.Errorf("the step %s does not provide the type: %w", filename, common.ErrMissingParameter)
 	}
 
 	if stepType, err = normalizeStepType(stepType); err != nil {

@@ -9,21 +9,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Admin only migration
+// Admin only migration.
 var Admin bool
 
-// User only migration
+// User only migration.
 var User bool
 var limit int
 
-//AddCommands adds all subcommands to RootCmd
+//AddCommands adds all subcommands to RootCmd.
 func AddCommands(cmd *cobra.Command) {
 	cmd.AddCommand(
 		NewMigrateCommand(),
 	)
 }
 
-//NewMigrateCommand declare the migration sub commands
+//NewMigrateCommand declare the migration sub commands.
 func NewMigrateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "migrate",
@@ -49,7 +49,7 @@ func createSuperseed() (map[string]string, error) {
 	superseed := common.CreateSuperseed()
 
 	if Admin && User {
-		return superseed, fmt.Errorf("option --admin and --user are mutually exclusive")
+		return superseed, fmt.Errorf("option --admin and --user are mutually exclusive: %w", common.ErrWrongParameterValue)
 	}
 
 	if Admin {
@@ -69,7 +69,7 @@ func createSuperseed() (map[string]string, error) {
 	return superseed, nil
 }
 
-// UpDown manage the actual migration
+// UpDown manage the actual migration.
 func UpDown(direction string, cookbook recipe.Cooker, args []string) error {
 	log := common.Logger.WithField("action", "migrate-"+direction)
 
@@ -87,16 +87,16 @@ func UpDown(direction string, cookbook recipe.Cooker, args []string) error {
 
 	err = cookbook.Load(common.Ctx, log, common.CfgFolder, recipes, common.Tags, nil, []string{"migration"})
 	if err != nil {
-		return fmt.Errorf("error while loading the recipes: %v", err)
+		return fmt.Errorf("error while loading the recipes: %w", err)
 	}
 
 	err = cookbook.PostLoad(log, superseed)
 	if err != nil {
-		return fmt.Errorf("error while postloading the recipes: %v", err)
+		return fmt.Errorf("error while postloading the recipes: %w", err)
 	}
 
 	if cookbook.Do(common.Ctx, log) {
-		return fmt.Errorf("a step had an error")
+		return fmt.Errorf("a step had an error: %w", common.ErrStep)
 	}
 
 	return nil

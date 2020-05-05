@@ -11,7 +11,7 @@ import (
 
 var mu sync.Mutex
 
-//watchdog will run has a parallel goroutine until the context is cancelled or the Do sub push to the end channel
+//watchdog will run has a parallel goroutine until the context is cancelled or the Do sub push to the end channel.
 func stepWatchdog(ctxRecipe context.Context, log *logrus.Entry, wgWatchdog *sync.WaitGroup, end chan bool, step common.Steper) {
 	defer close(end)
 	defer wgWatchdog.Done()
@@ -31,7 +31,7 @@ func stepWatchdog(ctxRecipe context.Context, log *logrus.Entry, wgWatchdog *sync
 	log.Debug("Watchdog ending")
 }
 
-//stepExecutor will execute the step, cancel the context and raise the global fi
+//stepExecutor will execute the step, cancel the context and raise the global flag.
 func stepExecutor(ctxRecipe context.Context, log *logrus.Entry, step common.Steper, wgStep *sync.WaitGroup, wgWatchdog *sync.WaitGroup, cancelRecipe func(), end chan bool, hadError chan bool) {
 	defer wgStep.Done()
 

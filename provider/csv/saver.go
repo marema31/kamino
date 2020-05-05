@@ -11,7 +11,7 @@ import (
 	"github.com/marema31/kamino/provider/types"
 )
 
-//KaminoCsvSaver specifc state for database Saver provider
+//KaminoCsvSaver specifc state for database Saver provider.
 type KaminoCsvSaver struct {
 	ds       datasource.Datasourcer
 	file     io.WriteCloser
@@ -20,7 +20,7 @@ type KaminoCsvSaver struct {
 	colNames []string
 }
 
-//NewSaver open the encoding process on provider file and return a Saver compatible object
+//NewSaver open the encoding process on provider file and return a Saver compatible object.
 func NewSaver(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer) (*KaminoCsvSaver, error) {
 	logFile := log.WithField("datasource", ds.GetName())
 
@@ -35,7 +35,7 @@ func NewSaver(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer)
 	return &KaminoCsvSaver{file: file, ds: ds, name: tv.FilePath, writer: *writer, colNames: nil}, nil
 }
 
-//Save writes the record to the destination
+//Save writes the record to the destination.
 func (cs *KaminoCsvSaver) Save(log *logrus.Entry, record types.Record) error {
 	logFile := log.WithField("datasource", cs.ds.GetName())
 	// Is this method is called for the first time
@@ -69,7 +69,7 @@ func (cs *KaminoCsvSaver) Save(log *logrus.Entry, record types.Record) error {
 	return cs.writer.Write(row)
 }
 
-//Close closes the destination
+//Close closes the destination.
 func (cs *KaminoCsvSaver) Close(log *logrus.Entry) error {
 	logFile := log.WithField("datasource", cs.ds.GetName())
 	cs.writer.Flush()
@@ -77,12 +77,12 @@ func (cs *KaminoCsvSaver) Close(log *logrus.Entry) error {
 	return cs.ds.CloseFile(logFile)
 }
 
-//Name give the name of the destination
+//Name give the name of the destination.
 func (cs *KaminoCsvSaver) Name() string {
 	return cs.name
 }
 
-//Reset reinitialize the destination (if possible)
+//Reset reinitialize the destination (if possible).
 func (cs *KaminoCsvSaver) Reset(log *logrus.Entry) error {
 	logFile := log.WithField("datasource", cs.ds.GetName())
 	return cs.ds.ResetFile(logFile)

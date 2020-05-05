@@ -1,4 +1,4 @@
-//Package cmd manage the first level of command of the CLI
+//Package cmd manage the first level of command of the CLI.
 package cmd
 
 import (
@@ -12,7 +12,7 @@ import (
 	"github.com/marema31/kamino/cmd/migrate"
 )
 
-// RootCmd represents the base command when called without any subcommands
+// RootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:   "kamino [OPTIONS] COMMAND <recipe> ... <recipe>",
 	Short: "Development database manager",
@@ -32,13 +32,13 @@ var rootCmd = &cobra.Command{
 	SilenceErrors: true,
 }
 
-// Execute the corresponding cobra sub-command
+// Execute the corresponding cobra sub-command.
 func Execute(c context.Context) error {
 	common.Ctx = c //Store the context for all sub-command definition
 	return rootCmd.Execute()
 }
 
-// Called at package initialization, before main execution
+// Called at package initialization, before main execution.
 func init() {
 	cobra.OnInitialize(InitConfig)
 
@@ -49,12 +49,12 @@ func init() {
 	rootCmd.PersistentFlags().IntVar(&common.Retry, "connection-retry", 1, "number maximum of database connection retries")
 	rootCmd.PersistentFlags().BoolVar(&common.Sequential, "sequential", false, "run the step one by one")
 	rootCmd.PersistentFlags().StringSliceVarP(&common.Tags, "tags", "T", []string{}, "comma separated list of tags to filter the calculated impacted datasources")
-	rootCmd.PersistentFlags().DurationVar(&common.Timeout, "connection-timeout", time.Millisecond*2, "timeout of each database connection retry")
+	rootCmd.PersistentFlags().DurationVar(&common.Timeout, "connection-timeout", time.Millisecond*2, "timeout of each database connection retry") //nolint:gomnd //Default value
 	rootCmd.PersistentFlags().BoolVarP(&common.Verbose, "verbose", "v", false, "logs more verbose")
 	migrate.AddCommands(rootCmd)
 }
 
-// GetLogger returns the logger instancied at initialization phase
+// GetLogger returns the logger instancied at initialization phase.
 func GetLogger() *logrus.Logger {
 	return common.Logger
 }

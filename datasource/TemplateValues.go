@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// TmplValues structure use for template rendering to avoid exposing the datasource structure to the template
+// TmplValues structure use for template rendering to avoid exposing the datasource structure to the template.
 type TmplValues struct {
 	Name         string
 	Datasource   string
@@ -24,7 +24,7 @@ type TmplValues struct {
 	Environments map[string]string
 }
 
-// FillTmplValues return a struct for template operation with value corresponding to the provided datasource
+// FillTmplValues return a struct for template operation with value corresponding to the provided datasource.
 func (ds *Datasource) FillTmplValues() TmplValues {
 	var tv TmplValues
 	tv.Name = ds.name

@@ -41,47 +41,46 @@ func isRecipeFolder(log *logrus.Entry, filename string) bool {
 	return complete
 }
 
-// FindRecipes lookup the configuration folder and return a list of recipes if the args is empty
-func FindRecipes(log *logrus.Entry, args []string) ([]string, error) {
-	if len(args) != 0 {
-		recipesList := make([]string, 0, len(args))
+func lookupProvidedRecipes(log *logrus.Entry, recipesNames []string) ([]string, error) {
+	recipes := make([]string, 0, len(recipesNames))
 
-		for _, filename := range args {
-			if isRecipeFolder(log, filename) {
-				recipesList = append(recipesList, filename)
-				continue // We found, go to the next arg
-			}
+	for _, filename := range recipesNames {
+		if isRecipeFolder(log, filename) {
+			recipes = append(recipes, filename)
+			continue // We found, go to the next arg
+		}
 
-			if !strings.EqualFold(filepath.Base(filename), filename) {
-				return nil, fmt.Errorf("%s (%s) is not a valid globbed recipe", filename, filepath.Base(filename))
-			}
+		if !strings.EqualFold(filepath.Base(filename), filename) {
+			return nil, fmt.Errorf("%s (%s) is not a valid globbed recipe: %w", filename, filepath.Base(filename), ErrWrongParameterValue)
+		}
 
-			folders, err := filepath.Glob(filepath.Join(CfgFolder, filename))
+		folders, err := filepath.Glob(filepath.Join(CfgFolder, filename))
 
-			if err != nil {
-				return nil, fmt.Errorf("%s is not a valid globbed recipe", filename)
-			}
+		if err != nil {
+			return nil, fmt.Errorf("%s is not a valid globbed recipe: %w", filename, err)
+		}
 
-			found := false
+		found := false
 
-			for _, recipe := range folders {
-				recipe = "." + strings.TrimPrefix(recipe, CfgFolder)
-				recipe = filepath.Base(recipe)
+		for _, recipe := range folders {
+			recipe = "." + strings.TrimPrefix(recipe, CfgFolder)
+			recipe = filepath.Base(recipe)
 
-				if isRecipeFolder(log, recipe) {
-					recipesList = append(recipesList, recipe)
-					found = true
-				}
-			}
-
-			if !found {
-				return nil, fmt.Errorf("no recipe correspond to %s", filename)
+			if isRecipeFolder(log, recipe) {
+				recipes = append(recipes, recipe)
+				found = true
 			}
 		}
 
-		return recipesList, nil
+		if !found {
+			return nil, fmt.Errorf("no recipe correspond to %s: %w", filename, ErrWrongParameterValue)
+		}
 	}
 
+	return recipes, nil
+}
+
+func lookupAllRecipes(log *logrus.Entry) ([]string, error) {
 	recipes := make([]string, 0)
 
 	files, err := ioutil.ReadDir(CfgFolder)
@@ -96,8 +95,17 @@ func FindRecipes(log *logrus.Entry, args []string) ([]string, error) {
 	}
 
 	if len(recipes) == 0 {
-		return nil, fmt.Errorf("no recipes folder found in %s", CfgFolder)
+		return nil, fmt.Errorf("no recipes folder found in %s: %w", CfgFolder, ErrNoConfiguration)
 	}
 
 	return recipes, nil
+}
+
+// FindRecipes lookup the configuration folder and return a list of recipes if the args is empty.
+func FindRecipes(log *logrus.Entry, args []string) ([]string, error) {
+	if len(args) != 0 {
+		return lookupProvidedRecipes(log, args)
+	}
+
+	return lookupAllRecipes(log)
 }

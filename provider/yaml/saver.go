@@ -11,7 +11,7 @@ import (
 	"github.com/marema31/kamino/provider/types"
 )
 
-//KaminoYAMLSaver specifc state for database Saver provider
+//KaminoYAMLSaver specifc state for database Saver provider.
 type KaminoYAMLSaver struct {
 	ds      datasource.Datasourcer
 	file    io.WriteCloser
@@ -19,7 +19,7 @@ type KaminoYAMLSaver struct {
 	content []map[string]string
 }
 
-//NewSaver open the encoding process on provider file and return a Saver compatible object
+//NewSaver open the encoding process on provider file and return a Saver compatible object.
 func NewSaver(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer) (*KaminoYAMLSaver, error) {
 	logFile := log.WithField("datasource", ds.GetName())
 
@@ -34,13 +34,13 @@ func NewSaver(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer)
 	return &KaminoYAMLSaver{file: file, ds: ds, name: tv.FilePath, content: content}, nil
 }
 
-//Save writes the record to the destination
+//Save writes the record to the destination.
 func (ys *KaminoYAMLSaver) Save(log *logrus.Entry, record types.Record) error {
 	ys.content = append(ys.content, record)
 	return nil
 }
 
-//Close closes the destination
+//Close closes the destination.
 func (ys *KaminoYAMLSaver) Close(log *logrus.Entry) error {
 	logFile := log.WithField("datasource", ys.ds.GetName())
 
@@ -63,12 +63,12 @@ func (ys *KaminoYAMLSaver) Close(log *logrus.Entry) error {
 	return ys.ds.CloseFile(logFile)
 }
 
-//Name give the name of the destination
+//Name give the name of the destination.
 func (ys *KaminoYAMLSaver) Name() string {
 	return ys.name
 }
 
-//Reset reinitialize the destination (if possible)
+//Reset reinitialize the destination (if possible).
 func (ys *KaminoYAMLSaver) Reset(log *logrus.Entry) error {
 	logFile := log.WithField("datasource", ys.ds.GetName())
 	return ys.ds.ResetFile(logFile)

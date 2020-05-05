@@ -29,7 +29,7 @@ func init() {
 	rootCmd.AddCommand(syncCmd)
 }
 
-//Sync will run only the recipes with sync type
+//Sync will run only the recipes with sync type.
 func Sync(cookbook recipe.Cooker, names []string, args []string) error {
 	log := common.Logger.WithField("action", "sync")
 
@@ -40,7 +40,7 @@ func Sync(cookbook recipe.Cooker, names []string, args []string) error {
 
 	err = cookbook.Load(common.Ctx, log, common.CfgFolder, recipes, common.Tags, names, []string{"sync"})
 	if err != nil {
-		return fmt.Errorf("error while loading the recipes: %v", err)
+		return fmt.Errorf("error while loading the recipes: %w", err)
 	}
 
 	superseed := common.CreateSuperseed()
@@ -50,11 +50,11 @@ func Sync(cookbook recipe.Cooker, names []string, args []string) error {
 
 	err = cookbook.PostLoad(log, superseed)
 	if err != nil {
-		return fmt.Errorf("error while postloading the recipes: %v", err)
+		return fmt.Errorf("error while postloading the recipes: %w", err)
 	}
 
 	if cookbook.Do(common.Ctx, log) {
-		return fmt.Errorf("a step had an error")
+		return fmt.Errorf("a step had an error: %w", common.ErrStep)
 	}
 
 	return nil

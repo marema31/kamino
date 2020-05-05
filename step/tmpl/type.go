@@ -9,7 +9,7 @@ import (
 	"github.com/marema31/kamino/file"
 )
 
-//Mode discriminate the result on the destination file
+//Mode discriminate the result on the destination file.
 type Mode int
 
 const (
@@ -21,7 +21,7 @@ const (
 	Unique Mode = iota
 )
 
-// Step informations
+// Step informations.
 type Step struct {
 	Name            string
 	datasources     []datasource.Datasourcer

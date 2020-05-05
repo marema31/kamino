@@ -6,6 +6,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/provider/common"
 	"github.com/marema31/kamino/provider/types"
 )
 
@@ -79,7 +80,7 @@ func (saver *DbSaver) getColNames(log *logrus.Entry, record types.Record) ([]str
 			log.Errorf("Provided key %s is not a column of %s", saver.key, saver.table)
 			log.Error(err)
 
-			return nil, nil, fmt.Errorf("provided key %s is not a column of %s.%s ", saver.key, saver.database, saver.table)
+			return nil, nil, fmt.Errorf("provided key %s is not a column of %s.%s : %w", saver.key, saver.database, saver.table, common.ErrMissingParameter)
 		}
 	}
 
@@ -117,7 +118,7 @@ func (saver *DbSaver) getColNames(log *logrus.Entry, record types.Record) ([]str
 	return questionmark, updateSet, nil
 }
 
-// createStatement Query the destination table to determine the available colums, create the corresponding insert/update statement and save them in the dbSaver instance
+// createStatement Query the destination table to determine the available colums, create the corresponding insert/update statement and save them in the dbSaver instance.
 func (saver *DbSaver) createStatement(log *logrus.Entry, record types.Record) error {
 	questionmark, updateSet, err := saver.getColNames(log, record)
 	if err != nil {

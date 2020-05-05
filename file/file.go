@@ -14,7 +14,7 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
-// File managed file operation for kamino
+// File managed file operation for kamino.
 type File struct {
 	FilePath    string
 	tmpFilePath string
@@ -27,7 +27,7 @@ type File struct {
 	ZippedExt   string
 }
 
-//OpenReadFile open and return a io.ReadCloser used by datasource, providers and template destination
+//OpenReadFile open and return a io.ReadCloser used by datasource, providers and template destination.
 func (fi *File) OpenReadFile(log *logrus.Entry) (io.ReadCloser, error) {
 	logFile := log.WithField("file", fi.FilePath)
 
@@ -82,7 +82,7 @@ func (fi *File) OpenReadFile(log *logrus.Entry) (io.ReadCloser, error) {
 
 	if reader == nil {
 		logFile.Error("Do not know which file to open for reading")
-		return nil, fmt.Errorf("do not know which file to open for reading")
+		return nil, fmt.Errorf("do not know which file to open for reading: %w", err)
 	}
 
 	if fi.Gzip {
@@ -103,7 +103,7 @@ func (fi *File) OpenReadFile(log *logrus.Entry) (io.ReadCloser, error) {
 	return reader, nil
 }
 
-//OpenWriteFile open and return a io.WriteCloser corresponding to the datasource to be used by providers
+//OpenWriteFile open and return a io.WriteCloser corresponding to the datasource to be used by providers.
 func (fi *File) OpenWriteFile(log *logrus.Entry) (io.WriteCloser, error) {
 	logFile := log.WithField("file", fi.FilePath)
 
@@ -138,7 +138,7 @@ func (fi *File) OpenWriteFile(log *logrus.Entry) (io.WriteCloser, error) {
 	return writer, nil
 }
 
-//ResetFile close the file and remove the temporary file
+//ResetFile close the file and remove the temporary file.
 func (fi *File) ResetFile(log *logrus.Entry) error {
 	logFile := log.WithField("file", fi.FilePath)
 	logFile.Debugf("Resetting file by removing the temporary file %s", fi.tmpFilePath)
@@ -165,7 +165,57 @@ func (fi *File) ResetFile(log *logrus.Entry) error {
 	return nil
 }
 
-//CloseFile close the file and rename the temporary file to real name (if exists)
+func (fi *File) zipFile(logFile *logrus.Entry) error {
+	logFile.Debug("Creating zip archive")
+
+	archivew, err := os.Create(fi.FilePath)
+	if err != nil {
+		logFile.Error("Creating zip file failed")
+		logFile.Error(err)
+
+		return err
+	}
+
+	archive := zip.NewWriter(archivew)
+
+	reader, err := os.Open(fi.tmpFilePath)
+	if err != nil {
+		logFile.Errorf("Opening temporary file %s failed", fi.tmpFilePath)
+		logFile.Error(err)
+
+		return err
+	}
+
+	name := filepath.Base(strings.TrimSuffix(fi.FilePath, "zip"))
+
+	writer, err := archive.Create(name + fi.ZippedExt)
+	if err != nil {
+		logFile.Error("Creating archive entry zip file failed")
+		logFile.Error(err)
+
+		return err
+	}
+
+	_, err = io.Copy(writer, reader)
+	if err != nil {
+		logFile.Error("Compression failed")
+		logFile.Error(err)
+
+		return err
+	}
+
+	err = archive.Close()
+	if err != nil {
+		logFile.Error("Closing zip file failed")
+		logFile.Error(err)
+
+		return err
+	}
+
+	return nil
+}
+
+//CloseFile close the file and rename the temporary file to real name (if exists).
 func (fi *File) CloseFile(log *logrus.Entry) error {
 	logFile := log.WithField("file", fi.FilePath)
 
@@ -196,49 +246,9 @@ func (fi *File) CloseFile(log *logrus.Entry) error {
 	}
 
 	if fi.Zip {
-		logFile.Debug("Creating zip archive")
-
-		archivew, err := os.Create(fi.FilePath)
+		err := fi.zipFile(logFile)
 		if err != nil {
-			logFile.Error("Creating zip file failed")
-			logFile.Error(err)
-
-			return err
-		}
-
-		archive := zip.NewWriter(archivew)
-
-		reader, err := os.Open(fi.tmpFilePath)
-		if err != nil {
-			logFile.Errorf("Opening temporary file %s failed", fi.tmpFilePath)
-			logFile.Error(err)
-
-			return err
-		}
-
-		name := filepath.Base(strings.TrimSuffix(fi.FilePath, "zip"))
-
-		writer, err := archive.Create(name + fi.ZippedExt)
-		if err != nil {
-			logFile.Error("Creating archive entry zip file failed")
-			logFile.Error(err)
-
-			return err
-		}
-
-		_, err = io.Copy(writer, reader)
-		if err != nil {
-			logFile.Error("Compression failed")
-			logFile.Error(err)
-
-			return err
-		}
-
-		err = archive.Close()
-		if err != nil {
-			logFile.Error("Closing zip file failed")
-			logFile.Error(err)
-
+			logFile.Errorf("Unable to zip to %s: %v", fi.FilePath, err)
 			return err
 		}
 
@@ -260,7 +270,7 @@ func (fi *File) CloseFile(log *logrus.Entry) error {
 	return nil
 }
 
-// Close the file if it is still opened
+// Close the file if it is still opened.
 func (fi *File) Close() {
 	if fi.fileHandle != nil {
 		fi.fileHandle.Close()
@@ -268,7 +278,7 @@ func (fi *File) Close() {
 	}
 }
 
-// Stat returns os.FileInfo on the file of the datasource
+// Stat returns os.FileInfo on the file of the datasource.
 func (fi *File) Stat() (os.FileInfo, error) {
 	return os.Stat(fi.FilePath)
 }

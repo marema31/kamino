@@ -19,13 +19,13 @@ import (
 	"github.com/marema31/kamino/step/common"
 )
 
-//PostLoad modify the loaded step values with the values provided in the map in argument
+//PostLoad modify the loaded step values with the values provided in the map in argument.
 func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) error {
 	// Nothing to do
 	return nil
 }
 
-//Load data from step file using its viper representation a return priority and list of steps
+//Load data from step file using its viper representation a return priority and list of steps.
 func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, force bool, dryRun bool, limitedTags []string) (priority uint, steps []common.Steper, err error) { //nolint: funlen
 	steps = make([]common.Steper, 0, 1)
 	priority = v.GetUint("priority")
@@ -41,7 +41,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 	if templateFile == "" {
 		logStep.Error("No SQL script template filename provided")
 
-		return 0, nil, fmt.Errorf("the step %s must have a SQL script template to render", name)
+		return 0, nil, fmt.Errorf("the step %s must have a SQL script template to render: %w", name, common.ErrMissingParameter)
 	}
 
 	if !filepath.IsAbs(templateFile) {
@@ -53,14 +53,14 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		logStep.Error("Parsing the SQL script template failed:")
 		logStep.Error(err)
 
-		return 0, nil, fmt.Errorf("error parsing the template file %s of %s step: %v", templateFile, name, err)
+		return 0, nil, fmt.Errorf("error parsing the template file %s of %s step: %w", templateFile, name, err)
 	}
 
 	queryTmpl := v.GetString("query")
 	if queryTmpl == "" {
 		logStep.Error("No SQL query provided")
 
-		return 0, nil, fmt.Errorf("the step %s must have a query to be executed", name)
+		return 0, nil, fmt.Errorf("the step %s must have a query to be executed: %w", name, common.ErrMissingParameter)
 	}
 
 	tquery, err := template.New("query").Funcs(sprig.FuncMap()).Parse(queryTmpl)
@@ -68,7 +68,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		logStep.Error("Parsing the SQL query template failed:")
 		logStep.Error(err)
 
-		return 0, nil, fmt.Errorf("error parsing the query of %s step: %v", name, err)
+		return 0, nil, fmt.Errorf("error parsing the query of %s step: %w", name, err)
 	}
 
 	admin := v.GetBool("admin")

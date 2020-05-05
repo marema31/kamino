@@ -1,6 +1,7 @@
 package mockdatasource
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -8,13 +9,13 @@ import (
 	"github.com/marema31/kamino/datasource"
 )
 
-// MockDatasources is fake datasources object for test purpose
+// MockDatasources is fake datasources object for test purpose.
 type MockDatasources struct {
 	// Datasource tag dictionary for lookup
 	precordedAnswers map[string][]*MockDatasource
 }
 
-// New returns a new Datasources object with elments initialized
+// New returns a new Datasources object with elments initialized.
 func New() *MockDatasources {
 	var dss MockDatasources
 
@@ -23,16 +24,18 @@ func New() *MockDatasources {
 	return &dss
 }
 
-//LoadAll do nothing, return an error if path is empty
+var errNoConfiguration = errors.New("NO CONFIGURATION FOUND")
+
+//LoadAll do nothing, return an error if path is empty.
 func (dss *MockDatasources) LoadAll(path string, log *logrus.Entry) error {
 	if path == "" {
-		return fmt.Errorf("empty path")
+		return fmt.Errorf("empty path: %w", errNoConfiguration)
 	}
 
 	return nil
 }
 
-//CloseAll do nothing, return an error if path is empty
+//CloseAll do nothing, return an error if path is empty.
 func (dss *MockDatasources) CloseAll(log *logrus.Entry) {
 }
 
@@ -66,7 +69,7 @@ func (dss *MockDatasources) Lookup(log *logrus.Entry, tags []string, limitedTags
 	return dsr
 }
 
-//Insert add a Mocked datasource to the array
+//Insert add a Mocked datasource to the array.
 func (dss *MockDatasources) Insert(tags []string, dsTypes []datasource.Type, engines []datasource.Engine, ds []*MockDatasource) {
 	index := getIndex(tags, dsTypes, engines)
 	dss.precordedAnswers[index] = ds

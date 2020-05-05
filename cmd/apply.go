@@ -30,7 +30,7 @@ func init() {
 	rootCmd.AddCommand(applyCmd)
 }
 
-//Apply will run only the recipes with Apply type
+//Apply will run only the recipes with Apply type.
 func Apply(cookbook recipe.Cooker, names []string, types []string, args []string) error {
 	log := common.Logger.WithField("action", "apply")
 
@@ -41,16 +41,16 @@ func Apply(cookbook recipe.Cooker, names []string, types []string, args []string
 
 	err = cookbook.Load(common.Ctx, log, common.CfgFolder, recipes, common.Tags, names, types)
 	if err != nil {
-		return fmt.Errorf("error while loading the recipes: %v", err)
+		return fmt.Errorf("error while loading the recipes: %w", err)
 	}
 
 	err = cookbook.PostLoad(log, common.CreateSuperseed())
 	if err != nil {
-		return fmt.Errorf("error while postloading the recipes: %v", err)
+		return fmt.Errorf("error while postloading the recipes: %w", err)
 	}
 
 	if cookbook.Do(common.Ctx, log) {
-		return fmt.Errorf("a step had an error")
+		return fmt.Errorf("a step had an error: %w", common.ErrStep)
 	}
 
 	return nil
