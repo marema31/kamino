@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -17,6 +18,8 @@ import (
 )
 
 var openedDatabase = map[string]*sql.DB{}
+var openedReadMutex = &sync.Mutex{}
+var openMutex = &sync.Mutex{}
 
 type tmplEnv struct {
 	Environments map[string]string
@@ -264,20 +267,39 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 var mockingSQL = false
 
 func sqlOpen(driver string, url string) (*sql.DB, error) {
-	if !mockingSQL {
-		if db, ok := openedDatabase[url]; ok {
-			return db, nil
-		}
-
-		db, err := sql.Open(driver, url)
-		if err == nil {
-			openedDatabase[url] = db
-		}
+	if mockingSQL {
+		db, _, err := sqlmock.New()
 
 		return db, err
 	}
 
-	db, _, err := sqlmock.New()
+	var err error = nil
+	// Most of the time the open will occurs on a already opened database
+	openedReadMutex.Lock()
+	db, ok := openedDatabase[url]
+	openedReadMutex.Unlock()
+
+	if ok {
+		return db, nil
+	}
+
+	// Out of lock, we may have to open the database connection, avoid two concurrent opening
+	openMutex.Lock()
+	//Verify that in between the database as not been already opened
+	openedReadMutex.Lock()
+	db, ok = openedDatabase[url]
+	openedReadMutex.Unlock()
+
+	if !ok {
+		//No we have to open it
+		db, err = sql.Open(driver, url)
+		if err == nil {
+			openedReadMutex.Lock()
+			openedDatabase[url] = db
+			openedReadMutex.Unlock()
+		}
+	}
+	openMutex.Unlock()
 
 	return db, err
 }
