@@ -3,10 +3,13 @@ package mockdatasource
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"database/sql"
+	"fmt"
 	"io"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
 )
 
@@ -73,4 +76,26 @@ func (ds *MockDatasource) GetNamedTag(name string) string {
 //GetName return the name of the datasource.
 func (ds *MockDatasource) GetName() string {
 	return ds.Name
+}
+
+//GetHash returns uniq hash for the datasource final destination (more than one datasource could have the same hash by example same database engine).
+func (ds *MockDatasource) GetHash(log *logrus.Entry, admin bool, nodb bool) string {
+	var toHash string
+
+	if ds.Type == datasource.File {
+		toHash = ds.FilePath
+	} else {
+		switch {
+		case nodb:
+			toHash = ds.URLNoDb
+		case admin:
+			toHash = ds.URLAdmin
+		default:
+			toHash = ds.URL
+		}
+	}
+
+	hashed := sha256.Sum256([]byte(toHash))
+
+	return fmt.Sprintf("%x", hashed)
 }
