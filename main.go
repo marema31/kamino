@@ -11,7 +11,7 @@ import (
 func main() {
 	log := cmd.GetLogger()
 
-	// Synchro beetween the main goroutin and the Execution goroutine
+	// Synchro beetween the main goroutine and the Execution goroutine
 	end := make(chan error, 1)
 
 	// Create the application context for correct sub-task abortion if CTRL+C

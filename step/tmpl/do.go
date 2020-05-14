@@ -22,7 +22,7 @@ func (st *Step) Finish(log *logrus.Entry) {
 
 //Cancel manage the cancellation of the step.
 func (st *Step) Cancel(log *logrus.Entry) {
-	logStep := log.WithField("name", st.Name).WithField("type", "template")
+	logStep := log.WithField("name", st.Name).WithField("datasource", st.datasources[0].GetName()).WithField("type", "template")
 	logStep.Info("Cancelling step")
 
 	if err := st.output.ResetFile(logStep); err != nil {
@@ -119,9 +119,8 @@ func (st *Step) doUnique(log *logrus.Entry) error {
 
 // ToSkip return true if the step must be skipped.
 func (st *Step) ToSkip(ctx context.Context, log *logrus.Entry) (bool, error) {
-	logStep := log.WithField("name", st.Name).WithField("type", "template")
-	logStep.Debug("Do we need to skip the step ?")
-
+	//logStep := log.WithField("name", st.Name).WithField("type", "template")
+	//logStep.Debug("Do we need to skip the step ?")
 	if st.onlyIfNotExists {
 		if _, err := os.Stat(st.destination); !os.IsNotExist(err) {
 			return true, nil

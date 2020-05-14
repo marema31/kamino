@@ -18,6 +18,7 @@ tags          | no  | List of tags used for selecting datasource impacted by thi
 type          | yes | Type of step, in this case _sql_
 template      | yes | Path of the SQL script template to be executed
 transaction   | no  | If true use transaction if the datasource has transaction defined |false
+unique        | no  | If true the script will be run only once by unique datasource URL corresponding to the value of admin and nodb attributes|false
 
 If admin = false and noDb = false, the SQL script will be executed with the _user_ account of the datasource.
 

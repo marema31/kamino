@@ -40,7 +40,7 @@ Each environment can be composed of several 'datasources'. This datasource is co
 ### Step
 A step is an action to be done on the selected datasources. The action could be:
    * [_sql_](/docs/sql.md)     : run a templated sql script
-   * [_migrate_](/docs/migrate.md) : apply sql-migrate migration, the actions will be different if Kamino is in apply or migrate mode.
+   * [_migrate_](/docs/migration.md) : apply sql-migrate migration, the actions will be different if Kamino is in apply or migrate mode.
    * [_sync_](/docs/sync.md)    : Synchronize data from an other database or files
    * [_shell_](/docs/shell.md)   : run a shell script
    * [_template_](/docs/template.md): Create a file from a template

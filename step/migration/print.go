@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sort"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/olekukonko/tablewriter"
@@ -46,7 +47,7 @@ func (st *Step) print(log *logrus.Entry, admin bool) (int, error) {
 	table.SetColWidth(60) //nolint:gomnd  // Due to what is displayed this value ie more adapted
 
 	rows := make(map[string]string)
-
+	ids := make([]string, 0, len(files))
 	// Initialize table with migrations files
 	for _, f := range files {
 		rows[f.Id] = "no"
@@ -63,13 +64,19 @@ func (st *Step) print(log *logrus.Entry, admin bool) (int, error) {
 
 	remaining := 0
 
-	for id, applied := range rows {
+	for id := range rows {
+		ids = append(ids, id)
+	}
+
+	sort.Strings(ids)
+
+	for _, id := range ids {
 		table.Append([]string{
 			id,
-			applied,
+			rows[id],
 		})
 
-		if applied == "no" {
+		if rows[id] == "no" {
 			remaining++
 		}
 	}

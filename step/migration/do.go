@@ -25,7 +25,7 @@ func (st *Step) Cancel(log *logrus.Entry) {
 
 //Do manage the runnning of the step.
 func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
-	logStep := log.WithField("name", st.Name).WithField("type", "migration")
+	logStep := log.WithField("name", st.Name).WithField("datasource", st.datasource.GetName()).WithField("type", "migration")
 	logStep.Debug("Beginning step")
 
 	limit := st.limit

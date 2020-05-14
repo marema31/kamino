@@ -114,7 +114,7 @@ func (st *Step) useCache(ctx context.Context, logStep *logrus.Entry) error {
 
 //Do manage the runnning of the step.
 func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
-	logStep := log.WithField("name", st.Name).WithField("type", "sync")
+	logStep := log.WithField("name", st.Name).WithField("datasource", st.sourceCfg.ds.GetName()).WithField("type", "sync")
 	logStep.Debug("Beginning step")
 
 	if st.cacheCfg.ds != nil {

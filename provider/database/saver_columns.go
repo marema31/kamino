@@ -21,14 +21,31 @@ func (saver *DbSaver) questionMarkByEngine(qm *[]string) string {
 	return ""
 }
 
+func (saver *DbSaver) queryColumnsByEngine(log *logrus.Entry) string {
+	var query string
+
+	switch saver.engine {
+	case datasource.Mysql:
+		query = fmt.Sprintf("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = '%s' AND table_name ='%s';", saver.database, saver.table) //nolint: gosec
+	case datasource.Postgres:
+		if saver.schema != "" {
+			query = fmt.Sprintf("SELECT column_name AS name FROM information_schema.columns WHERE table_catalog = '%s' AND table_schema = '%s' AND table_name ='%s';", saver.database, saver.schema, saver.rawtable) //nolint: gosec
+		} else {
+			query = fmt.Sprintf("SELECT column_name AS name FROM information_schema.columns WHERE table_catalog = '%s' AND table_schema = 'public' AND table_name ='%s';", saver.database, saver.table) //nolint: gosec
+		}
+	}
+
+	log.Debug(query)
+
+	return query
+}
+
 func (saver *DbSaver) getColNames(log *logrus.Entry, record types.Record) ([]string, []string, error) {
 	updateSet := make([]string, 0)
 	questionmark := make([]string, 0)
+	query := saver.queryColumnsByEngine(log)
 
 	log.Debug("Retrieving the column names")
-
-	query := fmt.Sprintf("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = '%s' AND table_name ='%s';", saver.database, saver.table) //nolint: gosec
-	log.Debug(query)
 
 	rows, err := saver.db.QueryContext(saver.ctx, query)
 	if err != nil {

@@ -30,6 +30,8 @@ type DbSaver struct {
 	tx           *sql.Tx
 	database     string
 	table        string
+	rawtable     string
+	schema       string
 	insertString string
 	insertStmt   *sql.Stmt
 	updateString string
@@ -61,6 +63,9 @@ func NewSaver(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer,
 		logDb.Error("No destination table provided")
 		return nil, fmt.Errorf("destination of sync does not provided a table name: %w", common.ErrMissingParameter)
 	}
+
+	saver.rawtable = table
+	saver.schema = tv.Schema
 
 	if tv.Schema != "" {
 		table = fmt.Sprintf("%s.%s", tv.Schema, table)

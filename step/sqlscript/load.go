@@ -71,6 +71,11 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		return 0, nil, fmt.Errorf("error parsing the query of %s step: %w", name, err)
 	}
 
+	unique := v.GetBool("unique")
+	if unique {
+		logStep.Debug("Will limitate step to unique datasource")
+	}
+
 	admin := v.GetBool("admin")
 	noDb := v.GetBool("noDb")
 	v.SetDefault("transaction", true)
@@ -86,9 +91,21 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 
 	renderedQuery := bytes.NewBuffer(make([]byte, 0, 1024))
 	renderedSQLScript := bytes.NewBuffer(make([]byte, 0, 8192))
+	datasourceHashes := map[string]bool{}
 
 	for index, datasource := range dss.Lookup(log, tags, limitedTags, []datasource.Type{datasource.Database}, e) {
 		var step Step
+
+		if unique {
+			hash := datasource.GetHash(logStep, admin, noDb)
+			if _, ok := datasourceHashes[hash]; ok {
+				logStep.Debugf("Skipping datasource %s: not unique", datasource.GetName())
+
+				continue
+			}
+
+			datasourceHashes[hash] = true
+		}
 
 		step.Name = fmt.Sprintf("%s:%d", name, nameIndex+index)
 		step.dryRun = dryRun

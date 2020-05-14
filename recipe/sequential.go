@@ -40,7 +40,7 @@ func (ck *Cookbook) doSequentialOneRecipe(ctx context.Context, log *logrus.Entry
 				}
 			}
 			nbSteps := len(stepsToBeDone)
-			logPriority.Debugf("Will skip %d steps of the %d of this priority", cap(stepsToBeDone)-nbSteps, cap(stepsToBeDone))
+			logPriority.Infof("Will skip %d steps of the %d of this priority", cap(stepsToBeDone)-nbSteps, cap(stepsToBeDone))
 		}
 
 		for _, step := range stepsToBeDone {

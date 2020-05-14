@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -17,17 +18,17 @@ import (
 )
 
 var openedDatabase = map[string]*sql.DB{}
+var openedReadMutex = &sync.Mutex{}
+var openMutex = &sync.Mutex{}
 
 type tmplEnv struct {
 	Environments map[string]string
 }
 
-func parseField(log *logrus.Entry, v *viper.Viper, data tmplEnv, field string, fieldDetailedName string) (string, error) {
+func parseField(v *viper.Viper, data tmplEnv, field string, fieldDetailedName string) (string, error) {
 	var buf bytes.Buffer
 
 	fieldValue := v.GetString(field)
-	logParse := log.WithField("field", field)
-	logParse.Debugf("Parsing %s", fieldValue)
 
 	tmpl, err := template.New(field).Funcs(sprig.FuncMap()).Parse(fieldValue)
 	if err != nil {
@@ -39,7 +40,6 @@ func parseField(log *logrus.Entry, v *viper.Viper, data tmplEnv, field string, f
 	}
 
 	parsed := buf.String()
-	logParse.Debugf("Will be %s", parsed)
 
 	return parsed, nil
 }
@@ -58,7 +58,7 @@ func loadDatabaseDatasource(log *logrus.Entry, filename string, v *viper.Viper, 
 
 	data := tmplEnv{Environments: envVar}
 
-	ds.database, err = parseField(log, v, data, "database", "database name")
+	ds.database, err = parseField(v, data, "database", "database name")
 	if err != nil {
 		return Datasource{}, err
 	}
@@ -79,7 +79,7 @@ func loadDatabaseDatasource(log *logrus.Entry, filename string, v *viper.Viper, 
 
 	ds.transaction = v.GetBool("transaction")
 
-	ds.host, err = parseField(log, v, data, "host", "host name")
+	ds.host, err = parseField(v, data, "host", "host name")
 	if err != nil {
 		return Datasource{}, err
 	}
@@ -88,27 +88,27 @@ func loadDatabaseDatasource(log *logrus.Entry, filename string, v *viper.Viper, 
 		ds.host = "127.0.0.1"
 	}
 
-	ds.port, err = parseField(log, v, data, "port", "port")
+	ds.port, err = parseField(v, data, "port", "port")
 	if err != nil {
 		return Datasource{}, err
 	}
 
-	ds.user, err = parseField(log, v, data, "user", "user name")
+	ds.user, err = parseField(v, data, "user", "user name")
 	if err != nil {
 		return Datasource{}, err
 	}
 
-	ds.admin, err = parseField(log, v, data, "admin", "admin name")
+	ds.admin, err = parseField(v, data, "admin", "admin name")
 	if err != nil {
 		return Datasource{}, err
 	}
 
-	ds.userPw, err = parseField(log, v, data, "password", "user password")
+	ds.userPw, err = parseField(v, data, "password", "user password")
 	if err != nil {
 		return Datasource{}, err
 	}
 
-	ds.adminPw, err = parseField(log, v, data, "adminpassword", "admin password")
+	ds.adminPw, err = parseField(v, data, "adminpassword", "admin password")
 	if err != nil {
 		return Datasource{}, err
 	}
@@ -207,13 +207,11 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 
 	switch ds.engine {
 	case Mysql:
-		log.Debug("Opening Mysql database")
-		log.Debug(URL)
+		log.Debugf("Opening Mysql database: %s", URL)
 
 		driver = "mysql"
 	case Postgres:
-		log.Debug("Opening Postgresql database")
-		log.Debug(URL)
+		log.Debugf("Opening Postgresql database: %v", URL)
 
 		driver = "postgres"
 	}
@@ -264,20 +262,39 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 var mockingSQL = false
 
 func sqlOpen(driver string, url string) (*sql.DB, error) {
-	if !mockingSQL {
-		if db, ok := openedDatabase[url]; ok {
-			return db, nil
-		}
-
-		db, err := sql.Open(driver, url)
-		if err == nil {
-			openedDatabase[url] = db
-		}
+	if mockingSQL {
+		db, _, err := sqlmock.New()
 
 		return db, err
 	}
 
-	db, _, err := sqlmock.New()
+	var err error = nil
+	// Most of the time the open will occurs on a already opened database
+	openedReadMutex.Lock()
+	db, ok := openedDatabase[url]
+	openedReadMutex.Unlock()
+
+	if ok {
+		return db, nil
+	}
+
+	// Out of lock, we may have to open the database connection, avoid two concurrent opening
+	openMutex.Lock()
+	//Verify that in between the database as not been already opened
+	openedReadMutex.Lock()
+	db, ok = openedDatabase[url]
+	openedReadMutex.Unlock()
+
+	if !ok {
+		//No we have to open it
+		db, err = sql.Open(driver, url)
+		if err == nil {
+			openedReadMutex.Lock()
+			openedDatabase[url] = db
+			openedReadMutex.Unlock()
+		}
+	}
+	openMutex.Unlock()
 
 	return db, err
 }

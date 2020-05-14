@@ -3,6 +3,7 @@
 package datasource
 
 import (
+	"crypto/sha256"
 	"database/sql"
 	"fmt"
 	"io"
@@ -24,6 +25,7 @@ type Datasourcer interface {
 	ResetFile(*logrus.Entry) error
 	CloseFile(*logrus.Entry) error
 	GetName() string
+	GetHash(*logrus.Entry, bool, bool) string
 	GetEngine() Engine
 	GetType() Type
 	IsTransaction() bool
@@ -80,6 +82,30 @@ type Datasource struct {
 	schema      string
 	file        file.File
 	tags        []string
+}
+
+//GetHash returns uniq hash for the datasource final destination (more than one datasource could have the same hash by example same database engine).
+func (ds *Datasource) GetHash(log *logrus.Entry, admin bool, nodb bool) string {
+	var toHash string
+
+	if ds.dstype == File {
+		toHash = ds.file.FilePath
+	} else {
+		switch {
+		case nodb:
+			toHash = ds.urlNoDb
+		case admin:
+			toHash = ds.urlAdmin
+		default:
+			toHash = ds.url
+		}
+	}
+
+	hashed := fmt.Sprintf("%x", sha256.Sum256([]byte(toHash)))
+
+	//log.Debugf("Hashing: %s => %s", toHash, hashed)
+
+	return hashed
 }
 
 //StringToType convert string to corresponding Type typed value.
