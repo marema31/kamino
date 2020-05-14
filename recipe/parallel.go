@@ -15,7 +15,6 @@ var mu sync.Mutex
 func stepWatchdog(ctxRecipe context.Context, log *logrus.Entry, wgWatchdog *sync.WaitGroup, end chan bool, step common.Steper) {
 	defer close(end)
 	defer wgWatchdog.Done()
-	log.Debug("Watchdog entering")
 
 	select {
 	case <-ctxRecipe.Done(): // the context has been cancelled
@@ -25,10 +24,9 @@ func stepWatchdog(ctxRecipe context.Context, log *logrus.Entry, wgWatchdog *sync
 		//Even if have cancelled, we should wait for Do.recipe to ask us to quit
 		<-end
 	case <-end: // All the step of this priority has ended without error, the Do.recipe ask us to quit
-		log.Debug("Watchdog finish")
+		//		log.Debug("Watchdog finish")
 		step.Finish(log)
 	}
-	log.Debug("Watchdog ending")
 }
 
 //stepExecutor will execute the step, cancel the context and raise the global flag.
@@ -93,7 +91,7 @@ func (ck *Cookbook) doParallelOneRecipe(ctx context.Context, log *logrus.Entry, 
 		}
 
 		nbSteps := len(stepsToBeDone)
-		logPriority.Debugf("Will skip %d steps of the %d of this priority", cap(stepsToBeDone)-nbSteps, cap(stepsToBeDone))
+		logPriority.Infof("Will skip %d steps of the %d of this priority", cap(stepsToBeDone)-nbSteps, cap(stepsToBeDone))
 
 		for _, step := range stepsToBeDone {
 			err := step.Init(ctxRecipe, logPriority)

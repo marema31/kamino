@@ -103,7 +103,7 @@ func (ds *Datasource) GetHash(log *logrus.Entry, admin bool, nodb bool) string {
 
 	hashed := fmt.Sprintf("%x", sha256.Sum256([]byte(toHash)))
 
-	log.Debugf("Hashing: %s => %s", toHash, hashed)
+	//log.Debugf("Hashing: %s => %s", toHash, hashed)
 
 	return hashed
 }

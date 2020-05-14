@@ -25,12 +25,10 @@ type tmplEnv struct {
 	Environments map[string]string
 }
 
-func parseField(log *logrus.Entry, v *viper.Viper, data tmplEnv, field string, fieldDetailedName string) (string, error) {
+func parseField(v *viper.Viper, data tmplEnv, field string, fieldDetailedName string) (string, error) {
 	var buf bytes.Buffer
 
 	fieldValue := v.GetString(field)
-	logParse := log.WithField("field", field)
-	logParse.Debugf("Parsing %s", fieldValue)
 
 	tmpl, err := template.New(field).Funcs(sprig.FuncMap()).Parse(fieldValue)
 	if err != nil {
@@ -42,7 +40,6 @@ func parseField(log *logrus.Entry, v *viper.Viper, data tmplEnv, field string, f
 	}
 
 	parsed := buf.String()
-	logParse.Debugf("Will be %s", parsed)
 
 	return parsed, nil
 }
@@ -61,7 +58,7 @@ func loadDatabaseDatasource(log *logrus.Entry, filename string, v *viper.Viper, 
 
 	data := tmplEnv{Environments: envVar}
 
-	ds.database, err = parseField(log, v, data, "database", "database name")
+	ds.database, err = parseField(v, data, "database", "database name")
 	if err != nil {
 		return Datasource{}, err
 	}
@@ -82,7 +79,7 @@ func loadDatabaseDatasource(log *logrus.Entry, filename string, v *viper.Viper, 
 
 	ds.transaction = v.GetBool("transaction")
 
-	ds.host, err = parseField(log, v, data, "host", "host name")
+	ds.host, err = parseField(v, data, "host", "host name")
 	if err != nil {
 		return Datasource{}, err
 	}
@@ -91,27 +88,27 @@ func loadDatabaseDatasource(log *logrus.Entry, filename string, v *viper.Viper, 
 		ds.host = "127.0.0.1"
 	}
 
-	ds.port, err = parseField(log, v, data, "port", "port")
+	ds.port, err = parseField(v, data, "port", "port")
 	if err != nil {
 		return Datasource{}, err
 	}
 
-	ds.user, err = parseField(log, v, data, "user", "user name")
+	ds.user, err = parseField(v, data, "user", "user name")
 	if err != nil {
 		return Datasource{}, err
 	}
 
-	ds.admin, err = parseField(log, v, data, "admin", "admin name")
+	ds.admin, err = parseField(v, data, "admin", "admin name")
 	if err != nil {
 		return Datasource{}, err
 	}
 
-	ds.userPw, err = parseField(log, v, data, "password", "user password")
+	ds.userPw, err = parseField(v, data, "password", "user password")
 	if err != nil {
 		return Datasource{}, err
 	}
 
-	ds.adminPw, err = parseField(log, v, data, "adminpassword", "admin password")
+	ds.adminPw, err = parseField(v, data, "adminpassword", "admin password")
 	if err != nil {
 		return Datasource{}, err
 	}
@@ -210,13 +207,11 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 
 	switch ds.engine {
 	case Mysql:
-		log.Debug("Opening Mysql database")
-		log.Debug(URL)
+		log.Debugf("Opening Mysql database: %s", URL)
 
 		driver = "mysql"
 	case Postgres:
-		log.Debug("Opening Postgresql database")
-		log.Debug(URL)
+		log.Debugf("Opening Postgresql database: %v", URL)
 
 		driver = "postgres"
 	}

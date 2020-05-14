@@ -23,7 +23,7 @@ func (st *Step) Cancel(log *logrus.Entry) {
 
 //Do manage the runnning of the step.
 func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
-	logStep := log.WithField("name", st.Name).WithField("type", "shell")
+	logStep := log.WithField("name", st.Name).WithField("datasource", st.datasource.GetName()).WithField("type", "shell")
 	logStep.Debug("Beginning step")
 
 	var wg sync.WaitGroup
@@ -90,8 +90,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 
 // ToSkip return true if the step must be skipped.
 func (st *Step) ToSkip(ctx context.Context, log *logrus.Entry) (bool, error) {
-	logStep := log.WithField("name", st.Name).WithField("type", "shell")
-	logStep.Debug("Do we need to skip the step ?")
-
+	//logStep := log.WithField("name", st.Name).WithField("type", "shell")
+	//logStep.Debug("Do we need to skip the step ?")
 	return false, nil
 }
