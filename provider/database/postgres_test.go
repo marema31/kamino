@@ -33,7 +33,7 @@ func TestPostgresOk(t *testing.T) {
 		AddRow("id").
 		AddRow("title").
 		AddRow("body")
-	dmock.ExpectQuery("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = 'blog' AND table_name ='dtable';").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT column_name AS name FROM information_schema.columns WHERE table_catalog = 'blog' AND table_schema = 'public' AND table_name ='dtable';").WillReturnRows(rows)
 
 	rows = sqlmock.NewRows([]string{"count"}).
 		AddRow(0)
@@ -121,7 +121,7 @@ func TestPostgresTransactionOk(t *testing.T) {
 		AddRow("id").
 		AddRow("title").
 		AddRow("body")
-	dmock.ExpectQuery("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = 'blog' AND table_name ='dtable';").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT column_name AS name FROM information_schema.columns WHERE table_catalog = 'blog' AND table_schema = 'public' AND table_name ='dtable';").WillReturnRows(rows)
 
 	rows = sqlmock.NewRows([]string{"count"}).
 		AddRow(0)
@@ -210,7 +210,7 @@ func TestPostgresSchemaOk(t *testing.T) {
 		AddRow("id").
 		AddRow("title").
 		AddRow("body")
-	dmock.ExpectQuery("SELECT column_name AS name FROM information_schema.columns WHERE table_schema = 'blog' AND table_name ='greatbob.dtable';").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT column_name AS name FROM information_schema.columns WHERE table_catalog = 'blog' AND table_schema = 'greatbob' AND table_name ='dtable';").WillReturnRows(rows)
 
 	rows = sqlmock.NewRows([]string{"count"}).
 		AddRow(0)
