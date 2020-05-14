@@ -26,7 +26,7 @@ func (st *Step) Init(ctx context.Context, log *logrus.Entry) error {
 
 	adminFolder := filepath.Join(st.folder, "admin")
 	if _, err := os.Stat(adminFolder); err != nil {
-		if os.IsNotExist(err) && st.noUser {
+		if os.IsNotExist(err) && !st.printOnly && st.noUser {
 			log.Errorf("The admin migration folder %s does not exists and you asked me to apply it only", adminFolder)
 			return err
 		}
