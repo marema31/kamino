@@ -15,6 +15,7 @@ engines       | no  | Limit the datasource selection to those corresponding to t
 folder        | yes | Folder containing the migration files (template)
 name          | no  | Step name used for step selection by the CLI, more than one step can have the same name
 noadmin       | no  | If true the step will not apply _admin_ migration | false 
+noforce       | no  | If true the step will be skipped for `kamino migrate` sub-command or for `kamino apply --force` 
 nouser        | no  | If true the step will not apply _user_ migration | false 
 priority      | yes | Priority of this step on the recipe execution (ascending order)
 queries       | yes | Skip condition queries, each query should returns only one column/line, if this result is different of 0, the step will be skipped, if there is more than one query they will be executed in order until one returns a 0 or all have a different resulttags          | no  | List of tags used for selecting datasource impacted by this step | all
