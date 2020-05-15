@@ -7,6 +7,7 @@ engines: "postgres"
 nouser: false
 noadmin: false
 usertable: "pokemon_migration"
-query: "SELECT count(*) FROM information_schema.tables WHERE table_catalog = '{{.Database}}' and table_schema = '{{default \"public\" .Schema}}'"
+queries : 
+  - "SELECT count(*) FROM information_schema.tables WHERE table_catalog = '{{.Database}}' and table_schema = '{{default \"public\" .Schema}}'"
 tags: 
   - "pokemon"

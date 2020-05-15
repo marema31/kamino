@@ -7,4 +7,5 @@ tags:
   - "pokemon"
 admin: "true"
 engines: "mysql"
-query: "SELECT COUNT(user) FROM mysql.user WHERE user = 'sacha'" 
+queries : 
+  - "SELECT COUNT(user) FROM mysql.user WHERE user = 'sacha'" 

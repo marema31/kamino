@@ -3,4 +3,5 @@ priority: 42
 name: "namesqlscriptok"
 type: "sqlscript"
 template: "templates/create_user.sql.tmpl"
-query: "SELECT * FROM USER WHERE user = '{{.User}}';"
+queries : 
+  - "SELECT * FROM USER WHERE user = '{{.User}}';"

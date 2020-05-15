@@ -92,5 +92,5 @@ func (st *Step) applyOrPrint(log *logrus.Entry, admin bool, limit int) (int, err
 // ToSkip return true if the step must be skipped (based on the query parameter.
 func (st *Step) ToSkip(ctx context.Context, log *logrus.Entry) (bool, error) {
 	logStep := log.WithField("name", st.Name).WithField("type", "migration")
-	return common.ToSkipDatabase(ctx, logStep, st.datasource, true, false, st.query)
+	return common.ToSkipDatabase(ctx, logStep, st.datasource, true, false, st.queries)
 }

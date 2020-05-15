@@ -10,4 +10,5 @@ nodb: "true"
 engines: "postgres"
 # On postgres, create database are not authorized in transactions
 transaction: "false"
-query: "SELECT COUNT(datname) FROM pg_database WHERE datname = '{{.Database}}';" 
+queries : 
+  - "SELECT COUNT(datname) FROM pg_database WHERE datname = '{{.Database}}';" 

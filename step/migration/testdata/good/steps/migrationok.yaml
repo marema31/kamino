@@ -6,7 +6,8 @@ folder: "migrations/{{.Database}}"
 types: Database
 engines:
   - MariaDB
-query: "SELECT count(table_schema) FROM information_schema.tables WHERE table_catalog = {{.Database}} and table_schema = {{default \"public\" .Schema}}"
+queries: 
+  - "SELECT count(table_schema) FROM information_schema.tables WHERE table_catalog = {{.Database}} and table_schema = {{default \"public\" .Schema}}"
 tags: 
   - "tag1"
   

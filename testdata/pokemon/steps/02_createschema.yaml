@@ -7,4 +7,5 @@ tags:
   - "pokemon.subschema"
 admin: "true"
 engines: "postgres"
-query: "SELECT COUNT(schema_name) FROM information_schema.schemata WHERE schema_name = '{{.Schema}}';" 
+queries : 
+  - "SELECT COUNT(schema_name) FROM information_schema.schemata WHERE schema_name = '{{.Schema}}';" 

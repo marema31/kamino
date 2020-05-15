@@ -5,7 +5,8 @@ type: "sqlscript"
 template: "templates/create_user.sql.tmpl"
 admin: false
 noDb: false
-query: "SELECT * FROM USER WHERE user = '{{.User}}';"
+queries : 
+  - "SELECT * FROM USER WHERE user = '{{.User}}';"
 engines:
   - Mysql
   - unknown
