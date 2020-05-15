@@ -121,6 +121,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 
 	noUser := v.GetBool("nouser")
 	noAdmin := v.GetBool("noadmin")
+	limit := v.GetInt("limit")
 
 	tableUser := v.GetString("usertable")
 	if tableUser == "" {
@@ -180,7 +181,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		// Value for initial migration
 		step.printOnly = false
 		step.dir = migrate.Up
-		step.limit = 0 // No limits
+		step.limit = limit
 		step.noAdmin = noAdmin
 		step.noUser = noUser
 
