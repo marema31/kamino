@@ -25,12 +25,13 @@ func TestToSkipYesOk(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"COUNT(id)"}).
 		AddRow(10)
 
-	mock.ExpectQuery("SELECT COUNT\\(id\\) from stable WHERE title like '%'").WillReturnRows(rows)
-	if err != nil {
-		t.Fatalf("NewSaver should not return error and returned '%v'", err)
-	}
+	mock.ExpectQuery("SELECT COUNT\\(id\\) from dtable WHERE title like '%'").WillReturnRows(rows)
 
-	ok, err := common.ToSkipDatabase(context.Background(), log, ds, false, false, "SELECT COUNT(id) from stable WHERE title like '%'")
+	rows = sqlmock.NewRows([]string{"COUNT(id)"}).
+		AddRow(1)
+	mock.ExpectQuery("SELECT COUNT\\(id\\) from stable WHERE title like '%'").WillReturnRows(rows)
+
+	ok, err := common.ToSkipDatabase(context.Background(), log, ds, false, false, []string{"SELECT COUNT(id) from dtable WHERE title like '%'", "SELECT COUNT(id) from stable WHERE title like '%'"})
 	if err != nil {
 		t.Errorf("ToSkip should not return error, returned: %v", err)
 	}
@@ -64,7 +65,7 @@ func TestToSkipNoOk(t *testing.T) {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
 
-	ok, err := common.ToSkipDatabase(context.Background(), log, ds, false, false, "SELECT COUNT(id) from stable WHERE title like '%'")
+	ok, err := common.ToSkipDatabase(context.Background(), log, ds, false, false, []string{"SELECT COUNT(id) from stable WHERE title like '%'", "SELECT COUNT(id) from dtable WHERE title like '%'"})
 	if err != nil {
 		t.Errorf("ToSkip should not return error, returned: %v", err)
 	}
@@ -95,7 +96,7 @@ func TestToSkipError(t *testing.T) {
 		t.Fatalf("NewSaver should not return error and returned '%v'", err)
 	}
 
-	_, err = common.ToSkipDatabase(context.Background(), log, ds, false, false, "SELECT COUNT(id) from stable WHERE title like '%'")
+	_, err = common.ToSkipDatabase(context.Background(), log, ds, false, false, []string{"SELECT COUNT(id) from stable WHERE title like '%'"})
 	if err == nil {
 		t.Errorf("ToSkip should return error")
 	}
@@ -113,7 +114,7 @@ func TestToSkipOpenError(t *testing.T) {
 
 	ds.ErrorOpenDb = fmt.Errorf("Fake OpenDatabase error")
 
-	_, err := common.ToSkipDatabase(context.Background(), log, ds, false, false, "SELECT COUNT(id) from stable WHERE title like '%'")
+	_, err := common.ToSkipDatabase(context.Background(), log, ds, false, false, []string{"SELECT COUNT(id) from stable WHERE title like '%'"})
 	if err == nil {
 		t.Errorf("ToSkip should return error")
 	}

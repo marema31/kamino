@@ -3,7 +3,8 @@ priority: 42
 name: "nametmplok"
 type: "migration"
 folder: "migrations/{{.Database}}.cfg"
-query: "SELECT count(*) FROM information_schema.tables WHERE table_catalog = {{.Database}} and table_schema = {{default \"public\" .Schema}}"
+queries : 
+  - "SELECT count(*) FROM information_schema.tables WHERE table_catalog = {{.Database}} and table_schema = {{default \"public\" .Schema}}"
 engines:
   - MariaDB
   - Postgres

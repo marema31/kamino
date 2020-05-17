@@ -8,4 +8,5 @@ tags:
 admin: "true"
 nodb: "true"
 engines: "mysql"
-query: "SELECT COUNT(schema_name) FROM information_schema.schemata WHERE schema_name='{{.Database}}';" 
+queries : 
+  - "SELECT COUNT(schema_name) FROM information_schema.schemata WHERE schema_name='{{.Database}}';" 

@@ -24,6 +24,7 @@ func TestToSkipYesOk(t *testing.T) {
 		t.Fatalf("Load should not returns an error, returned: %v", err)
 	}
 
+	fmt.Printf("%v", steps[0])
 	ok, err := steps[0].ToSkip(context.Background(), log)
 	if err != nil {
 		t.Errorf("ToSkip should not return error, returned: %v", err)

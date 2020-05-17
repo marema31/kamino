@@ -2,7 +2,8 @@
 priority: 42
 name: "namesqlscriptok"
 type: "sqlscript"
-query: "SELECT * FROM USER WHERE user = '{{.User}}';"
+queries : 
+  - "SELECT * FROM USER WHERE user = '{{.User}}';"
 admin: false
 noDb: false
 tags: 

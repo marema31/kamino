@@ -76,5 +76,5 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 // ToSkip return true if the step must be skipped (based on the query parameter.
 func (st *Step) ToSkip(ctx context.Context, log *logrus.Entry) (bool, error) {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
-	return common.ToSkipDatabase(ctx, logStep, st.datasource, st.admin, st.noDb, st.query)
+	return common.ToSkipDatabase(ctx, logStep, st.datasource, st.admin, st.noDb, st.queries)
 }

@@ -92,6 +92,12 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 	}
 
 	name := v.GetString("name")
+	noForce := v.GetBool("noforce")
+
+	if noForce && force {
+		log.WithField("name", name).Debugf("Step has noForce flag and we try to force, I refuse to do anything")
+		return 0, make([]common.Steper, 0), nil
+	}
 
 	if sf.indexes == nil {
 		sf.indexes = make(map[string]int)

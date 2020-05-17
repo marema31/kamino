@@ -11,4 +11,5 @@ tags:
 transaction: "false"
 admin: "true"
 engines: "postgres"
-query: "SELECT COUNT(rolname) FROM pg_roles WHERE rolname='sacha'" 
+queries : 
+  - "SELECT COUNT(rolname) FROM pg_roles WHERE rolname='sacha'" 

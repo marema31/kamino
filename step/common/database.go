@@ -10,7 +10,7 @@ import (
 
 // ToSkipDatabase run the query (likely a SELECT COUNT) on the datasource
 // return true if the query return a non-zero value in the only column of the only row.
-func ToSkipDatabase(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer, admin bool, nodb bool, query string) (bool, error) {
+func ToSkipDatabase(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer, admin bool, nodb bool, queries []string) (bool, error) {
 	var needskip int
 
 	db, err := ds.OpenDatabase(log, admin, nodb)
@@ -18,13 +18,18 @@ func ToSkipDatabase(ctx context.Context, log *logrus.Entry, ds datasource.Dataso
 		return false, err
 	}
 
-	err = db.QueryRowContext(ctx, query).Scan(&needskip)
-	if err != nil {
-		log.Error("Query of skip phase failed")
-		log.Error(err)
+	for _, query := range queries {
+		err = db.QueryRowContext(ctx, query).Scan(&needskip)
+		if err != nil {
+			log.Errorf("Query of skip phase failed : %v", err)
+			return false, err
+		}
 
-		return false, err
+		// If the query returned a 0 result we shoud do it, do not test other queries (AND) to allow test table exists and table contains something
+		if needskip == 0 {
+			return false, nil
+		}
 	}
 
-	return needskip != 0, nil
+	return true, nil
 }

@@ -13,7 +13,7 @@ type Step struct {
 	datasource   datasource.Datasourcer
 	admin        bool
 	noDb         bool
-	query        string
+	queries      []string
 	templateFile string
 	sqlCmds      []string
 	transaction  bool

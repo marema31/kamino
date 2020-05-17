@@ -13,4 +13,5 @@ admin: "true"
 # Since we want to change grants on some schemas, we must connect to the database that contain the schema
 nodb: "false"
 engines: "postgres"
-query: "SELECT COUNT(rolname) FROM pg_roles WHERE rolname='{{.User}}'" 
+queries : 
+  - "SELECT COUNT(rolname) FROM pg_roles WHERE rolname='{{.User}}'" 

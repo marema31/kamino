@@ -94,22 +94,34 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		return 0, nil, err
 	}
 
-	queryTmpl := v.GetString("query")
-	if queryTmpl == "" {
-		logStep.Error("No SQL query provided")
+	queriesTmpl := v.GetStringSlice("queries")
+	if len(queriesTmpl) == 0 {
+		logStep.Error("No SQL queries provided")
 		return 0, nil, fmt.Errorf("the step %s must have a query to be executed: %w", name, common.ErrMissingParameter)
 	}
 
-	tquery, err := template.New("query").Funcs(sprig.FuncMap()).Parse(queryTmpl)
-	if err != nil {
-		logStep.Error("Parsing the SQL query template failed:")
-		logStep.Error(err)
+	tqueries := make([]*template.Template, 0, len(queriesTmpl))
 
-		return 0, nil, fmt.Errorf("error parsing the query of %s step: %w", name, err)
+	for _, queryTmpl := range queriesTmpl {
+		if queryTmpl == "" {
+			logStep.Error("No SQL query provided")
+			return 0, nil, fmt.Errorf("the step %s must have a query to be executed: %w", name, common.ErrMissingParameter)
+		}
+
+		tquery, err := template.New("query").Funcs(sprig.FuncMap()).Parse(queryTmpl)
+		if err != nil {
+			logStep.Error("Parsing the SQL query template failed:")
+			logStep.Error(err)
+
+			return 0, nil, fmt.Errorf("error parsing the query of %s step: %w", name, err)
+		}
+
+		tqueries = append(tqueries, tquery)
 	}
 
 	noUser := v.GetBool("nouser")
 	noAdmin := v.GetBool("noadmin")
+	limit := v.GetInt("limit")
 
 	tableUser := v.GetString("usertable")
 	if tableUser == "" {
@@ -146,16 +158,22 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 
 		tmplValue := datasource.FillTmplValues()
 
-		err = tquery.Execute(renderedQuery, tmplValue)
-		if err != nil {
-			logStep.Error("Rendering the query template failed")
-			logStep.Error(err)
+		queries := make([]string, 0, len(tqueries))
 
-			return 0, nil, err
+		for _, tquery := range tqueries {
+			err = tquery.Execute(renderedQuery, tmplValue)
+			if err != nil {
+				logStep.Error("Rendering the query template failed")
+				logStep.Error(err)
+
+				return 0, nil, err
+			}
+
+			queries = append(queries, renderedQuery.String())
+			renderedQuery.Reset()
 		}
 
-		step.query = renderedQuery.String()
-		renderedQuery.Reset()
+		step.queries = queries
 
 		step.schema = tmplValue.Schema
 		step.tableAdmin = tableAdmin
@@ -163,7 +181,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		// Value for initial migration
 		step.printOnly = false
 		step.dir = migrate.Up
-		step.limit = 0 // No limits
+		step.limit = limit
 		step.noAdmin = noAdmin
 		step.noUser = noUser
 

@@ -17,7 +17,7 @@ type Step struct {
 	limit      int
 	tableUser  string
 	tableAdmin string
-	query      string
+	queries    []string
 	printOnly  bool //Used by migrate status
 	dryRun     bool
 	dialect    string

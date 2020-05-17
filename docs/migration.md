@@ -13,12 +13,13 @@ Attribute     | Mandatory | Definition | Default
 admintable    | no  | Table used for store applied _admin_ migration informations | kamino_admin_migrations
 engines       | no  | Limit the datasource selection to those corresponding to the listed engines | all engines
 folder        | yes | Folder containing the migration files (template)
+limit         | no  | Number of migration applied | 0 (all)
 name          | no  | Step name used for step selection by the CLI, more than one step can have the same name
 noadmin       | no  | If true the step will not apply _admin_ migration | false 
+noforce       | no  | If true the step will be skipped for `kamino migrate` sub-command or for `kamino apply --force` 
 nouser        | no  | If true the step will not apply _user_ migration | false 
 priority      | yes | Priority of this step on the recipe execution (ascending order)
-query         | yes | Skip condition query, it should returns only one column/line, if this result is different of 0, the step will be skipped
-tags          | no  | List of tags used for selecting datasource impacted by this step | all
+queries       | yes | Skip condition queries, each query should returns only one column/line, if this result is different of 0, the step will be skipped, if there is more than one query they will be executed in order until one returns a 0 or all have a different resulttags          | no  | List of tags used for selecting datasource impacted by this step | all
 type          | yes | Type of step, in this case _migration_
 usertable     | no  | Table used for store applied _user_ migration informations | kamino_user_migrations
 
