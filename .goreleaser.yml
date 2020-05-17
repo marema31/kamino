@@ -32,3 +32,8 @@ release:
   github:
     owner: marema31
     name: kamino
+brews:
+  - github:
+      owner: marema31
+      name: homebrew-marema31
+    description: "Development database content bootstraper"
