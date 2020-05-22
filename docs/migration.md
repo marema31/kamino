@@ -19,9 +19,37 @@ noadmin       | no  | If true the step will not apply _admin_ migration | false
 noforce       | no  | If true the step will be skipped for `kamino migrate` sub-command or for `kamino apply --force` 
 nouser        | no  | If true the step will not apply _user_ migration | false 
 priority      | yes | Priority of this step on the recipe execution (ascending order)
-queries       | yes | Skip condition queries, each query should returns only one column/line, if this result is different of 0, the step will be skipped, if there is more than one query they will be executed in order until one returns a 0 or all have a different resulttags          | no  | List of tags used for selecting datasource impacted by this step | all
+queries       | yes | Skip condition queries, see below for more information
+tags          | no  | List of tags used for selecting datasource impacted by this step | all
 type          | yes | Type of step, in this case _migration_
 usertable     | no  | Table used for store applied _user_ migration informations | kamino_user_migrations
 
-
+## Templates 
 The attributes `folder` and `query` can contains Golang templates, for list of availables variables refer to this [documentation](/doc/template.md)
+
+## Skip queries
+In _apply_ mode, Kamino use the `queries` parameter for each selected datasource before executing the migration to determine if the step for this datasource should be skipped. This behavior is disable by using the `--force` CLI flags.
+
+`queries` parameter is a list of templated SQL query. Theses queries will be rendered for each datasource with values specific to this datasource.
+
+Each queries: 
+  * can be prefixed by condition with a form of `!`, `=<number>:` or `!=<number>:`, if no condition is provided it will be `=0:`, `!` is an abbreviation for `!=0:`
+  * must returns only one column/line, the return value is compare to the condition,
+  * are runned one by one until one validates the corresponding condition.
+  
+If all queries does not validate their conditions, the step will be skipped for this datasource.
+
+#### example 
+```yaml
+- queries:
+    - "SELECT COUNT(id) from table1",
+	- "!SELECT COUNT(id) from table2",
+	- "=10:SELECT COUNT(id) from table3",
+	- "!=10:SELECT COUNT(id) from table4",
+```
+
+The step will be skipped only if: 
+  * table1 has at least one row,
+  * table2 is empty
+  * table3 does not have 10 rows,
+  * table4 has 10 rows

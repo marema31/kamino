@@ -16,5 +16,5 @@ scripts       | yes | Path of the script to be executed
 tags          | no  | List of tags used for selecting datasource impacted by this step | all
 type          | yes | Type of step, in this case _shell_
 
-
+## Templates
 The attributes `arguments`, `environment` and `path` can contains Golang templates, for list of availables variables refer to this [documentation](/doc/template.md)

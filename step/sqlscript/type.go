@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/step/common"
 )
 
 // Step informations.
@@ -13,7 +14,7 @@ type Step struct {
 	datasource   datasource.Datasourcer
 	admin        bool
 	noDb         bool
-	queries      []string
+	queries      []common.SkipQuery
 	templateFile string
 	sqlCmds      []string
 	transaction  bool

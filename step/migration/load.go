@@ -94,29 +94,9 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		return 0, nil, err
 	}
 
-	queriesTmpl := v.GetStringSlice("queries")
-	if len(queriesTmpl) == 0 {
-		logStep.Error("No SQL queries provided")
-		return 0, nil, fmt.Errorf("the step %s must have a query to be executed: %w", name, common.ErrMissingParameter)
-	}
-
-	tqueries := make([]*template.Template, 0, len(queriesTmpl))
-
-	for _, queryTmpl := range queriesTmpl {
-		if queryTmpl == "" {
-			logStep.Error("No SQL query provided")
-			return 0, nil, fmt.Errorf("the step %s must have a query to be executed: %w", name, common.ErrMissingParameter)
-		}
-
-		tquery, err := template.New("query").Funcs(sprig.FuncMap()).Parse(queryTmpl)
-		if err != nil {
-			logStep.Error("Parsing the SQL query template failed:")
-			logStep.Error(err)
-
-			return 0, nil, fmt.Errorf("error parsing the query of %s step: %w", name, err)
-		}
-
-		tqueries = append(tqueries, tquery)
+	tqueries, err := common.ParseQueries(logStep, v.GetStringSlice("queries"))
+	if err != nil {
+		return 0, nil, err
 	}
 
 	noUser := v.GetBool("nouser")
@@ -133,7 +113,6 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		tableAdmin = "kamino_admin_migrations"
 	}
 
-	renderedQuery := bytes.NewBuffer(make([]byte, 0, 1024))
 	renderedFolder := bytes.NewBuffer(make([]byte, 0, 1024))
 
 	for index, datasource := range dss.Lookup(log, tags, limitedTags, []datasource.Type{datasource.Database}, e) {
@@ -156,26 +135,16 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 
 		renderedFolder.Reset()
 
-		tmplValue := datasource.FillTmplValues()
+		tmplValues := datasource.FillTmplValues()
 
-		queries := make([]string, 0, len(tqueries))
-
-		for _, tquery := range tqueries {
-			err = tquery.Execute(renderedQuery, tmplValue)
-			if err != nil {
-				logStep.Error("Rendering the query template failed")
-				logStep.Error(err)
-
-				return 0, nil, err
-			}
-
-			queries = append(queries, renderedQuery.String())
-			renderedQuery.Reset()
+		queries, err := common.RenderQueries(logStep, tqueries, tmplValues)
+		if err != nil {
+			return 0, nil, err
 		}
 
 		step.queries = queries
 
-		step.schema = tmplValue.Schema
+		step.schema = tmplValues.Schema
 		step.tableAdmin = tableAdmin
 		step.tableUser = tableUser
 		// Value for initial migration

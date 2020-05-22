@@ -3,6 +3,7 @@ package migration
 
 import (
 	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/step/common"
 	migrate "github.com/rubenv/sql-migrate"
 )
 
@@ -17,7 +18,7 @@ type Step struct {
 	limit      int
 	tableUser  string
 	tableAdmin string
-	queries    []string
+	queries    []common.SkipQuery
 	printOnly  bool //Used by migrate status
 	dryRun     bool
 	dialect    string

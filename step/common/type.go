@@ -4,6 +4,7 @@ package common
 import (
 	"context"
 	"errors"
+	"html/template"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -23,3 +24,17 @@ var ErrMissingParameter = errors.New("MISSING PARAMETER")
 
 //ErrWrongParameterValue raise when a parameter as a wrong value in step definition.
 var ErrWrongParameterValue = errors.New("WRONG PARAMETER VALUE")
+
+//TemplateSkipQuery contains parameters for a skip query parsed from string of step configuration file.
+type TemplateSkipQuery struct {
+	tquery       *template.Template
+	compareValue int
+	inverted     bool
+}
+
+//SkipQuery contains parameters for a skip query where the query is templated with the parameters of the datasource.
+type SkipQuery struct {
+	query        string
+	compareValue int
+	inverted     bool
+}
