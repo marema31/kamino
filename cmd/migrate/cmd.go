@@ -40,12 +40,12 @@ func NewMigrateCommand() *cobra.Command {
 
 	cmd.PersistentFlags().BoolVarP(&Admin, "admin", "a", false, "Only admin migration (if relevant)")
 	cmd.PersistentFlags().BoolVarP(&User, "user", "u", false, "Only user migration")
-	cmd.PersistentFlags().IntVarP(&limit, "limit", "l", 0, "Max number of migration(0 for all)")
+	cmd.PersistentFlags().IntVarP(&limit, "limit", "l", -1, "Max number of migration(0 for all)")
 
 	return cmd
 }
 
-func createSuperseed() (map[string]string, error) {
+func createSuperseed(direction string) (map[string]string, error) {
 	superseed := common.CreateSuperseed()
 
 	if Admin && User {
@@ -62,7 +62,16 @@ func createSuperseed() (map[string]string, error) {
 		superseed["migration.noUser"] = "false"
 	}
 
-	if limit != 0 {
+	superseed["migration.dir"] = direction
+
+	switch {
+	case limit == -1 && direction == "down":
+		limit = 1
+		superseed["migration.limit"] = "1"
+	case limit == -1 && direction == "up":
+		limit = 0
+		superseed["migration.limit"] = "0"
+	default:
 		superseed["migration.limit"] = strconv.Itoa(limit)
 	}
 
@@ -73,12 +82,10 @@ func createSuperseed() (map[string]string, error) {
 func UpDown(direction string, cookbook recipe.Cooker, args []string) error {
 	log := common.Logger.WithField("action", "migrate-"+direction)
 
-	superseed, err := createSuperseed()
+	superseed, err := createSuperseed(direction)
 	if err != nil {
 		return err
 	}
-
-	superseed["migration.dir"] = direction
 
 	recipes, err := common.FindRecipes(log, args)
 	if err != nil {

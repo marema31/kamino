@@ -135,15 +135,34 @@ func (saver *DbSaver) getColNames(log *logrus.Entry, record types.Record) ([]str
 	return questionmark, updateSet, nil
 }
 
+func (saver *DbSaver) statementsByEngine(log *logrus.Entry, record types.Record) (string, string, error) {
+	var insertString, updateString string
+
+	questionmark, updateSet, err := saver.getColNames(log, record)
+	if err != nil {
+		return "", "", err
+	}
+
+	switch saver.engine {
+	case datasource.Mysql:
+		insertString = fmt.Sprintf("INSERT INTO %s ( `%s`) VALUES ( %s )", saver.table, strings.Join(saver.colNames, "`,`"), strings.Join(questionmark, ","))       //nolint:gosec
+		updateString = fmt.Sprintf("UPDATE %s SET  %s WHERE %s = %s", saver.table, strings.Join(updateSet, ","), saver.key, saver.questionMarkByEngine(&updateSet)) //nolint:gosec
+	case datasource.Postgres:
+		insertString = fmt.Sprintf("INSERT INTO %s ( %s) VALUES ( %s )", saver.table, strings.Join(saver.colNames, ","), strings.Join(questionmark, ","))           //nolint:gosec
+		updateString = fmt.Sprintf("UPDATE %s SET  %s WHERE %s = %s", saver.table, strings.Join(updateSet, ","), saver.key, saver.questionMarkByEngine(&updateSet)) //nolint:gosec
+	}
+
+	return insertString, updateString, nil
+}
+
 // createStatement Query the destination table to determine the available colums, create the corresponding insert/update statement and save them in the dbSaver instance.
 func (saver *DbSaver) createStatement(log *logrus.Entry, record types.Record) error {
-	questionmark, updateSet, err := saver.getColNames(log, record)
+	var err error
+
+	saver.insertString, saver.updateString, err = saver.statementsByEngine(log, record)
 	if err != nil {
 		return err
 	}
-
-	saver.insertString = fmt.Sprintf("INSERT INTO %s ( %s) VALUES ( %s )", saver.table, strings.Join(saver.colNames, ","), strings.Join(questionmark, ","))           //nolint:gosec
-	saver.updateString = fmt.Sprintf("UPDATE %s SET  %s WHERE %s = %s", saver.table, strings.Join(updateSet, ","), saver.key, saver.questionMarkByEngine(&updateSet)) //nolint:gosec
 
 	log.Debug("Preparing Insert statement")
 	log.Debug(saver.insertString)

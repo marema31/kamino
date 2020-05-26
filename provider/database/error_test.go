@@ -167,7 +167,7 @@ func TestDestHasMoreColsOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"count"}).
 		AddRow(1)
 	dmock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM dtable").WillReturnRows(rows)
-	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
+	dmock.ExpectPrepare("INSERT INTO dtable \\( `title`,`body`,`id`\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectClose()
@@ -224,7 +224,7 @@ func TestDestHasLessColsOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"count"}).
 		AddRow(0)
 	dmock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM dtable").WillReturnRows(rows)
-	dmock.ExpectPrepare("INSERT INTO dtable \\( title,id\\) VALUES \\( \\?,\\? \\)")
+	dmock.ExpectPrepare("INSERT INTO dtable \\( `title`,`id`\\) VALUES \\( \\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectClose()
@@ -345,7 +345,7 @@ func TestPrepareInsertError(t *testing.T) {
 
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
 	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
-	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)").WillReturnError(fmt.Errorf("fake error"))
+	dmock.ExpectPrepare("INSERT INTO dtable \\( `title`,`body`,`id`\\) VALUES \\( \\?,\\?,\\? \\)").WillReturnError(fmt.Errorf("fake error"))
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
@@ -394,7 +394,7 @@ func TestPrepareUpdateError(t *testing.T) {
 	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
 	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
-	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
+	dmock.ExpectPrepare("INSERT INTO dtable \\( `title`,`body`,`id`\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?").WillReturnError(fmt.Errorf("fake error"))
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog"}
 	logger := logrus.New()
@@ -442,7 +442,7 @@ func TestBeginTransactionError(t *testing.T) {
 	dmock.ExpectBegin().WillReturnError(fmt.Errorf("fake error"))
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
 	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
-	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
+	dmock.ExpectPrepare("INSERT INTO dtable \\( `title`,`body`,`id`\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectCommit()
 	dmock.ExpectClose()
@@ -502,7 +502,7 @@ func TestEndTransactionError(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"count"}).
 		AddRow(0)
 	dmock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM dtable").WillReturnRows(rows)
-	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
+	dmock.ExpectPrepare("INSERT INTO dtable \\( `title`,`body`,`id`\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectCommit().WillReturnError(fmt.Errorf("fake error"))
@@ -562,7 +562,7 @@ func TestRollbackTransactionError(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"count"}).
 		AddRow(0)
 	dmock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM dtable").WillReturnRows(rows)
-	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
+	dmock.ExpectPrepare("INSERT INTO dtable \\( `title`,`body`,`id`\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 1", "hello", "1").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("INSERT INTO dtable").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectRollback().WillReturnError(fmt.Errorf("fake error"))
@@ -776,7 +776,7 @@ func TestDeleteError(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"count"}).
 		AddRow(0)
 	dmock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM dtable").WillReturnRows(rows)
-	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
+	dmock.ExpectPrepare("INSERT INTO dtable \\( `title`,`body`,`id`\\) VALUES \\( \\?,\\?,\\? \\)")
 	dmock.ExpectPrepare("UPDATE dtable SET  title=\\?,body=\\? WHERE id = \\?")
 	dmock.ExpectExec("UPDATE dtable SET title=\\?,body=\\? WHERE id = \\?").WithArgs("post 2", "world", "2").WillReturnResult(sqlmock.NewResult(1, 1))
 	dmock.ExpectExec("DELETE from dtable WHERE id=1").WillReturnError(fmt.Errorf("fake error"))

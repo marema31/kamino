@@ -385,7 +385,7 @@ func TestParseRenderQueries(t *testing.T) {
 			name:          "ParseNoQuery",
 			queries:       []string{},
 			expected:      []e{},
-			wantParseErr:  true,
+			wantParseErr:  false,
 			wantRenderErr: false,
 		},
 		{

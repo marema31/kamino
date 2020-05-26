@@ -3,6 +3,7 @@
 package datasource
 
 import (
+	"context"
 	"crypto/sha256"
 	"database/sql"
 	"fmt"
@@ -29,6 +30,8 @@ type Datasourcer interface {
 	GetEngine() Engine
 	GetType() Type
 	IsTransaction() bool
+	IsTableEmpty(context.Context, *logrus.Entry, string) (bool, error)
+	IsTableExists(context.Context, *logrus.Entry, string) (bool, error)
 	Stat() (os.FileInfo, error)
 }
 

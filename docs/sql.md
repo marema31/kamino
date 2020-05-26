@@ -10,7 +10,7 @@ name          | no  | Step name used for step selection by the CLI, more than on
 nodb          | no  | Use _admin_ user account of datasource and connect to the database server without a database (useful for database creation) to execute the SQL script | false 
 nouser        | no  | If true the step will not apply _user_ migration | false 
 priority      | yes | Priority of this step on the recipe execution (ascending order)
-queries       | yes | Skip condition queries, see below for more information
+queries       | no  | Skip condition queries, see below for more information
 tags          | no  | List of tags used for selecting datasource impacted by this step | all
 type          | yes | Type of step, in this case _sql_
 template      | yes | Path of the SQL script template to be executed
@@ -44,10 +44,10 @@ If all queries does not validate their conditions, the step will be skipped for 
 #### example 
 ```yaml
 - queries:
-    - "SELECT COUNT(id) from table1",
-	- "!SELECT COUNT(id) from table2",
-	- "=10:SELECT COUNT(id) from table3",
-	- "!=10:SELECT COUNT(id) from table4",
+  - "SELECT COUNT(id) from table1"
+  - "!SELECT COUNT(id) from table2"
+  - "=10:SELECT COUNT(id) from table3"
+  - "!=10:SELECT COUNT(id) from table4"
 ```
 
 The step will be skipped only if: 

@@ -19,7 +19,7 @@ noadmin       | no  | If true the step will not apply _admin_ migration | false
 noforce       | no  | If true the step will be skipped for `kamino migrate` sub-command or for `kamino apply --force` 
 nouser        | no  | If true the step will not apply _user_ migration | false 
 priority      | yes | Priority of this step on the recipe execution (ascending order)
-queries       | yes | Skip condition queries, see below for more information
+queries       | no  | Skip condition queries, see below for more information
 tags          | no  | List of tags used for selecting datasource impacted by this step | all
 type          | yes | Type of step, in this case _migration_
 usertable     | no  | Table used for store applied _user_ migration informations | kamino_user_migrations
@@ -29,6 +29,8 @@ The attributes `folder` and `query` can contains Golang templates, for list of a
 
 ## Skip queries
 In _apply_ mode, Kamino use the `queries` parameter for each selected datasource before executing the migration to determine if the step for this datasource should be skipped. This behavior is disable by using the `--force` CLI flags.
+
+***Note:*** the step will never be skipped if the migration table(s) does not exists or are empty, tested tables (`admintable`/`usertable`) will depend of `noadmin`/`nouser` flags of the step.
 
 `queries` parameter is a list of templated SQL query. Theses queries will be rendered for each datasource with values specific to this datasource.
 
@@ -42,10 +44,10 @@ If all queries does not validate their conditions, the step will be skipped for 
 #### example 
 ```yaml
 - queries:
-    - "SELECT COUNT(id) from table1",
-	- "!SELECT COUNT(id) from table2",
-	- "=10:SELECT COUNT(id) from table3",
-	- "!=10:SELECT COUNT(id) from table4",
+  - "SELECT COUNT(id) from table1"
+  - "!SELECT COUNT(id) from table2"
+  - "=10:SELECT COUNT(id) from table3"
+  - "!=10:SELECT COUNT(id) from table4"
 ```
 
 The step will be skipped only if: 

@@ -28,12 +28,10 @@ func newMigrateStatusCommand() *cobra.Command {
 func Status(cookbook recipe.Cooker, args []string) error {
 	log := common.Logger.WithField("action", "migrate-status")
 
-	superseed, err := createSuperseed()
+	superseed, err := createSuperseed("status")
 	if err != nil {
 		return err
 	}
-
-	superseed["migration.dir"] = "status"
 
 	recipes, err := common.FindRecipes(log, args)
 	if err != nil {

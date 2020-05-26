@@ -27,6 +27,7 @@ var ErrWrongParameterValue = errors.New("WRONG PARAMETER VALUE")
 
 //TemplateSkipQuery contains parameters for a skip query parsed from string of step configuration file.
 type TemplateSkipQuery struct {
+	text         string
 	tquery       *template.Template
 	compareValue int
 	inverted     bool

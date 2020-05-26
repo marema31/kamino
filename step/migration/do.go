@@ -92,5 +92,22 @@ func (st *Step) applyOrPrint(log *logrus.Entry, admin bool, limit int) (int, err
 // ToSkip return true if the step must be skipped (based on the query parameter.
 func (st *Step) ToSkip(ctx context.Context, log *logrus.Entry) (bool, error) {
 	logStep := log.WithField("name", st.Name).WithField("type", "migration")
+
+	if !st.noAdmin {
+		empty, err := st.datasource.IsTableEmpty(ctx, logStep, st.tableAdmin)
+		if empty || err != nil {
+			logStep.Debug("Do not skip since tableAdmin is empty")
+			return false, err
+		}
+	}
+
+	if !st.noUser {
+		empty, err := st.datasource.IsTableEmpty(ctx, logStep, st.tableUser)
+		if empty || err != nil {
+			logStep.Debug("Do not skip since tableUser is empty")
+			return false, err
+		}
+	}
+
 	return common.ToSkipDatabase(ctx, logStep, st.datasource, true, false, st.queries)
 }

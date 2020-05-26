@@ -43,6 +43,8 @@ type MockDatasource struct {
 	ErrorReset    error
 	ErrorClose    error
 	FileNotExists bool
+	TableExists   bool
+	TableEmpty    bool
 	MockedDb      *sql.DB
 	WriteBuf      bytes.Buffer
 }

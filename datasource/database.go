@@ -2,6 +2,7 @@ package datasource
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"fmt"
 	"html/template"
@@ -170,6 +171,68 @@ func loadDatabaseDatasource(log *logrus.Entry, filename string, v *viper.Viper, 
 	}
 
 	return ds, nil
+}
+
+func (ds *Datasource) isQueryCountZero(ctx context.Context, log *logrus.Entry, query string, admin bool, nodb bool) (bool, error) {
+	var value int
+
+	db, err := ds.OpenDatabase(log, admin, nodb)
+	if err != nil {
+		return false, err
+	}
+
+	err = db.QueryRowContext(ctx, query).Scan(&value)
+	if err != nil {
+		log.Errorf("Query of failed : %v", err)
+		return false, err
+	}
+
+	return value == 0, nil
+}
+
+//IsTableExists return true if the table exists.
+func (ds *Datasource) IsTableExists(ctx context.Context, log *logrus.Entry, table string) (bool, error) {
+	var query string
+
+	switch ds.engine {
+	case Mysql:
+		query = fmt.Sprintf("SELECT count(*) FROM information_schema.tables WHERE table_schema = '%s' AND table_name = '%s'", ds.database, table) //nolint:gosec
+	case Postgres:
+		schema := "public"
+		if ds.schema != "" {
+			schema = ds.schema
+		}
+
+		query = fmt.Sprintf("SELECT count(*) FROM information_schema.tables WHERE table_catalog = '%s' AND table_schema = '%s' AND table_name = '%s'", ds.database, schema, table) //nolint:gosec
+	}
+
+	zero, err := ds.isQueryCountZero(ctx, log, query, true, false)
+
+	return !zero, err
+}
+
+//IsTableEmpty return true if the table empty.
+func (ds *Datasource) IsTableEmpty(ctx context.Context, log *logrus.Entry, table string) (bool, error) {
+	var query string
+
+	if exists, err := ds.IsTableExists(ctx, log, table); !exists || err != nil {
+		log.Debugf("Table %s does not exists", table)
+		return true, err
+	}
+
+	switch ds.engine {
+	case Mysql:
+		query = fmt.Sprintf("SELECT count(*) FROM %s", table) //nolint:gosec
+	case Postgres:
+		schema := "public"
+		if ds.schema != "" {
+			schema = ds.schema
+		}
+
+		query = fmt.Sprintf("SELECT count(*) FROM %s.%s", schema, table) //nolint:gosec
+	}
+
+	return ds.isQueryCountZero(ctx, log, query, true, false)
 }
 
 //OpenDatabase open connection to the corresponding database.

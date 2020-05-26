@@ -125,8 +125,8 @@ func TestMigrationLoadNoQuery(t *testing.T) {
 		t.Errorf("SetupLoad should not returns an error, returned: %v", err)
 	}
 	_, _, err = migration.Load(ctx, log, "testdata/fail", "noquery", 0, v, dss, false, false, nil)
-	if err == nil {
-		t.Errorf("Load should returns an error")
+	if err != nil {
+		t.Errorf("Load should not returns an error : %v", err)
 	}
 }
 func TestMigrationLoadWrongQuery(t *testing.T) {

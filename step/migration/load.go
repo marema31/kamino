@@ -143,17 +143,30 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		}
 
 		step.queries = queries
-
 		step.schema = tmplValues.Schema
 		step.tableAdmin = tableAdmin
 		step.tableUser = tableUser
-		// Value for initial migration
-		step.printOnly = false
-		step.dir = migrate.Up
+
+		switch v.GetString("direction") {
+		case "":
+			step.dir = migrate.Up
+			step.printOnly = false
+		case "up":
+			step.dir = migrate.Up
+			step.printOnly = false
+		case "down":
+			step.dir = migrate.Down
+			step.printOnly = false
+		case "status":
+			step.dir = migrate.Up
+			step.printOnly = true
+		default:
+			return 0, nil, fmt.Errorf("%s is not a correct direction for migration: %w", v.GetString("direction"), common.ErrWrongParameterValue)
+		}
+
 		step.limit = limit
 		step.noAdmin = noAdmin
 		step.noUser = noUser
-
 		step.dialect = dialects[datasource.GetEngine()]
 		steps = append(steps, &step)
 	}
