@@ -70,6 +70,11 @@ func (ys *KaminoYAMLSaver) Name() string {
 
 //Reset reinitialize the destination (if possible).
 func (ys *KaminoYAMLSaver) Reset(log *logrus.Entry) error {
+	if ys.ds == nil {
+		return nil // The file was not open yet
+	}
+
 	logFile := log.WithField("datasource", ys.ds.GetName())
+
 	return ys.ds.ResetFile(logFile)
 }

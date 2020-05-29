@@ -84,6 +84,11 @@ func (cs *KaminoCsvSaver) Name() string {
 
 //Reset reinitialize the destination (if possible).
 func (cs *KaminoCsvSaver) Reset(log *logrus.Entry) error {
+	if cs.ds == nil {
+		return nil // The file was not open yet
+	}
+
 	logFile := log.WithField("datasource", cs.ds.GetName())
+
 	return cs.ds.ResetFile(logFile)
 }

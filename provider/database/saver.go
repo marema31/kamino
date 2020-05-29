@@ -20,7 +20,6 @@ const (
 	replace     dbSaverMode = iota // Will update if line with same primary exist or insert the line
 	exactCopy   dbSaverMode = iota // As replace but will remove line with primary key not present in source
 	truncate    dbSaverMode = iota // As insert but will truncate the table before
-
 )
 
 //DbSaver specifc state for database Saver provider.
@@ -254,7 +253,7 @@ func (saver *DbSaver) Close(log *logrus.Entry) error {
 		}
 	}
 
-	if saver.transaction {
+	if saver.transaction && saver.tx != nil {
 		logDb.Debug("Committing transaction")
 
 		err := saver.tx.Commit()

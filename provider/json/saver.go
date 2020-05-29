@@ -69,6 +69,11 @@ func (js *KaminoJSONSaver) Name() string {
 
 //Reset reinitialize the destination (if possible).
 func (js *KaminoJSONSaver) Reset(log *logrus.Entry) error {
+	if js.ds == nil {
+		return nil // The file was not open yet
+	}
+
 	logFile := log.WithField("datasource", js.ds.GetName())
+
 	return js.ds.ResetFile(logFile)
 }
