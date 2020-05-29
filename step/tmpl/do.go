@@ -13,7 +13,7 @@ import (
 //Finish manage the finish of the step (called after all other step of the same priority has ended their Do).
 func (st *Step) Finish(log *logrus.Entry) {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
-	logStep.Info("Finishing step")
+	logStep.Debug("Finishing step")
 
 	if err := st.output.CloseFile(logStep); err != nil {
 		logStep.Error(err)

@@ -12,8 +12,8 @@ import (
 //Finish manage the finish of the step (called after all other step of the same priority has ended their Do).
 func (st *Step) Finish(log *logrus.Entry) {
 	logStep := log.WithField("name", st.Name).WithField("type", "migration")
-	logStep.Info("Finishing step")
-	logStep.Info("Nothing to do")
+	logStep.Debug("Finishing step")
+	logStep.Debug("Nothing to do")
 }
 
 //Cancel manage the cancellation of the step.
@@ -31,7 +31,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	limit := st.limit
 
 	if !st.noAdmin && (st.dir == migrate.Up || st.printOnly) {
-		logStep.Debug("Applying admin migration")
+		logStep.Info("Applying admin migration")
 
 		applied, err := st.applyOrPrint(logStep.WithField("kind", "admin"), true, limit)
 		if err != nil {
@@ -48,7 +48,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	}
 
 	if !st.noUser {
-		logStep.Debug("Applying user migration")
+		logStep.Info("Applying user migration")
 
 		applied, err := st.applyOrPrint(logStep.WithField("kind", "user"), false, limit)
 		if err != nil {
@@ -70,7 +70,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	}
 
 	if !st.noAdmin && st.dir == migrate.Down {
-		logStep.Debug("Applying admin migration")
+		logStep.Info("Applying admin migration")
 
 		_, err := st.apply(logStep.WithField("kind", "admin"), true, limit)
 		if err != nil {

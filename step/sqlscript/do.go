@@ -10,7 +10,7 @@ import (
 //Finish manage the finish of the step (called after all other step of the same priority has ended their Do).
 func (st *Step) Finish(log *logrus.Entry) {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
-	logStep.Info("Finishing step")
+	logStep.Info("Debug step")
 
 	if st.tx != nil {
 		if err := st.tx.Commit(); err != nil {

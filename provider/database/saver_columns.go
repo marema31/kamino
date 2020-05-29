@@ -165,7 +165,7 @@ func (saver *DbSaver) createStatement(log *logrus.Entry, record types.Record) er
 	}
 
 	log.Debug("Preparing Insert statement")
-	log.Debug(saver.insertString)
+	//log.Debug(saver.insertString)
 
 	if saver.transaction {
 		saver.insertStmt, err = saver.tx.Prepare(saver.insertString)
@@ -183,7 +183,7 @@ func (saver *DbSaver) createStatement(log *logrus.Entry, record types.Record) er
 
 	if saver.mode == replace || saver.mode == update || saver.mode == exactCopy {
 		log.Debug("Preparing Update statement")
-		log.Debug(saver.updateString)
+		//log.Debug(saver.updateString)
 
 		if saver.transaction {
 			saver.updateStmt, err = saver.tx.Prepare(saver.updateString)
