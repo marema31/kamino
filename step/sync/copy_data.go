@@ -54,6 +54,11 @@ func (st *Step) copyData(ctx context.Context, log *logrus.Entry) error {
 				return err
 			}
 		}
+		st.count++
+
+		if st.count%1000 == 0 {
+			log.Infof("%d rows treated", st.count)
+		}
 
 		//Look for cancellation between each data
 		select {

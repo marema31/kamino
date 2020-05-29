@@ -40,4 +40,5 @@ type Step struct {
 	destsCfg       []parsedDestConfig
 	prov           provider.Provider
 	dryRun         bool
+	count          int
 }

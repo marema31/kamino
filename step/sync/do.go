@@ -11,7 +11,7 @@ import (
 //Finish manage the finish of the step (called after all other step of the same priority has ended their Do).
 func (st *Step) Finish(log *logrus.Entry) {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
-	logStep.Info("Finishing step")
+	logStep.Debug("Finishing step")
 
 	if st.source != nil {
 		st.source.Close(logStep)
@@ -58,7 +58,7 @@ func (st *Step) Cancel(log *logrus.Entry) {
 	}
 }
 
-func (st *Step) useCache(ctx context.Context, logStep *logrus.Entry) error {
+func (st *Step) useCache(ctx context.Context, logStep *logrus.Entry) (bool, error) {
 	ttlExpired := false
 
 	cacheStat, errFile := st.cacheCfg.ds.Stat()
@@ -73,19 +73,19 @@ func (st *Step) useCache(ctx context.Context, logStep *logrus.Entry) error {
 
 		st.cacheSaver, err = st.prov.NewSaver(ctx, logStep, st.cacheCfg.ds, st.cacheCfg.table, "", "")
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		err = st.copyData(ctx, logStep)
 		if err == nil {
 			logStep.Info("Synchronization ok, cache file created")
-			return nil
+			return true, nil
 		}
 
 		// Something goes wrong, we will try from the cache even it is expired
 		err = st.cacheSaver.Reset(logStep) // reset it will only remove the temporary file
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		st.cacheSaver = nil //Since we closed it, ensure that it will not be closed afterwards
@@ -96,7 +96,7 @@ func (st *Step) useCache(ctx context.Context, logStep *logrus.Entry) error {
 	// Generation of cache file failed we will try to use the old one if it exists
 	if _, err := st.cacheCfg.ds.Stat(); os.IsNotExist(err) {
 		logStep.Error("Cache does not exist, and synchronization from source failed")
-		return err
+		return false, err
 	}
 
 	logStep.Info("Using cache as source")
@@ -109,7 +109,7 @@ func (st *Step) useCache(ctx context.Context, logStep *logrus.Entry) error {
 		st.cacheLoader = cacheLoader
 	}
 
-	return nil
+	return false, nil
 }
 
 //Do manage the runnning of the step.
@@ -118,10 +118,17 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	logStep.Debug("Beginning step")
 
 	if st.cacheCfg.ds != nil {
-		err := st.useCache(ctx, log)
+		done, err := st.useCache(ctx, logStep)
+		if done {
+			logStep.Infof("Synchronization from cache ok. %d rows", st.count)
+			return nil
+		}
+
 		if err != nil {
 			return err
 		}
+
+		st.count = 0
 	}
 
 	err := st.copyData(ctx, logStep)
@@ -131,9 +138,9 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	}
 
 	if st.cacheCfg.ds == nil {
-		logStep.Info("Synchronization ok, no cache file created")
+		logStep.Infof("Synchronization ok, no cache file created %d rows", st.count)
 	} else {
-		logStep.Info("Synchronization ok")
+		logStep.Infof("Synchronization ok. %d rows", st.count)
 	}
 
 	return nil
