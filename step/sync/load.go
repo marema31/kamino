@@ -33,6 +33,7 @@ type DestinationConfig struct {
 	Table   string
 	Key     string
 	Mode    string
+	Queries []string
 }
 
 // FilterConfig type for filter contain all possible fields without verification.
@@ -114,6 +115,11 @@ func parseDestConfig(log *logrus.Entry, v *viper.Viper, dss datasource.Datasourc
 	}
 
 	for _, dest := range dests {
+		tqueries, err := common.ParseQueries(log, dest.Queries)
+		if err != nil {
+			return nil, err
+		}
+
 		datasources, err := getDatasources(log, dss, dest.Tags, dest.Engines, dest.Types, "destination", false, limitedTags)
 		if err != nil {
 			return nil, err
@@ -129,6 +135,15 @@ func parseDestConfig(log *logrus.Entry, v *viper.Viper, dss datasource.Datasourc
 			if p.mode == "onlyifempty" && force {
 				p.mode = "truncate"
 			}
+
+			tmplValues := datasource.FillTmplValues()
+
+			queries, err := common.RenderQueries(log, tqueries, tmplValues)
+			if err != nil {
+				return nil, err
+			}
+
+			p.queries = queries
 
 			parsedDests = append(parsedDests, p)
 		}

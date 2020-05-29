@@ -117,6 +117,11 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	logStep := log.WithField("name", st.Name).WithField("datasource", st.sourceCfg.ds.GetName()).WithField("type", "sync")
 	logStep.Debug("Beginning step")
 
+	if len(st.destinations) == 0 {
+		logStep.Info("All destinations has been skipped")
+		return nil
+	}
+
 	if st.cacheCfg.ds != nil {
 		done, err := st.useCache(ctx, logStep)
 		if done {

@@ -2,9 +2,11 @@ package sync
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/provider"
+	"github.com/marema31/kamino/step/common"
 )
 
 //Init manage the initialization of the step.
@@ -40,12 +42,20 @@ func (st *Step) Init(ctx context.Context, log *logrus.Entry) error {
 	savers := make([]provider.Saver, 0, len(st.destsCfg))
 
 	for _, dest := range st.destsCfg {
-		saver, err := st.prov.NewSaver(ctx, log, dest.ds, dest.table, dest.key, dest.mode)
+		skip, err := common.ToSkipDatabase(ctx, logStep, dest.ds, false, false, dest.queries)
+
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to determine is this destination must be skipped, %w", err)
 		}
 
-		savers = append(savers, saver)
+		if !skip {
+			saver, err := st.prov.NewSaver(ctx, log, dest.ds, dest.table, dest.key, dest.mode)
+			if err != nil {
+				return err
+			}
+
+			savers = append(savers, saver)
+		}
 	}
 
 	st.destinations = savers

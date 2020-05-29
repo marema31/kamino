@@ -39,6 +39,7 @@ Attribute     | Mandatory | Definition | Default
 engines       | no  | Limit the datasource selection to those corresponding to the listed engines (Mysql, Postgres, CSV, JSON, YAML) | all datasource engines
 key           | no  | Key column, used by some modes to defined if a line already exist.
 mode          | yes | Synchronization mode (only for database) (see below)
+queries       | no  | Skip condition queries, see below for more information, superseed the mode for skipping the destination
 table         | no  | Table to be synchronized. Ignored for files. If missing for database the step will fail.
 tags          | no  | List of tags used for selecting datasource impacted by this step | all
 types         | no  | Limit the datasource selection to those corresponding to the listed types (Database or File) | all datasource types
@@ -80,3 +81,39 @@ This filter will transform the data to contains only the column listed in the `a
 ## replace
 This filter will replace the value of columns, impacted columns and the values to be replaced by are listed as a dictionary in the `mparameters` attribute
 
+## Skip queries
+In _apply_ mode, Kamino use the `queries` parameter for each selected datasource before executing the migration to determine if the step for this datasource should be skipped. This behavior is disable by using the `--force` CLI flags.
+
+`queries` parameter is a list of templated SQL query. Theses queries will be rendered for each datasource with values specific to this datasource.
+
+Each queries: 
+  * can be prefixed by condition with a form of `!`, `=<number>:` or `!=<number>:`, if no condition is provided it will be `=0:`, `!` is an abbreviation for `!=0:`
+  * must returns only one column/line, the return value is compare to the condition,
+  * are runned one by one until one validates the corresponding condition.
+  
+If all queries does not validate their conditions, the step will be skipped for this datasource.
+
+#### example 
+```yaml
+- queries:
+  - "SELECT COUNT(id) from table1"
+  - "!SELECT COUNT(id) from table2"
+  - "=10:SELECT COUNT(id) from table3"
+  - "!=10:SELECT COUNT(id) from table4"
+```
+
+The step will be skipped only if: 
+  * table1 has at least one row,
+  * table2 is empty
+  * table3 does not have 10 rows,
+  * table4 has 10 rows
+
+## Templates
+The attributes `queries` of the step can contains Golang templates, for list of availables variables refer to this [documentation](/doc/template.md)
+
+In the SQL script each SQL statement can be multiline and must be ended by a semi-column character. If a SQL statement must contain a semi-column (for example a postgres function definition), it must be surrounded by the lines:
+```SQL
+    --StatementBegin
+    ....
+    --StatementEnd
+```

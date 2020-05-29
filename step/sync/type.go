@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/marema31/kamino/datasource"
+	"github.com/marema31/kamino/step/common"
 
 	"github.com/marema31/kamino/filter"
 	"github.com/marema31/kamino/provider"
@@ -17,10 +18,11 @@ type parsedSourceConfig struct {
 }
 
 type parsedDestConfig struct {
-	ds    datasource.Datasourcer
-	table string
-	key   string
-	mode  string
+	ds      datasource.Datasourcer
+	table   string
+	key     string
+	mode    string
+	queries []common.SkipQuery
 }
 
 // Step informations.
