@@ -289,6 +289,7 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 
 	db.SetConnMaxLifetime(time.Minute * 5) //nolint:gomnd //for the moment no reason to make it parametrized
 	db.SetMaxIdleConns(10)                 //nolint:gomnd //for the moment no reason to make it parametrized
+	db.SetMaxOpenConns(151)                //nolint:gomnd //for the moment no reason to make it parametrized
 
 	for databaseConnectionAttemptLoop := 0; databaseConnectionAttemptLoop < ds.conRetry; databaseConnectionAttemptLoop++ {
 		// Open does not really do a connection and therefore does not test for url is correct, ping will do
