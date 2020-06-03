@@ -19,7 +19,7 @@ type DbLoader struct {
 	table    string
 	rows     *sql.Rows
 	scanned  []interface{}
-	rawBytes []sql.RawBytes
+	rawBytes []sql.NullString
 	colNames []string
 }
 
@@ -71,8 +71,8 @@ func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer
 		columnsname[i] = col.Name()
 	}
 
-	rawBytes := make([]sql.RawBytes, len(columns)) // Buffers for each column
-	scanned := make([]interface{}, len(columns))   // Address of each Buffers since sql.QueryContext needs pointer to each column buffers
+	rawBytes := make([]sql.NullString, len(columns)) // Buffers for each column
+	scanned := make([]interface{}, len(columns))     // Address of each Buffers since sql.QueryContext needs pointer to each column buffers
 
 	for i := range rawBytes {
 		scanned[i] = &rawBytes[i]
@@ -115,8 +115,13 @@ func (dl *DbLoader) Load(log *logrus.Entry) (types.Record, error) {
 	}
 
 	record := make(types.Record, len(dl.colNames))
+
 	for i, col := range dl.colNames {
-		record[col] = string(dl.rawBytes[i])
+		if dl.rawBytes[i].Valid {
+			record[col] = dl.rawBytes[i].String
+		} else {
+			record[col] = types.NullValue
+		}
 	}
 
 	return record, nil

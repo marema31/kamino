@@ -172,8 +172,13 @@ func (saver *DbSaver) Save(log *logrus.Entry, record types.Record) error {
 	}
 
 	row := make([]interface{}, len(saver.colNames))
+
 	for i, col := range saver.colNames {
-		row[i] = record[col]
+		if record[col] != types.NullValue {
+			row[i] = record[col]
+		} else {
+			row[i] = sql.NullString{}
+		}
 	}
 
 	switch saver.mode {

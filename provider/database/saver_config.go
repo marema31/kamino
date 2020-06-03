@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
@@ -27,9 +28,10 @@ func stringToMode(modestr string) dbSaverMode {
 
 //createIdsList store in the instance the list of all values of column described in 'key' configuration entry.
 func (saver *DbSaver) createIdsList(log *logrus.Entry) error {
-	log.Debugf("SELECT %s from %s", saver.key, saver.table)
+	query := fmt.Sprintf("SELECT %s from %s", saver.key, saver.table) //nolint: gosec
+	log.Debugf(query)
 
-	rows, err := saver.db.QueryContext(saver.ctx, "SELECT ? from ?", saver.key, saver.table)
+	rows, err := saver.db.QueryContext(saver.ctx, query)
 	if err != nil {
 		return err
 	}
