@@ -68,7 +68,7 @@ func TestCreateIdsListError(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 
-	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnError(fmt.Errorf("fake error"))
+	dmock.ExpectQuery("SELECT id from dtable").WillReturnError(fmt.Errorf("fake error"))
 	dest := mockdatasource.MockDatasource{MockedDb: ddb, Type: datasource.Database, Engine: datasource.Mysql, Database: "blog", Transaction: true}
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
@@ -294,7 +294,7 @@ func TestKeyNotExistsSourceError(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(3).
 		AddRow(2)
-	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
 	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( title,body,id\\) VALUES \\( \\?,\\?,\\? \\)")
@@ -391,7 +391,7 @@ func TestPrepareUpdateError(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(1).
 		AddRow(2)
-	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"})
 	dmock.ExpectQuery("SELECT \\* from \\? LIMIT 1").WithArgs("dtable").WillReturnRows(rows)
 	dmock.ExpectPrepare("INSERT INTO dtable \\( `title`,`body`,`id`\\) VALUES \\( \\?,\\?,\\? \\)")
@@ -708,7 +708,7 @@ func TestInsertError(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(1).
 		AddRow(2)
-	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"name"}).
 		AddRow("id").
 		AddRow("title").
@@ -766,7 +766,7 @@ func TestDeleteError(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(1).
 		AddRow(2)
-	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"name"}).
 		AddRow("id").
 		AddRow("title").

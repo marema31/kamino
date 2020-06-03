@@ -33,3 +33,8 @@ func (ds *MockDatasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool)
 
 	return ds.MockedDb, nil
 }
+
+//CloseDatabase close connection to the corresponding database only if no more used.
+func (ds *MockDatasource) CloseDatabase(log *logrus.Entry, admin bool, nodb bool) error {
+	return ds.ErrorClose
+}

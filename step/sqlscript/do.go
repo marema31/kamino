@@ -10,7 +10,9 @@ import (
 //Finish manage the finish of the step (called after all other step of the same priority has ended their Do).
 func (st *Step) Finish(log *logrus.Entry) {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
-	logStep.Info("Debug step")
+	logStep.Info("Finish step")
+
+	defer st.datasource.CloseDatabase(log, st.admin, st.noDb) //nolint: errcheck
 
 	if st.tx != nil {
 		if err := st.tx.Commit(); err != nil {
@@ -23,6 +25,8 @@ func (st *Step) Finish(log *logrus.Entry) {
 func (st *Step) Cancel(log *logrus.Entry) {
 	logStep := log.WithField("name", st.Name).WithField("type", "sql")
 	logStep.Info("Cancelling step")
+
+	defer st.datasource.CloseDatabase(log, st.admin, st.noDb) //nolint: errcheck
 
 	if st.tx != nil {
 		if err := st.tx.Rollback(); err != nil {
@@ -44,10 +48,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 		return nil
 	}
 
-	db, err := st.datasource.OpenDatabase(logStep, st.admin, st.noDb)
-	if err != nil {
-		return err
-	}
+	var err error
 
 	for _, stmt := range st.sqlCmds {
 		logStep.Debug("Executing: ")
@@ -56,7 +57,7 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 		if st.tx != nil {
 			_, err = st.tx.ExecContext(ctx, stmt)
 		} else {
-			_, err = db.ExecContext(ctx, stmt)
+			_, err = st.db.ExecContext(ctx, stmt)
 		}
 
 		if err != nil {

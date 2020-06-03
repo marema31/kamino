@@ -363,7 +363,7 @@ func TestUpdateOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(3).
 		AddRow(2)
-	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"}).
 		AddRow(3, "post 3", "good").
 		AddRow(2, "post 2 bis", "planet")
@@ -443,7 +443,7 @@ func TestReplaceOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(3).
 		AddRow(2)
-	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"}).
 		AddRow(3, "post 3", "good").
 		AddRow(2, "post 2 bis", "planet")
@@ -524,7 +524,7 @@ func TestExactCopyOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(3).
 		AddRow(2)
-	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"}).
 		AddRow(3, "post 3", "good").
 		AddRow(2, "post 2 bis", "planet")
@@ -606,7 +606,7 @@ func TestExactCopyTransactionOk(t *testing.T) {
 	rows = sqlmock.NewRows([]string{"id"}).
 		AddRow(3).
 		AddRow(2)
-	dmock.ExpectQuery("SELECT \\? from \\?").WithArgs("id", "dtable").WillReturnRows(rows)
+	dmock.ExpectQuery("SELECT id from dtable").WillReturnRows(rows)
 	rows = sqlmock.NewRows([]string{"id", "title", "body"}).
 		AddRow(3, "post 3", "good").
 		AddRow(2, "post 2 bis", "planet")

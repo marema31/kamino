@@ -133,13 +133,17 @@ func (dl *DbLoader) Close(log *logrus.Entry) error {
 	logDb.Debug("Closing database")
 
 	err := dl.rows.Close()
-	/*	We do not close the database to take advantage of pool connection pool of sql package
-		err := dl.ds.CloseDatabase(logDb, false, false)
-		if err != nil {
-			logDb.Error("Close database failed")
-			logDb.Error(err)
-		}
-	*/
+	if err != nil {
+		logDb.Error("Closing row failed")
+		logDb.Error(err)
+	}
+
+	err = dl.ds.CloseDatabase(logDb, false, false)
+	if err != nil {
+		logDb.Error("Close database failed")
+		logDb.Error(err)
+	}
+
 	return err
 }
 

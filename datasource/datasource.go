@@ -25,6 +25,7 @@ type Datasourcer interface {
 	OpenWriteFile(*logrus.Entry) (io.WriteCloser, error)
 	ResetFile(*logrus.Entry) error
 	CloseFile(*logrus.Entry) error
+	CloseDatabase(*logrus.Entry, bool, bool) error
 	GetName() string
 	GetHash(*logrus.Entry, bool, bool) string
 	GetEngine() Engine

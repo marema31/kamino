@@ -28,6 +28,8 @@ func ToSkipDatabase(ctx context.Context, log *logrus.Entry, ds datasource.Dataso
 		return false, err
 	}
 
+	defer ds.CloseDatabase(log, admin, nodb) //nolint: errcheck
+
 	for _, query := range queries {
 		err = db.QueryRowContext(ctx, query.query).Scan(&needskip)
 		if err != nil {

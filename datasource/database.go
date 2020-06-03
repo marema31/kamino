@@ -18,7 +18,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-var openedDatabase = map[string]*sql.DB{}
+type dbInfo struct {
+	db    *sql.DB
+	count int
+}
+
+var openedDatabase = map[string]*dbInfo{}
 var openedReadMutex = &sync.Mutex{}
 var openMutex = &sync.Mutex{}
 
@@ -279,7 +284,7 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 		driver = "postgres"
 	}
 
-	db, err := sqlOpen(driver, URL)
+	db, err := sqlOpen(log, driver, URL)
 	if err != nil {
 		log.Error("Opening database failed")
 		log.Error(err)
@@ -325,7 +330,7 @@ func (ds *Datasource) OpenDatabase(log *logrus.Entry, admin bool, nodb bool) (*s
 //Only for unit testing of OpenDatabase function.
 var mockingSQL = false
 
-func sqlOpen(driver string, url string) (*sql.DB, error) {
+func sqlOpen(log *logrus.Entry, driver string, url string) (*sql.DB, error) {
 	if mockingSQL {
 		db, _, err := sqlmock.New()
 
@@ -335,30 +340,89 @@ func sqlOpen(driver string, url string) (*sql.DB, error) {
 	var err error = nil
 	// Most of the time the open will occurs on a already opened database
 	openedReadMutex.Lock()
+
 	db, ok := openedDatabase[url]
+	if ok {
+		openedDatabase[url].count++
+		log.Debugf("Already openned %d", openedDatabase[url].count)
+	}
+
 	openedReadMutex.Unlock()
 
 	if ok {
-		return db, nil
+		return db.db, nil
 	}
 
 	// Out of lock, we may have to open the database connection, avoid two concurrent opening
 	openMutex.Lock()
 	//Verify that in between the database as not been already opened
 	openedReadMutex.Lock()
+
 	db, ok = openedDatabase[url]
+	if ok {
+		openedDatabase[url].count++
+		log.Debugf("Already openned %d", openedDatabase[url].count)
+	}
+
 	openedReadMutex.Unlock()
 
 	if !ok {
 		//No we have to open it
-		db, err = sql.Open(driver, url)
+		dbHandler, err := sql.Open(driver, url)
 		if err == nil {
 			openedReadMutex.Lock()
-			openedDatabase[url] = db
+			openedDatabase[url] = &dbInfo{db: dbHandler, count: 1}
+			db = openedDatabase[url]
+
+			log.Debugf("Really openning %d", openedDatabase[url].count)
 			openedReadMutex.Unlock()
 		}
 	}
 	openMutex.Unlock()
 
-	return db, err
+	return db.db, err
+}
+
+//CloseDatabase close connection to the corresponding database only if no more used.
+func (ds *Datasource) CloseDatabase(log *logrus.Entry, admin bool, nodb bool) error {
+	var (
+		err error
+		url string
+	)
+
+	switch {
+	case nodb:
+		url = ds.urlNoDb
+	case admin:
+		url = ds.urlAdmin
+	default:
+		url = ds.url
+	}
+
+	openedReadMutex.Lock()
+
+	db, ok := openedDatabase[url]
+	if ok {
+		openedDatabase[url].count--
+		if openedDatabase[url].count == 0 {
+			log.Debugf("Really closing Database since no more used")
+
+			err = db.db.Close()
+
+			delete(openedDatabase, url)
+		}
+	}
+
+	switch {
+	case nodb:
+		ds.dbNoDb = nil
+	case admin:
+		ds.dbAdmin = nil
+	default:
+		ds.db = nil
+	}
+
+	openedReadMutex.Unlock()
+
+	return err
 }

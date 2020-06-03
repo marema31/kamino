@@ -90,7 +90,7 @@ func (dss *Datasources) findCandidatesTags(log *logrus.Entry, tagElement string,
 			}
 		}
 
-		log.Debug("Removing datasource not found for this sub-tag")
+		log.Debugf("Removing datasource not found for this sub-tag: %s", tag)
 
 		for name, viewed := range candidates {
 			if !viewed {

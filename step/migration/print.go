@@ -27,6 +27,8 @@ func (st *Step) print(log *logrus.Entry, admin bool) (int, error) {
 		return 0, err
 	}
 
+	defer st.datasource.CloseDatabase(log, admin, false) //nolint: errcheck
+
 	migSet := migrate.MigrationSet{TableName: tableName, SchemaName: st.schema}
 	source := migrate.FileMigrationSource{Dir: folder}
 

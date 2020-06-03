@@ -18,6 +18,7 @@ type Step struct {
 	templateFile string
 	sqlCmds      []string
 	transaction  bool
+	db           *sql.DB
 	tx           *sql.Tx
 	dryRun       bool
 }

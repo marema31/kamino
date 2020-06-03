@@ -268,15 +268,13 @@ func (saver *DbSaver) Close(log *logrus.Entry) error {
 		}
 	}
 
-	/*	We do not close the database to take advantage of pool connection pool of sql package
-		err := saver.ds.CloseDatabase(logDb, false, false)
-		if err != nil {
-			logDb.Error("Close database failed")
-			logDb.Error(err)
-		}
-		return err
-	*/
-	return nil
+	err := saver.ds.CloseDatabase(logDb, false, false)
+	if err != nil {
+		logDb.Error("Close database failed")
+		logDb.Error(err)
+	}
+
+	return err
 }
 
 //Reset reinitialize the destination (if possible).
