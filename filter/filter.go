@@ -15,6 +15,8 @@ type Filter interface {
 //NewFilter analyze the config map and return object implemnting Filter of the asked type.
 func NewFilter(log *logrus.Entry, filterType string, aParam []string, mParam map[string]string) (Filter, error) {
 	switch filterType {
+	case "sed":
+		return newSedFilter(log, mParam)
 	case "replace":
 		return newReplaceFilter(log, mParam)
 	case "only":
