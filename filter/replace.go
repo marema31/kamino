@@ -2,6 +2,8 @@ package filter
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/provider/types"
@@ -25,7 +27,31 @@ func newReplaceFilter(log *logrus.Entry, mParam map[string]string) (Filter, erro
 		return nil, fmt.Errorf("filter replace refuse to replace nothing: %w", errWrongParameterValue)
 	}
 
-	return &ReplaceFilter{columns: mParam}, nil
+	envVar := make(map[string]string)
+	columns := make(map[string]string)
+
+	for _, v := range os.Environ() {
+		splitV := strings.Split(v, "=")
+		envVar[splitV[0]] = splitV[1]
+	}
+
+	data := tmplEnv{Environments: envVar}
+
+	logFilter.Info("Will apply replace filter on:")
+
+	for name, value := range mParam {
+		parsed, err := parseField(name, value, data)
+		if err != nil {
+			log.Errorf("unable to parse the template for %s (%s): %v", name, value, err)
+			return nil, err
+		}
+
+		columns[name] = parsed
+
+		logFilter.Infof("   - %s : %s", name, parsed)
+	}
+
+	return &ReplaceFilter{columns: columns}, nil
 }
 
 // Filter : replace the content of column by provided values (insert the column if not present).

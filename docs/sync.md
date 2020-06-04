@@ -79,7 +79,7 @@ mparameters   | no  | Dictionary of parameter for the filter
 This filter will transform the data to contains only the column listed in the `aparameters` attribute
 
 ## replace
-This filter will replace the value of columns, impacted columns and the values to be replaced by are listed as a dictionary in the `mparameters` attribute
+This filter will replace the value of columns, impacted columns and the values to be replaced by are listed as a dictionary in the `mparameters` attribute. The replacement value can be a Golang template able to accesses environment variables througth `{{ index .Environments "VARIABLE_NAME" }}`.
 
 ## Skip queries
 In _apply_ mode, Kamino use the `queries` parameter for each selected datasource before executing the migration to determine if the step for this datasource should be skipped. This behavior is disable by using the `--force` CLI flags.
