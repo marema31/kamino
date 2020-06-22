@@ -23,7 +23,7 @@ import (
 
 // Creater is an interface to an object able to create Steper from configuration.
 type Creater interface {
-	Load(context.Context, *logrus.Entry, string, string, datasource.Datasourcers, provider.Provider, []string, []string, []string, bool, bool) (uint, []common.Steper, error)
+	Load(context.Context, *logrus.Entry, string, string, datasource.Datasourcers, provider.Provider, []string, []string, []string, bool, bool) (uint, bool, []common.Steper, error)
 }
 
 // Factory implements the StepCreated and use configuration files to create the steps.
@@ -78,7 +78,7 @@ func (sf *Factory) nameInStepNames(log *logrus.Entry, name string, stepNames []s
 }
 
 // Load the step file and returns the priority and a list of steper for this file.
-func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider, limitedTags []string, stepNames []string, stepTypes []string, force bool, dryRun bool) (priority uint, stepList []common.Steper, err error) {
+func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider, limitedTags []string, stepNames []string, stepTypes []string, force bool, dryRun bool) (priority uint, forceSequential bool, stepList []common.Steper, err error) { //nolint:funlen
 	v := viper.New()
 	stepsFolder := filepath.Join(recipePath, "steps")
 
@@ -88,15 +88,16 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 	err = v.ReadInConfig()
 	if err != nil {
 		log.Errorf("Unable to parse configuration: %v", err)
-		return 0, nil, err
+		return 0, false, nil, err
 	}
 
 	name := v.GetString("name")
+	forceSeq := v.GetBool("forceSequential")
 	noForce := v.GetBool("noforce")
 
 	if noForce && force {
 		log.WithField("name", name).Debugf("Step has noForce flag and we try to force, I refuse to do anything")
-		return 0, make([]common.Steper, 0), nil
+		return 0, false, make([]common.Steper, 0), nil
 	}
 
 	if sf.indexes == nil {
@@ -106,11 +107,11 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 	if len(stepNames) != 0 {
 		matched, err := sf.nameInStepNames(log, name, stepNames)
 		if err != nil {
-			return 0, nil, err
+			return 0, false, nil, err
 		}
 
 		if !matched {
-			return 0, make([]common.Steper, 0), nil
+			return 0, false, make([]common.Steper, 0), nil
 		}
 	}
 
@@ -122,12 +123,12 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 	stepType := strings.ToLower(v.GetString("type"))
 	if stepType == "" {
 		log.Errorf("Step type is empty")
-		return 0, nil, fmt.Errorf("the step %s does not provide the type: %w", filename, common.ErrMissingParameter)
+		return 0, false, nil, fmt.Errorf("the step %s does not provide the type: %w", filename, common.ErrMissingParameter)
 	}
 
 	if stepType, err = normalizeStepType(stepType); err != nil {
 		log.Errorf("Do not know how to manage %s step type", stepType)
-		return 0, nil, err
+		return 0, false, nil, err
 	}
 
 	if len(stepTypes) != 0 {
@@ -136,7 +137,7 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 		for _, testedType := range stepTypes {
 			if testedType, err = normalizeStepType(testedType); err != nil {
 				log.Errorf("Do not know how to filter on %s step type", testedType)
-				return 0, nil, err
+				return 0, false, nil, err
 			}
 
 			normalizedStepTypes = append(normalizedStepTypes, testedType)
@@ -151,7 +152,7 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 		}
 
 		if !found {
-			return 0, make([]common.Steper, 0), nil
+			return 0, false, make([]common.Steper, 0), nil
 		}
 	}
 
@@ -177,5 +178,5 @@ func (sf *Factory) Load(ctx context.Context, log *logrus.Entry, recipePath strin
 	logStep.Debugf("Created %d steps at priority %d", len(stepList), priority)
 	sf.indexes[name] = nameIndex + len(stepList)
 
-	return priority, stepList, err
+	return priority, forceSeq, stepList, err
 }

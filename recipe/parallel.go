@@ -2,14 +2,11 @@ package recipe
 
 import (
 	"context"
-	"sort"
 	"sync"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/step/common"
 )
-
-var mu sync.Mutex
 
 //watchdog will run has a parallel goroutine until the context is cancelled or the Do sub push to the end channel.
 func stepWatchdog(ctxRecipe context.Context, log *logrus.Entry, wgWatchdog *sync.WaitGroup, end chan bool, step common.Steper) {
@@ -46,162 +43,61 @@ func stepExecutor(ctxRecipe context.Context, log *logrus.Entry, step common.Step
 	}
 }
 
-func (ck *Cookbook) doParallelOneRecipe(ctx context.Context, log *logrus.Entry, wgRecipe *sync.WaitGroup, rname string) { //nolint: funlen
-	defer wgRecipe.Done()
+func (ck *Cookbook) doParallelOneRecipe(ctx context.Context, cancelRecipe context.CancelFunc, log *logrus.Entry, stepsToBeDone []common.Steper) {
+	nbSteps := len(stepsToBeDone)
 
-	log.Debug("Executing recipe")
-	// create a new context specific to this recipe.
-	// ctx cancellation will propagate to it,
-	// but its own cancel will stop to this context
-	ctxRecipe, cancelRecipe := context.WithCancel(ctx)
-	defer cancelRecipe()
+	//Waitgroup for steps do of this priority level
+	var wgStep sync.WaitGroup
 
-	// Create an ordered list of priorities of the recipe
-	priorities := make([]int, 0, len(ck.Recipes[rname].steps))
-	for priority := range ck.Recipes[rname].steps {
-		priorities = append(priorities, int(priority))
+	//Waitgroup for watchdog of this priority level
+	var wgWatchdog sync.WaitGroup
+
+	//Channel to allow stepExecutor to inform if the step finished in error
+	recipeHadError := make(chan bool, nbSteps)
+	defer close(recipeHadError)
+	//List of end channel for this priority level
+	ends := make([]chan bool, 0, nbSteps)
+
+	for _, step := range stepsToBeDone {
+		//Prepare waitgroup and end channel for this step
+		wgStep.Add(1)
+
+		end := make(chan bool, 1)
+		ends = append(ends, end)
+
+		go stepExecutor(ctx, log, step, &wgStep, &wgWatchdog, cancelRecipe, end, recipeHadError)
 	}
 
-	sort.Ints(priorities)
+	//Wait for all step/stepExecutor to finish
+	log.Debug("Waiting for steps of this priority")
+	wgStep.Wait()
+	log.Debug("All steps of this priority ended")
+	// All the step of this priority has finished (completed or cancelled), it's time to stop the watchdogs
+	for _, end := range ends {
+		end <- true
+	}
 
-	for _, priority := range priorities {
-		logPriority := log.WithField("priority", priority)
-		logPriority.Debug("Executing step of this priority")
+	log.Debug("Waiting for watchdog")
+	//Wait for all the watchdog to finish
+	wgWatchdog.Wait()
+	log.Debug("All watchdog ended")
 
-		stepsToBeDone := make([]common.Steper, 0, len(ck.Recipes[rname].steps[uint(priority)]))
-		if ck.force {
-			stepsToBeDone = append(stepsToBeDone, ck.Recipes[rname].steps[uint(priority)]...)
-			logPriority.Debugf("Force mode, will do all the %d steps of this priority", cap(stepsToBeDone))
-		} else {
-			for _, step := range ck.Recipes[rname].steps[uint(priority)] {
-				yes, err := step.ToSkip(ctx, logPriority)
-				if err != nil {
-					logPriority.Error("Can not determine if the step a step can be skipped")
-					mu.Lock()
-					{
-						hadError = true
-					}
-					mu.Unlock()
-					return
-				}
-				if !yes {
-					stepsToBeDone = append(stepsToBeDone, step)
-				}
+	//Since there is one end channel by stepExecutor
+	//Each stepExecutor will send only one boolean to the recipeHadError channel
+	for i := 0; i < len(stepsToBeDone); i++ {
+		wasNotOk := <-recipeHadError
+		if wasNotOk {
+			// One step of this priority finished in error and stepExecutor noticed us
+			//we set the flag for the cookbook, does not execute following priorities for this recipe
+			mu.Lock()
+			{
+				hadError = true
 			}
-		}
 
-		nbSteps := len(stepsToBeDone)
-		logPriority.Infof("Will skip %d steps of the %d of this priority", cap(stepsToBeDone)-nbSteps, cap(stepsToBeDone))
+			mu.Unlock()
+			log.Error("One step of this priority had error, skipping the following steps")
 
-		for _, step := range stepsToBeDone {
-			err := step.Init(ctxRecipe, logPriority)
-			if err != nil {
-				//we set the flag for the cookbook, does not execute following priorities for this recipe
-				mu.Lock()
-				{
-					hadError = true
-				}
-
-				mu.Unlock()
-				logPriority.Error("One step of this priority had error at initialization, skipping the following steps")
-
-				return //We won't execute the following priorities
-			}
-		}
-
-		//Waitgroup for steps do of this priority level
-		var wgStep sync.WaitGroup
-
-		//Waitgroup for watchdog of this priority level
-		var wgWatchdog sync.WaitGroup
-
-		//Channel to allow stepExecutor to inform if the step finished in error
-		recipeHadError := make(chan bool, nbSteps)
-		defer close(recipeHadError)
-		//List of end channel for this priority level
-		ends := make([]chan bool, 0, nbSteps)
-
-		for _, step := range stepsToBeDone {
-			//Prepare waitgroup and end channel for this step
-			wgStep.Add(1)
-
-			end := make(chan bool, 1)
-			ends = append(ends, end)
-
-			go stepExecutor(ctxRecipe, logPriority, step, &wgStep, &wgWatchdog, cancelRecipe, end, recipeHadError)
-		}
-
-		//Wait for all step/stepExecutor to finish
-		logPriority.Debug("Waiting for steps of this priority")
-		wgStep.Wait()
-		logPriority.Debug("All steps of this priority ended")
-		// All the step of this priority has finished (completed or cancelled), it's time to stop the watchdogs
-		for _, end := range ends {
-			end <- true
-		}
-
-		logPriority.Debug("Waiting for watchdog")
-		//Wait for all the watchdog to finish
-		wgWatchdog.Wait()
-		logPriority.Debug("All watchdog ended")
-
-		//Since there is one end channel by stepExecutor
-		//Each stepExecutor will send only one boolean to the recipeHadError channel
-		for i := 0; i < len(stepsToBeDone); i++ {
-			wasNotOk := <-recipeHadError
-			if wasNotOk {
-				// One step of this priority finished in error and stepExecutor noticed us
-				//we set the flag for the cookbook, does not execute following priorities for this recipe
-				mu.Lock()
-				{
-					hadError = true
-				}
-
-				mu.Unlock()
-				logPriority.Error("One step of this priority had error, skipping the following steps")
-
-				return //We won't execute the following priorities
-			}
+			return //We won't execute the following priorities
 		}
 	}
-
-	log.Debug("Recipe ended without error")
-}
-
-/* parallelDo will start one parallel recipe executor by recipe
-Each recipe executor will run all the steps of the recipes by priorities.
-All the step of same priority level will be parellelized and the executor
-will wait for all them before starting the next batch of step.
-
-If an error occurs in one of the steps or user CTRL+C , all the same priority level steps will
-receive an cancelation that they could use to rollback by example and all the step
-with a priority level not already launched will not be runned.
-*/
-func (ck *Cookbook) parallelDo(ctx context.Context, log *logrus.Entry) bool {
-	// Waitgroup for the recipes
-	var wgRecipe sync.WaitGroup
-
-	hadError = false
-
-	for rname := range ck.Recipes {
-		wgRecipe.Add(1)
-
-		logRecipe := log.WithField("recipe", rname)
-
-		defer ck.Recipes[rname].dss.CloseAll(logRecipe)
-
-		go ck.doParallelOneRecipe(ctx, logRecipe, &wgRecipe, rname)
-	}
-
-	wgRecipe.Wait()
-	//We wont treat the event before all recipe goroutine are finished
-	select {
-	case <-ctx.Done(): // the context has been cancelled before, since all the goroutine has also be notified
-		//  via context inheritance, we can afford to take this event in account after their termination (via the wgRecipe.Wait)
-		return true // we want the shell return code to be not ok
-
-	default: // Make the poll to ctx.Done() non blocking. Do nothing
-	}
-
-	return hadError
 }

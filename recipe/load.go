@@ -55,7 +55,7 @@ func (ck *Cookbook) parseStep(ctx context.Context, log *logrus.Entry, dss dataso
 
 	log.Debug("Parsing step configuration")
 
-	priority, steps, err := ck.stepFactory.Load(ctx, log, recipePath, filename, dss, prov, limitedTags, stepNames, stepTypes, ck.force, ck.dryRun)
+	priority, forceSequential, steps, err := ck.stepFactory.Load(ctx, log, recipePath, filename, dss, prov, limitedTags, stepNames, stepTypes, ck.force, ck.dryRun)
 	if err != nil {
 		if !ck.validate {
 			return err
@@ -64,6 +64,10 @@ func (ck *Cookbook) parseStep(ctx context.Context, log *logrus.Entry, dss dataso
 		if firstError == nil {
 			firstError = err
 		}
+	}
+
+	if !ck.forcedSequential[priority] {
+		ck.forcedSequential[priority] = forceSequential
 	}
 
 	if _, ok := ck.Recipes[rname]; !ok {

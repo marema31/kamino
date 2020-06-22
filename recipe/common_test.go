@@ -93,7 +93,7 @@ type MockedStepFactory struct {
 }
 
 // Load the step file and returns the priority and a list of steper for this file
-func (sf *MockedStepFactory) Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider, limitedTags []string, stepNames []string, stepTypes []string, force bool, dryRun bool) (uint, []common.Steper, error) {
+func (sf *MockedStepFactory) Load(ctx context.Context, log *logrus.Entry, recipePath string, filename string, dss datasource.Datasourcers, prov provider.Provider, limitedTags []string, stepNames []string, stepTypes []string, force bool, dryRun bool) (uint, bool, []common.Steper, error) {
 	v := viper.New()
 
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
@@ -101,7 +101,7 @@ func (sf *MockedStepFactory) Load(ctx context.Context, log *logrus.Entry, recipe
 	v.AddConfigPath(stepsFolder)
 	err := v.ReadInConfig()
 	if err != nil {
-		return 0, nil, err
+		return 0, false, nil, err
 	}
 	priority := v.GetUint("priority")
 	nbSteps := v.GetInt("steps")
@@ -112,9 +112,10 @@ func (sf *MockedStepFactory) Load(ctx context.Context, log *logrus.Entry, recipe
 
 	ToBeSkipped := v.GetBool("tobeskipped")
 	ToSkipError := v.GetBool("toskiperror")
+	forceSequential := v.GetBool("forceSequential")
 
 	if generateError {
-		return 0, nil, fmt.Errorf("fake error")
+		return 0, false, nil, fmt.Errorf("fake error")
 	}
 
 	rname := filepath.Base(recipePath)
@@ -148,5 +149,5 @@ func (sf *MockedStepFactory) Load(ctx context.Context, log *logrus.Entry, recipe
 		steps = append(steps, m)
 		sf.Steps[rname] = append(sf.Steps[rname], m)
 	}
-	return priority, steps, nil
+	return priority, forceSequential, steps, nil
 }

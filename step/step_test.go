@@ -41,22 +41,22 @@ func setupLoad() (context.Context, *logrus.Entry, datasource.Datasourcers, provi
 func TestStepLoadError(t *testing.T) {
 	ctx, log, dss, prov, sf := setupLoad()
 
-	_, _, err := sf.Load(ctx, log, "testdata/fail", "nofolder", dss, prov, []string{}, []string{}, []string{}, true, false)
+	_, _, _, err := sf.Load(ctx, log, "testdata/fail", "nofolder", dss, prov, []string{}, []string{}, []string{}, true, false)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 
-	_, _, err = sf.Load(ctx, log, "testdata/fail", "dummy", dss, prov, []string{}, []string{}, []string{}, true, false)
+	_, _, _, err = sf.Load(ctx, log, "testdata/fail", "dummy", dss, prov, []string{}, []string{}, []string{}, true, false)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 
-	_, _, err = sf.Load(ctx, log, "testdata/fail", "notype", dss, prov, []string{}, []string{}, []string{}, true, false)
+	_, _, _, err = sf.Load(ctx, log, "testdata/fail", "notype", dss, prov, []string{}, []string{}, []string{}, true, false)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
 
-	_, _, err = sf.Load(ctx, log, "testdata/fail", "unknown", dss, prov, []string{}, []string{}, []string{}, true, false)
+	_, _, _, err = sf.Load(ctx, log, "testdata/fail", "unknown", dss, prov, []string{}, []string{}, []string{}, true, false)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}
@@ -64,7 +64,7 @@ func TestStepLoadError(t *testing.T) {
 func TestStepLoadMigrationOk(t *testing.T) {
 	ctx, log, dss, prov, sf := setupLoad()
 
-	priority, steps, err := sf.Load(ctx, log, "testdata/good", "migrationok", dss, prov, []string{}, []string{}, []string{}, true, false)
+	priority, _, steps, err := sf.Load(ctx, log, "testdata/good", "migrationok", dss, prov, []string{}, []string{}, []string{}, true, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -94,7 +94,7 @@ func TestStepLoadMigrationOk(t *testing.T) {
 func TestStepLoadShellOk(t *testing.T) {
 	ctx, log, dss, prov, sf := setupLoad()
 
-	priority, steps, err := sf.Load(ctx, log, "testdata/good", "shellok", dss, prov, []string{}, []string{}, []string{}, true, false)
+	priority, _, steps, err := sf.Load(ctx, log, "testdata/good", "shellok", dss, prov, []string{}, []string{}, []string{}, true, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -123,7 +123,7 @@ func TestStepLoadShellOk(t *testing.T) {
 func TestStepLoadSqlscriptOk(t *testing.T) {
 	ctx, log, dss, prov, sf := setupLoad()
 
-	priority, steps, err := sf.Load(ctx, log, "testdata/good", "sqlscriptok", dss, prov, []string{}, []string{}, []string{}, true, false)
+	priority, _, steps, err := sf.Load(ctx, log, "testdata/good", "sqlscriptok", dss, prov, []string{}, []string{}, []string{}, true, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -153,7 +153,7 @@ func TestStepLoadSqlscriptOk(t *testing.T) {
 func TestStepLoadSyncOk(t *testing.T) {
 	ctx, log, dss, prov, sf := setupLoad()
 
-	priority, steps, err := sf.Load(ctx, log, "testdata/good", "syncok", dss, prov, []string{}, []string{}, []string{}, true, false)
+	priority, _, steps, err := sf.Load(ctx, log, "testdata/good", "syncok", dss, prov, []string{}, []string{}, []string{}, true, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -183,7 +183,7 @@ func TestStepLoadSyncOk(t *testing.T) {
 func TestStepLoadTmplOk(t *testing.T) {
 	ctx, log, dss, prov, sf := setupLoad()
 
-	priority, steps, err := sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{}, []string{}, true, false)
+	priority, _, steps, err := sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{}, []string{}, true, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -213,7 +213,7 @@ func TestStepLoadTmplOk(t *testing.T) {
 func TestStepNameFound(t *testing.T) {
 	ctx, log, dss, prov, sf := setupLoad()
 
-	priority, steps, err := sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{"nametmplok"}, []string{}, true, false)
+	priority, _, steps, err := sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{"nametmplok"}, []string{}, true, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -230,7 +230,7 @@ func TestStepNameFound(t *testing.T) {
 func TestGlobbedStepNameFound(t *testing.T) {
 	ctx, log, dss, prov, sf := setupLoad()
 
-	priority, steps, err := sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{"nametmpl*"}, []string{}, true, false)
+	priority, _, steps, err := sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{"nametmpl*"}, []string{}, true, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -247,7 +247,7 @@ func TestGlobbedStepNameFound(t *testing.T) {
 func TestStepNameNotFound(t *testing.T) {
 	ctx, log, dss, prov, sf := setupLoad()
 
-	priority, steps, err := sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{"unknown"}, []string{}, true, false)
+	priority, _, steps, err := sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{"unknown"}, []string{}, true, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -264,7 +264,7 @@ func TestStepNameNotFound(t *testing.T) {
 func TestStepTypeFound(t *testing.T) {
 	ctx, log, dss, prov, sf := setupLoad()
 
-	priority, steps, err := sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{}, []string{"template"}, true, false)
+	priority, _, steps, err := sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{}, []string{"template"}, true, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -281,7 +281,7 @@ func TestStepTypeFound(t *testing.T) {
 func TestStepTypeNotFound(t *testing.T) {
 	ctx, log, dss, prov, sf := setupLoad()
 
-	priority, steps, err := sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{}, []string{"shell"}, true, false)
+	priority, _, steps, err := sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{}, []string{"shell"}, true, false)
 	if err != nil {
 		t.Errorf("Load should not returns an error, returned: %v", err)
 	}
@@ -294,7 +294,7 @@ func TestStepTypeNotFound(t *testing.T) {
 		t.Errorf("The priority should be 0, it was: %v", priority)
 	}
 
-	_, _, err = sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{}, []string{"unknown"}, true, false)
+	_, _, _, err = sf.Load(ctx, log, "testdata/good", "tmplok", dss, prov, []string{}, []string{}, []string{"unknown"}, true, false)
 	if err == nil {
 		t.Errorf("Load should returns an error")
 	}

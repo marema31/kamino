@@ -11,6 +11,7 @@ Attribute     | Mandatory | Definition | Default
 cache         | no  | Caching attribute for synchronization (see below)
 destinations  | yes | List of destinations entry (see below)
 filters       | no  | List of filters to be applied on data synchronized (see below)
+forceSequential| no | If true all the steps of this priority will be run sequentially
 name          | no  | Step name used for step selection by the CLI, more than one step can have the same name
 priority      | yes | Priority of this step on the recipe execution (ascending order)
 source        | yes | Source of the synchronization (see below)

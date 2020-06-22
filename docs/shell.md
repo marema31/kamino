@@ -9,6 +9,7 @@ Attribute     | Mandatory | Definition | Default
 arguments     | no  | List of arguments to provides to the executed script
 engines       | no  | Limit the datasource selection to those corresponding to the listed engines | all engines
 environment   | no  | List of environment variables to be setted
+forceSequential| no | If true all the steps of this priority will be run sequentially
 name          | no  | Step name used for step selection by the CLI, more than one step can have the same name
 path          | no  | Current folder when executing the script
 priority      | yes | Priority of this step on the recipe execution (ascending order)

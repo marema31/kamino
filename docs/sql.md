@@ -6,6 +6,7 @@ Attribute     | Mandatory | Definition | Default
 --------------|----------------|------------|-----
 admin         | no  | Use the _admin_ user account of datasource to execute the SQL script | false
 engines       | no  | Limit the datasource selection to those corresponding to the listed engines | all engines
+forceSequential| no | If true all the steps of this priority will be run sequentially
 name          | no  | Step name used for step selection by the CLI, more than one step can have the same name
 nodb          | no  | Use _admin_ user account of datasource and connect to the database server without a database (useful for database creation) to execute the SQL script | false 
 nouser        | no  | If true the step will not apply _user_ migration | false 

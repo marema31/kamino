@@ -13,6 +13,7 @@ Attribute     | Mandatory | Definition | Default
 admintable    | no  | Table used for store applied _admin_ migration informations | kamino_admin_migrations
 engines       | no  | Limit the datasource selection to those corresponding to the listed engines | all engines
 folder        | yes | Folder containing the migration files (template)
+forceSequential| no | If true all the steps of this priority will be run sequentially
 limit         | no  | Number of migration applied | 0 (all)
 name          | no  | Step name used for step selection by the CLI, more than one step can have the same name
 noadmin       | no  | If true the step will not apply _admin_ migration | false 

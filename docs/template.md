@@ -9,6 +9,7 @@ Attribute      | Mandatory | Definition | Default
 ---------------|----------------|------------|-----
 destination    | yes | Path of the file to be rendered
 engines        | no  | Limit the datasource selection to those corresponding to the listed engines | all engines
+forceSequential| no | If true all the steps of this priority will be run sequentially
 gzip           | no  | If true the destination will be gziped | false
 name           | no  | Step name used for step selection by the CLI, more than one step can have the same name
 replacemode    | no  | How the step will manage the fact that the destination file already exists | replace 

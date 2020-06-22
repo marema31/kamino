@@ -38,27 +38,29 @@ type recipe struct {
 
 // Cookbook is a map of recipe indexed by recipe's name.
 type Cookbook struct {
-	Recipes     map[string]recipe
-	stepFactory step.Creater
-	conTimeout  time.Duration
-	conRetry    int
-	force       bool
-	sequential  bool
-	validate    bool
-	dryRun      bool
+	Recipes          map[string]recipe
+	forcedSequential map[uint]bool
+	stepFactory      step.Creater
+	conTimeout       time.Duration
+	conRetry         int
+	force            bool
+	sequential       bool
+	validate         bool
+	dryRun           bool
 }
 
 // New returns a new.
 func New(sf step.Creater, connectionTimeout time.Duration, connectionRetry int, force bool, sequential bool, validate bool, dryRun bool) *Cookbook {
 	return &Cookbook{
-		Recipes:     make(map[string]recipe),
-		stepFactory: sf,
-		conTimeout:  connectionTimeout,
-		conRetry:    connectionRetry,
-		force:       force,
-		sequential:  sequential,
-		validate:    validate,
-		dryRun:      dryRun,
+		Recipes:          make(map[string]recipe),
+		forcedSequential: make(map[uint]bool),
+		stepFactory:      sf,
+		conTimeout:       connectionTimeout,
+		conRetry:         connectionRetry,
+		force:            force,
+		sequential:       sequential,
+		validate:         validate,
+		dryRun:           dryRun,
 	}
 }
 
