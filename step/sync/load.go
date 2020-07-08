@@ -192,6 +192,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 	step.baseFolder = recipePath
 	step.prov = provider
 	priority = v.GetUint("priority")
+	step.ignoreErrors = v.GetBool("ignoreErrors")
 
 	logStep := log.WithField("name", name).WithField("type", "shell")
 	step.Name = fmt.Sprintf("%s:%d", name, nameIndex)

@@ -35,4 +35,5 @@ type Step struct {
 	output          file.File
 	outputHandle    io.Writer
 	dryRun          bool
+	ignoreErrors    bool
 }

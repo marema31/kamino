@@ -9,8 +9,9 @@ import (
 
 // Step informations.
 type Step struct {
-	Name       string
-	datasource datasource.Datasourcer
-	cmd        *exec.Cmd
-	dryRun     bool
+	Name         string
+	datasource   datasource.Datasourcer
+	cmd          *exec.Cmd
+	dryRun       bool
+	ignoreErrors bool
 }

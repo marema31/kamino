@@ -68,6 +68,7 @@ func (saver *DbSaver) getColNames(log *logrus.Entry, record types.Record) ([]str
 
 		columns = append(columns, col)
 	}
+	log.Debugf("Column in Source: %v", record)
 
 	keyseen := false
 

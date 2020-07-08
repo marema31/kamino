@@ -21,4 +21,5 @@ type Step struct {
 	db           *sql.DB
 	tx           *sql.Tx
 	dryRun       bool
+	ignoreErrors bool
 }

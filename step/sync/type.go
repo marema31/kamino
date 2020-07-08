@@ -43,4 +43,5 @@ type Step struct {
 	prov           provider.Provider
 	dryRun         bool
 	count          int
+	ignoreErrors   bool
 }

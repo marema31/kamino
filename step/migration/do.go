@@ -34,6 +34,11 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 		logStep.Info("Applying admin migration")
 
 		applied, err := st.applyOrPrint(logStep.WithField("kind", "admin"), true, limit)
+		if err != nil && st.ignoreErrors {
+			logStep.Warnf("Ignoring error: %v", err)
+			return nil
+		}
+
 		if err != nil {
 			return err
 		}
@@ -51,6 +56,11 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 		logStep.Info("Applying user migration")
 
 		applied, err := st.applyOrPrint(logStep.WithField("kind", "user"), false, limit)
+		if err != nil && st.ignoreErrors {
+			logStep.Warnf("Ignoring error: %v", err)
+			return nil
+		}
+
 		if err != nil {
 			return err
 		}
@@ -73,6 +83,11 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 		logStep.Info("Applying admin migration")
 
 		_, err := st.apply(logStep.WithField("kind", "admin"), true, limit)
+		if err != nil && st.ignoreErrors {
+			logStep.Warnf("Ignoring error: %v", err)
+			return nil
+		}
+
 		if err != nil {
 			return err
 		}

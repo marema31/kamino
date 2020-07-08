@@ -50,6 +50,11 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	}
 
 	err = st.cmd.Start()
+	if err != nil && st.ignoreErrors {
+		logStep.Warnf("Ignoring error: %v", err)
+		return nil
+	}
+
 	if err != nil {
 		logStep.Error("Script execution failed")
 		logStep.Error(err)

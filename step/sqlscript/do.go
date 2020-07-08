@@ -60,6 +60,11 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 			_, err = st.db.ExecContext(ctx, stmt)
 		}
 
+		if err != nil && st.ignoreErrors {
+			logStep.Warnf("Ignoring error: %v on statement: %s", err, stmt)
+			return nil
+		}
+
 		if err != nil {
 			logStep.Error("Execution of one statement failed:")
 			logStep.Error(stmt)

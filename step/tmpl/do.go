@@ -52,7 +52,13 @@ func (st *Step) doNonUnique(log *logrus.Entry) error {
 			return nil
 		}
 
-		if err := st.template.Execute(st.outputHandle, ds.FillTmplValues()); err != nil {
+		err := st.template.Execute(st.outputHandle, ds.FillTmplValues())
+		if err != nil && st.ignoreErrors {
+			logDs.Warnf("Ignoring error: %v", err)
+			return nil
+		}
+
+		if err != nil {
 			logDs.Error("Template rendering failed")
 			logDs.Error(err)
 
@@ -83,7 +89,13 @@ func (st *Step) doUnique(log *logrus.Entry) error {
 			continue
 		}
 
-		if err := st.template.Execute(rendered, ds.FillTmplValues()); err != nil {
+		err := st.template.Execute(rendered, ds.FillTmplValues())
+		if err != nil && st.ignoreErrors {
+			logDs.Warnf("Ignoring error: %v", err)
+			return nil
+		}
+
+		if err != nil {
 			logDs.Error("Template rendering failed")
 			logDs.Error(err)
 

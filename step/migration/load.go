@@ -60,6 +60,7 @@ func (st *Step) PostLoad(log *logrus.Entry, superseed map[string]string) error {
 func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string, nameIndex int, v *viper.Viper, dss datasource.Datasourcers, force bool, dryRun bool, limitedTags []string) (priority uint, steps []common.Steper, err error) { //nolint: funlen
 	steps = make([]common.Steper, 0, 1)
 	priority = v.GetUint("priority")
+	ignoreErrors := v.GetBool("ignoreErrors")
 
 	tags := v.GetStringSlice("tags")
 	if len(tags) == 0 {
@@ -121,6 +122,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		step.Name = fmt.Sprintf("%s:%d", name, nameIndex+index)
 		step.datasource = datasource
 		step.dryRun = dryRun
+		step.ignoreErrors = ignoreErrors
 
 		if err := tfolder.Execute(renderedFolder, datasource.FillTmplValues()); err != nil {
 			return 0, nil, err

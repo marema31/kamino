@@ -129,6 +129,11 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 			return nil
 		}
 
+		if err != nil && st.ignoreErrors {
+			logStep.Warnf("Ignoring error: %v", err)
+			return nil
+		}
+
 		if err != nil {
 			return err
 		}
@@ -137,6 +142,11 @@ func (st *Step) Do(ctx context.Context, log *logrus.Entry) error {
 	}
 
 	err := st.copyData(ctx, logStep)
+	if err != nil && st.ignoreErrors {
+		logStep.Warnf("Ignoring error: %v", err)
+		return nil
+	}
+
 	if err != nil {
 		logStep.Error("Synchronization failed")
 		return err
