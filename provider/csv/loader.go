@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/marema31/kamino/datasource"
@@ -44,9 +45,15 @@ func NewLoader(ctx context.Context, log *logrus.Entry, ds datasource.Datasourcer
 		return nil, err
 	}
 
+	colNames := make([]string, 0, len(row))
+
+	for _, col := range row {
+		colNames = append(colNames, strings.TrimSpace(col))
+	}
+
 	tv := ds.FillTmplValues()
 
-	return &KaminoCsvLoader{ds: ds, file: file, name: tv.FilePath, reader: *reader, colNames: row, currentRow: nil, currentError: nil}, nil
+	return &KaminoCsvLoader{ds: ds, file: file, name: tv.FilePath, reader: *reader, colNames: colNames, currentRow: nil, currentError: nil}, nil
 }
 
 //Next moves to next record and return false if there is no more records.
