@@ -74,6 +74,8 @@ A tag selector can be:
 * Intersection of tag (myTag1.myTag2): Only datasource with all this tag will be selected
 * A negation of a tag selector (!ta1.ta2): All datasources complying to this tag selector will be excluded of the final list of datasource impacted by the step. 
 
+Tag selector can contains "globbing characters" (like in shell)
+
 ### Recipe
 A recipe is a collection of steps (a folders that contains the steps), the orders of step will be determine by the priority of the step (lower will be the first one), if more than one step have the same priority, they will be run in parallel. 
 
