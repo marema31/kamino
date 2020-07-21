@@ -99,7 +99,11 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 
 	datasourcesByDestinations := make(map[string][]datasource.Datasourcer)
 
-	lookedUp, _ := dss.Lookup(log, tags, limitedTags, []datasource.Type{datasource.Database}, e)
+	lookedUp, _, err := dss.Lookup(logStep, tags, limitedTags, []datasource.Type{datasource.Database}, e)
+	if err != nil {
+		return 0, nil, err
+	}
+
 	for _, ds := range lookedUp {
 		if err = tdestination.Execute(renderedDestination, ds.FillTmplValues()); err != nil {
 			logStep.Error(err)

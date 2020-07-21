@@ -39,7 +39,7 @@ func helperTestLookup(t *testing.T, dss *mockdatasource.MockDatasources, tags []
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
 
-	result, _ := dss.Lookup(log, tags, nil, dsTypes, engines)
+	result, _, _ := dss.Lookup(log, tags, nil, dsTypes, engines)
 
 	sort.Strings(awaited)
 	aw := strings.Join(awaited, " ")

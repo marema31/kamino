@@ -62,7 +62,10 @@ func getDatasources(log *logrus.Entry, dss datasource.Datasourcers, tags []strin
 		return nil, nil, err
 	}
 
-	limited, notLimited = dss.Lookup(log, tags, limitedTags, t, e)
+	limited, notLimited, err = dss.Lookup(log, tags, limitedTags, t, e)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	log.Debugf("Found %d %s (from %d available)", len(limited), objectType, len(notLimited))
 

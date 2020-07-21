@@ -21,6 +21,7 @@ require (
 	go.hein.dev/go-version v0.1.0
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
+	google.golang.org/appengine v1.1.0
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v2 v2.2.4
 )

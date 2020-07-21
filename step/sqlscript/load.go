@@ -83,7 +83,11 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 	renderedSQLScript := bytes.NewBuffer(make([]byte, 0, 8192))
 	datasourceHashes := map[string]bool{}
 
-	lookedUp, _ := dss.Lookup(log, tags, limitedTags, []datasource.Type{datasource.Database}, e)
+	lookedUp, _, err := dss.Lookup(logStep, tags, limitedTags, []datasource.Type{datasource.Database}, e)
+	if err != nil {
+		return 0, nil, err
+	}
+
 	for index, datasource := range lookedUp {
 		var step Step
 

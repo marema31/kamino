@@ -15,7 +15,7 @@ Flags (short form)              | meaning
 `--help (-h)                   `| Help for the selected action
 `--quiet (-q)                  `| Do not print to screen
 `--sequential                  `| Run the step one by one removing the parallelization
-`--tags tag1,tag2 (-T)         `| Run the recipe only for datasources corresponding to the provided tags 
+`--tags tag1,tag2 (-T)         `| Run the recipe only for datasources corresponding to the provided tags, tags can contains "globbing characters" (like in shell), you may have to protect them from your shell (for example `--tags "p[a-z]k?m*n"`)
 `--verbose (-v)                `| Be more verbose for log message
 
 ## Available Commands:

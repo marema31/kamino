@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/mb0/glob"
 )
 
 func (ds *Datasource) isSelectedEngine(engines []Engine) bool {
@@ -34,8 +35,41 @@ func (ds *Datasource) isSelectedType(dsTypes []Type) bool {
 	return false
 }
 
-func (dss *Datasources) lookupOneTag(tag string, dsTypes []Type, engines []Engine) (selected []string) {
+func (dss *Datasources) lookupGlobTag(log *logrus.Entry, tag string, dsTypes []Type, engines []Engine) (selected []string, err error) {
+	selected = make([]string, 0)
+
+	g, err := glob.New(glob.Default())
+	if err != nil {
+		log.Errorf("Unable to initialize the globbing engine: %v", err)
+		return selected, err
+	}
+
+	for _, names := range dss.tagToDatasource {
+		for _, name := range names {
+			matched, err := g.Match(tag, name)
+			if err != nil {
+				log.Errorf("Using the tag %s failed: %v", tag, err)
+				return selected, err
+			}
+
+			if matched {
+				ds := dss.datasources[name]
+				if ds.isSelectedEngine(engines) && ds.isSelectedType(dsTypes) {
+					selected = append(selected, name)
+				}
+			}
+		}
+	}
+
+	return selected, nil
+}
+
+func (dss *Datasources) lookupOneTag(log *logrus.Entry, tag string, dsTypes []Type, engines []Engine) (selected []string, err error) {
 	tag = strings.TrimPrefix(tag, "!") // The negation is not useful here, it will be managed by caller
+
+	if strings.ContainsAny(tag, "*[") {
+		return dss.lookupGlobTag(log, tag, dsTypes, engines)
+	}
 
 	for _, name := range dss.tagToDatasource[tag] {
 		ds := dss.datasources[name]
@@ -44,7 +78,7 @@ func (dss *Datasources) lookupOneTag(tag string, dsTypes []Type, engines []Engin
 		}
 	}
 
-	return selected
+	return selected, nil
 }
 
 func (dss *Datasources) lookupWithoutTag(dsTypes []Type, engines []Engine) (selectedNames []string) {
@@ -68,13 +102,18 @@ func (dss *Datasources) lookupWithoutTag(dsTypes []Type, engines []Engine) (sele
 	return selectedNames
 }
 
-func (dss *Datasources) findCandidatesTags(log *logrus.Entry, tagElement string, dsTypes []Type, engines []Engine) map[string]bool {
+func (dss *Datasources) findCandidatesTags(log *logrus.Entry, tagElement string, dsTypes []Type, engines []Engine) (map[string]bool, error) {
 	candidates := make(map[string]bool)
 
 	for i, tag := range strings.Split(tagElement, ".") {
 		log.Debugf("Lookup for sub-tag %s", tag)
 
-		for _, name := range dss.lookupOneTag(tag, dsTypes, engines) {
+		names, err := dss.lookupOneTag(log, tag, dsTypes, engines)
+		if err != nil {
+			return candidates, err
+		}
+
+		for _, name := range names {
 			if i == 0 {
 				log.Debugf("Found: %s", name)
 
@@ -103,10 +142,11 @@ func (dss *Datasources) findCandidatesTags(log *logrus.Entry, tagElement string,
 		}
 	}
 
-	return candidates
+	return candidates, nil
 }
 
-func (dss *Datasources) getDsNameFromTagList(log *logrus.Entry, tagList []string, dsTypes []Type, engines []Engine) []string {
+//nolint:nestif
+func (dss *Datasources) getDsNameFromTagList(log *logrus.Entry, tagList []string, dsTypes []Type, engines []Engine) ([]string, error) {
 	selected := make(map[string]bool) // Use map to emulate a "set" to avoid duplicates
 	unselectedNames := make([]string, 0)
 
@@ -116,18 +156,27 @@ func (dss *Datasources) getDsNameFromTagList(log *logrus.Entry, tagList []string
 		if !strings.Contains(tagElement, ".") {
 			log.Debug("Simple tag")
 
+			names, err := dss.lookupOneTag(log, tagElement, dsTypes, engines)
+			if err != nil {
+				return nil, err
+			}
+
 			if strings.HasPrefix(tagElement, "!") {
 				log.Debug("Negative tag")
 
-				unselectedNames = append(unselectedNames, dss.lookupOneTag(tagElement, dsTypes, engines)...)
+				unselectedNames = append(unselectedNames, names...)
 			} else {
-				for _, name := range dss.lookupOneTag(tagElement, dsTypes, engines) {
+				for _, name := range names {
 					selected[name] = true
 				}
 			}
 		} else {
 			log.Debug("Composite tag")
-			candidates := dss.findCandidatesTags(log, tagElement, dsTypes, engines)
+			candidates, err := dss.findCandidatesTags(log, tagElement, dsTypes, engines)
+
+			if err != nil {
+				return nil, err
+			}
 			log.Debugf("Final list for %s", tagElement)
 			for name := range candidates {
 				if strings.HasPrefix(tagElement, "!") {
@@ -145,7 +194,7 @@ func (dss *Datasources) getDsNameFromTagList(log *logrus.Entry, tagList []string
 		selectedNames = append(selectedNames, dsName)
 	}
 
-	return removeFromList(selectedNames, unselectedNames)
+	return removeFromList(selectedNames, unselectedNames), nil
 }
 
 func removeFromList(selected []string, unselected []string) (filtered []string) {
@@ -167,16 +216,20 @@ func removeFromList(selected []string, unselected []string) (filtered []string) 
 	return filtered
 }
 
-func (dss *Datasources) lookupLimited(log *logrus.Entry, tagList []string, limitedTags []string, dsTypes []Type, engines []Engine) []string {
+func (dss *Datasources) lookupLimited(log *logrus.Entry, tagList []string, limitedTags []string, dsTypes []Type, engines []Engine) ([]string, error) {
 	log.Debug("Lookup limited tag list")
 
 	limited := make([]string, 0)
 
 	if limitedTags == nil {
-		return limited
+		return limited, nil
 	}
 
-	limited = dss.getDsNameFromTagList(log, limitedTags, dsTypes, engines)
+	limited, err := dss.getDsNameFromTagList(log, limitedTags, dsTypes, engines)
+	if err != nil {
+		return nil, err
+	}
+
 	if len(limited) == 0 {
 		allNegation := true
 
@@ -188,28 +241,37 @@ func (dss *Datasources) lookupLimited(log *logrus.Entry, tagList []string, limit
 		}
 
 		if allNegation {
-			limited = dss.getDsNameFromTagList(log, append(tagList, limitedTags...), dsTypes, engines)
+			limited, err = dss.getDsNameFromTagList(log, append(tagList, limitedTags...), dsTypes, engines)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
-	return limited
+	return limited, nil
 }
 
 //Lookup return a list of *Datasource that correspond to the
 // list of tag expression.
-func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags []string, dsTypes []Type, engines []Engine) (selectedDs []Datasourcer, notLimitedDs []Datasourcer) {
+func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags []string, dsTypes []Type, engines []Engine) (selectedDs []Datasourcer, notLimitedDs []Datasourcer, err error) {
 	logLookup := log.WithField("lookup", "tags")
 
 	var selected []string
 
-	limited := dss.lookupLimited(logLookup, tagList, limitedTags, dsTypes, engines)
+	limited, err := dss.lookupLimited(logLookup, tagList, limitedTags, dsTypes, engines)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	if len(tagList) == 0 {
 		logLookup.Debug("No tag provided, will only lookup on type and engines")
 		// The selection is not based on tag, lookup for all of them
 		selected = dss.lookupWithoutTag(dsTypes, engines)
 	} else {
-		selected = dss.getDsNameFromTagList(logLookup, tagList, dsTypes, engines)
+		selected, err = dss.getDsNameFromTagList(logLookup, tagList, dsTypes, engines)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	logLookup.Debug("Final datasources list:")
@@ -241,5 +303,5 @@ func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags 
 
 	logLookup.Debug(strings.Join(finalDsList, ","))
 
-	return selectedDs, notLimitedDs
+	return selectedDs, notLimitedDs, nil
 }

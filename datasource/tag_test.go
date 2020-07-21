@@ -51,7 +51,10 @@ func teardownLookupDatastore(dss *Datasources) {
 }
 
 func helperTestlookupOneTag(t *testing.T, dss *Datasources, tag string, dsTypes []Type, engines []Engine, anames []string) {
-	rnames := dss.lookupOneTag(tag, dsTypes, engines)
+	logger := logrus.New()
+	log := logger.WithField("appname", "kamino")
+
+	rnames, _ := dss.lookupOneTag(log, tag, dsTypes, engines)
 
 	sort.Strings(anames)
 	aw := strings.Join(anames, " ")
@@ -129,7 +132,7 @@ func helperTestLookup(t *testing.T, dss *Datasources, tags []string, limitedTags
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
 
-	result, _ := dss.Lookup(log, tags, limitedTags, dsTypes, engines)
+	result, _, _ := dss.Lookup(log, tags, limitedTags, dsTypes, engines)
 
 	anames := []string{}
 	for _, ds := range awaited {

@@ -91,7 +91,11 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		return 0, nil, err
 	}
 
-	lookedUp, _ := dss.Lookup(log, tags, limitedTags, []datasource.Type{datasource.Database}, e)
+	lookedUp, _, err := dss.Lookup(logStep, tags, limitedTags, []datasource.Type{datasource.Database}, e)
+	if err != nil {
+		return 0, nil, err
+	}
+
 	for index, datasource := range lookedUp {
 		var step Step
 
