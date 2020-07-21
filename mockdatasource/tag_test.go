@@ -23,10 +23,10 @@ func setupLookupDatastore() *mockdatasource.MockDatasources {
 	ds6 := mockdatasource.MockDatasource{Name: "ds6"}
 	notag := mockdatasource.MockDatasource{Name: "notag"}
 
-	dss.Insert([]string{"tag1", "tag2"}, []datasource.Type{}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&ds1, &ds2, &ds3, &ds4})
-	dss.Insert([]string{"tag1.environment:fr"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds1, &ds5, &ds6})
-	dss.Insert([]string{""}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&notag})
-	dss.Insert([]string{"empty"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{})
+	dss.Insert(true, []string{"tag1", "tag2"}, []datasource.Type{}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&ds1, &ds2, &ds3, &ds4})
+	dss.Insert(true, []string{"tag1.environment:fr"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds1, &ds5, &ds6})
+	dss.Insert(true, []string{""}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&notag})
+	dss.Insert(true, []string{"empty"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{})
 
 	return dss
 }
@@ -39,7 +39,7 @@ func helperTestLookup(t *testing.T, dss *mockdatasource.MockDatasources, tags []
 	logger := logrus.New()
 	log := logger.WithField("appname", "kamino")
 
-	result := dss.Lookup(log, tags, nil, dsTypes, engines)
+	result, _ := dss.Lookup(log, tags, nil, dsTypes, engines)
 
 	sort.Strings(awaited)
 	aw := strings.Join(awaited, " ")

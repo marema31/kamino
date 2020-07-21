@@ -20,11 +20,11 @@ func setupLoad(path string, filename string) (context.Context, *logrus.Entry, da
 	ds4 := mockdatasource.MockDatasource{Name: "ds4", Database: "db4", User: "user4", Tags: []string{"tag3"}}
 	dscache := mockdatasource.MockDatasource{Name: "dscache", FilePath: "db4", Tags: []string{"tagcache"}}
 
-	dss.Insert([]string{"tag1", "tag2"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds2})
-	dss.Insert([]string{"tag3"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds3, &ds4})
-	dss.Insert([]string{"tagsource"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds1})
-	dss.Insert([]string{"tagcache"}, []datasource.Type{datasource.File}, []datasource.Engine{datasource.JSON}, []*mockdatasource.MockDatasource{&dscache})
-	dss.Insert([]string{""}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds2})
+	dss.Insert(true, []string{"tag1", "tag2"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds2})
+	dss.Insert(true, []string{"tag3"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds3, &ds4})
+	dss.Insert(true, []string{"tagsource"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds1})
+	dss.Insert(true, []string{"tagcache"}, []datasource.Type{datasource.File}, []datasource.Engine{datasource.JSON}, []*mockdatasource.MockDatasource{&dscache})
+	dss.Insert(true, []string{""}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds2})
 	v := viper.New()
 	v.SetConfigName(filename) // The file will be named [filename].json, [filename].yaml or [filename.toml]
 	v.AddConfigPath(path)

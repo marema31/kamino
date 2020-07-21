@@ -45,7 +45,7 @@ type FilterConfig struct {
 
 var errDatasource = errors.New("NOT CORRECT NUMBER OF DATASOURCES")
 
-func getDatasources(log *logrus.Entry, dss datasource.Datasourcers, tags []string, engines []string, dsTypes []string, objectType string, unique bool, limitedTags []string) ([]datasource.Datasourcer, error) {
+func getDatasources(log *logrus.Entry, dss datasource.Datasourcers, tags []string, engines []string, dsTypes []string, objectType string, unique bool, limitedTags []string) (limited []datasource.Datasourcer, notLimited []datasource.Datasourcer, err error) {
 	if len(tags) == 0 {
 		tags = []string{""}
 	}
@@ -53,103 +53,126 @@ func getDatasources(log *logrus.Entry, dss datasource.Datasourcers, tags []strin
 	e, err := datasource.StringsToEngines(engines)
 	if err != nil {
 		log.Error(err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	t, err := datasource.StringsToTypes(dsTypes)
 	if err != nil {
 		log.Error(err)
-		return nil, err
+		return nil, nil, err
 	}
 
-	datasources := dss.Lookup(log, tags, limitedTags, t, e)
+	limited, notLimited = dss.Lookup(log, tags, limitedTags, t, e)
 
-	log.Debugf("Found %d %s", len(datasources), objectType)
+	log.Debugf("Found %d %s (from %d available)", len(limited), objectType, len(notLimited))
 
-	if len(datasources) == 0 {
+	if len(limited) == 0 && len(notLimited) == 0 {
 		log.Errorf("no %s found", objectType)
-		return nil, fmt.Errorf("no %s found: %w", objectType, errDatasource)
+		return nil, nil, fmt.Errorf("no %s found: %w", objectType, errDatasource)
 	}
 
-	if unique && len(datasources) != 1 {
+	if unique && len(limited) != 1 {
 		log.Errorf("too many %ss found", objectType)
-		return nil, fmt.Errorf("too many %ss found: %w", objectType, errDatasource)
+		return nil, nil, fmt.Errorf("too many %ss found: %w", objectType, errDatasource)
 	}
 
-	return datasources, nil
+	return limited, notLimited, nil
 }
 
-func parseSourceConfig(log *logrus.Entry, objectType string, v *viper.Viper, dss datasource.Datasourcers) (parsedSourceConfig, error) {
+func parseSourceConfig(log *logrus.Entry, objectType string, v *viper.Viper, dss datasource.Datasourcers) (parsedSourceConfig, parsedSourceConfig, error) {
 	var (
-		parsedSource parsedSourceConfig
-		source       SourceConfig
+		parsedLimitedSource    parsedSourceConfig
+		parsedNotLimitedSource parsedSourceConfig
+		source                 SourceConfig
 	)
 
 	err := v.Unmarshal(&source)
 	if err != nil {
 		log.Error(err)
-		return parsedSource, err
+		return parsedLimitedSource, parsedNotLimitedSource, err
 	}
 
-	datasources, err := getDatasources(log, dss, source.Tags, source.Engines, source.Types, objectType, true, nil)
+	limited, notLimited, err := getDatasources(log, dss, source.Tags, source.Engines, source.Types, objectType, true, nil)
 	if err != nil {
-		return parsedSource, err
+		return parsedLimitedSource, parsedNotLimitedSource, err
 	}
 
-	parsedSource.ds = datasources[0]
-	parsedSource.table = source.Table
-	parsedSource.where = source.Where
+	parsedLimitedSource.ds = limited[0]
+	parsedLimitedSource.table = source.Table
+	parsedLimitedSource.where = source.Where
+	parsedNotLimitedSource.ds = limited[0]
+	parsedNotLimitedSource.table = source.Table
+	parsedNotLimitedSource.where = source.Where
 
-	return parsedSource, nil
+	if len(notLimited) != 0 {
+		parsedNotLimitedSource.ds = notLimited[0]
+	}
+
+	return parsedLimitedSource, parsedNotLimitedSource, nil
 }
 
-func parseDestConfig(log *logrus.Entry, v *viper.Viper, dss datasource.Datasourcers, force bool, limitedTags []string) ([]parsedDestConfig, error) {
+func addParsedDest(log *logrus.Entry, parseDests []parsedDestConfig, datasource datasource.Datasourcer, dest DestinationConfig, tqueries []common.TemplateSkipQuery, force bool) ([]parsedDestConfig, error) {
+	var p parsedDestConfig
+	p.ds = datasource
+	p.table = dest.Table
+	p.key = dest.Key
+
+	p.mode = strings.ToLower(dest.Mode)
+	if p.mode == "onlyifempty" && force {
+		p.mode = "truncate"
+	}
+
+	tmplValues := datasource.FillTmplValues()
+
+	queries, err := common.RenderQueries(log, tqueries, tmplValues)
+	if err != nil {
+		return parseDests, err
+	}
+
+	p.queries = queries
+
+	return append(parseDests, p), err
+}
+
+func parseDestConfig(log *logrus.Entry, v *viper.Viper, dss datasource.Datasourcers, force bool, limitedTags []string) ([]parsedDestConfig, []parsedDestConfig, error) {
 	var dests []DestinationConfig
 
-	parsedDests := make([]parsedDestConfig, 0)
+	parsedLimitedDests := make([]parsedDestConfig, 0)
+	parsedNotLimitedDests := make([]parsedDestConfig, 0)
 
 	err := v.UnmarshalKey("destinations", &dests)
 	if err != nil {
 		log.Error(err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	for _, dest := range dests {
 		tqueries, err := common.ParseQueries(log, dest.Queries)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
-		datasources, err := getDatasources(log, dss, dest.Tags, dest.Engines, dest.Types, "destination", false, limitedTags)
+		limited, notLimited, err := getDatasources(log, dss, dest.Tags, dest.Engines, dest.Types, "destination", false, limitedTags)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
-		for _, datasource := range datasources {
-			var p parsedDestConfig
-			p.ds = datasource
-			p.table = dest.Table
-			p.key = dest.Key
-
-			p.mode = strings.ToLower(dest.Mode)
-			if p.mode == "onlyifempty" && force {
-				p.mode = "truncate"
-			}
-
-			tmplValues := datasource.FillTmplValues()
-
-			queries, err := common.RenderQueries(log, tqueries, tmplValues)
+		for _, datasource := range limited {
+			parsedLimitedDests, err = addParsedDest(log, parsedLimitedDests, datasource, dest, tqueries, force)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
+		}
 
-			p.queries = queries
-
-			parsedDests = append(parsedDests, p)
+		for _, datasource := range notLimited {
+			parsedNotLimitedDests, err = addParsedDest(log, parsedNotLimitedDests, datasource, dest, tqueries, force)
+			if err != nil {
+				return nil, nil, err
+			}
 		}
 	}
 
-	return parsedDests, nil
+	return parsedLimitedDests, parsedNotLimitedDests, nil
 }
 
 func getFilters(log *logrus.Entry, v *viper.Viper) ([]filter.Filter, error) {
@@ -212,7 +235,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 
 	sub := v.Sub("source")
 
-	step.sourceCfg, err = parseSourceConfig(logStep, "source", sub, dss)
+	parsedLimitedSrcCfg, parsedNotLimitedSrcCfg, err := parseSourceConfig(logStep, "source", sub, dss)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -224,7 +247,7 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 		step.allowCacheOnly = v.GetBool("cache.allowonly")
 		sub = v.Sub("cache")
 
-		step.cacheCfg, err = parseSourceConfig(logStep, "cache", sub, dss)
+		_, step.cacheCfg, err = parseSourceConfig(logStep, "cache", sub, dss)
 		if err != nil {
 			return 0, nil, err
 		}
@@ -241,12 +264,40 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 
 	log.Debug("Lookup destinations")
 
-	step.destsCfg, err = parseDestConfig(logStep, v, dss, force, limitedTags)
+	parsedLimitedDestsCfg, parsedNotLimitedDestsCfg, err := parseDestConfig(logStep, v, dss, force, limitedTags)
 	if err != nil {
 		return 0, nil, err
 	}
 
+	step.sourceCfg = parsedLimitedSrcCfg
+	step.destsCfg = parsedLimitedDestsCfg
+
 	steps = make([]common.Steper, 0, 1)
+
+	if len(limitedTags) != 0 {
+		switch {
+		case parsedLimitedSrcCfg.ds == nil && len(parsedLimitedDestsCfg) == 0:
+			log.Debug("Skipping since no tags selected")
+			return priority, steps, nil
+		case parsedLimitedSrcCfg.ds != nil && len(parsedLimitedDestsCfg) == 0:
+			step.sourceCfg = parsedLimitedSrcCfg
+			step.destsCfg = parsedNotLimitedDestsCfg
+		case parsedLimitedSrcCfg.ds == nil && len(parsedLimitedDestsCfg) != 0:
+			step.sourceCfg = parsedNotLimitedSrcCfg
+			step.destsCfg = parsedLimitedDestsCfg
+		}
+	}
+
+	if step.sourceCfg.ds == nil {
+		log.Error("No source found")
+		return 0, nil, fmt.Errorf("no source found: %w", errDatasource)
+	}
+
+	if len(step.destsCfg) == 0 {
+		log.Error("No destination found")
+		return 0, nil, fmt.Errorf("no destination found: %w", errDatasource)
+	}
+
 	steps = append(steps, &step)
 
 	return priority, steps, nil

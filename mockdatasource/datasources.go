@@ -12,14 +12,16 @@ import (
 // MockDatasources is fake datasources object for test purpose.
 type MockDatasources struct {
 	// Datasource tag dictionary for lookup
-	precordedAnswers map[string][]*MockDatasource
+	precordedAnswersLimited    map[string][]*MockDatasource
+	precordedAnswersNotLimited map[string][]*MockDatasource
 }
 
 // New returns a new Datasources object with elments initialized.
 func New() *MockDatasources {
 	var dss MockDatasources
 
-	dss.precordedAnswers = make(map[string][]*MockDatasource)
+	dss.precordedAnswersLimited = make(map[string][]*MockDatasource)
+	dss.precordedAnswersNotLimited = make(map[string][]*MockDatasource)
 
 	return &dss
 }
@@ -58,19 +60,31 @@ func getIndex(tags []string, dsTypes []datasource.Type, engines []datasource.Eng
 
 //Lookup : return the corresponding array of Mocked datasources
 //WARNING: the algorithm of lookup is much simpler than the one from the object, all the parameters must be exactly the same !
-func (dss *MockDatasources) Lookup(log *logrus.Entry, tags []string, limitedTags []string, dsTypes []datasource.Type, engines []datasource.Engine) []datasource.Datasourcer {
+func (dss *MockDatasources) Lookup(log *logrus.Entry, tags []string, limitedTags []string, dsTypes []datasource.Type, engines []datasource.Engine) ([]datasource.Datasourcer, []datasource.Datasourcer) {
 	index := getIndex(tags, dsTypes, engines)
-	dsr := make([]datasource.Datasourcer, 0, len(dss.precordedAnswers[index]))
+	dsrl := make([]datasource.Datasourcer, 0, len(dss.precordedAnswersLimited[index]))
 
-	for _, ds := range dss.precordedAnswers[index] {
-		dsr = append(dsr, ds)
+	for _, ds := range dss.precordedAnswersLimited[index] {
+		dsrl = append(dsrl, ds)
 	}
 
-	return dsr
+	dsrn := make([]datasource.Datasourcer, 0, len(dss.precordedAnswersNotLimited[index]))
+
+	for _, ds := range dss.precordedAnswersNotLimited[index] {
+		dsrn = append(dsrn, ds)
+	}
+
+	return dsrl, dsrn
 }
 
 //Insert add a Mocked datasource to the array.
-func (dss *MockDatasources) Insert(tags []string, dsTypes []datasource.Type, engines []datasource.Engine, ds []*MockDatasource) {
+func (dss *MockDatasources) Insert(limited bool, tags []string, dsTypes []datasource.Type, engines []datasource.Engine, ds []*MockDatasource) {
 	index := getIndex(tags, dsTypes, engines)
-	dss.precordedAnswers[index] = ds
+
+	if limited {
+		dss.precordedAnswersLimited[index] = ds
+		return
+	}
+
+	dss.precordedAnswersNotLimited[index] = ds
 }

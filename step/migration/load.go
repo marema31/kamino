@@ -116,7 +116,8 @@ func Load(ctx context.Context, log *logrus.Entry, recipePath string, name string
 
 	renderedFolder := bytes.NewBuffer(make([]byte, 0, 1024))
 
-	for index, datasource := range dss.Lookup(log, tags, limitedTags, []datasource.Type{datasource.Database}, e) {
+	lookedUp, _ := dss.Lookup(log, tags, limitedTags, []datasource.Type{datasource.Database}, e)
+	for index, datasource := range lookedUp {
 		var step Step
 
 		step.Name = fmt.Sprintf("%s:%d", name, nameIndex+index)

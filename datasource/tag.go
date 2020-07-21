@@ -197,7 +197,7 @@ func (dss *Datasources) lookupLimited(log *logrus.Entry, tagList []string, limit
 
 //Lookup return a list of *Datasource that correspond to the
 // list of tag expression.
-func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags []string, dsTypes []Type, engines []Engine) []Datasourcer {
+func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags []string, dsTypes []Type, engines []Engine) (selectedDs []Datasourcer, notLimitedDs []Datasourcer) {
 	logLookup := log.WithField("lookup", "tags")
 
 	var selected []string
@@ -215,7 +215,8 @@ func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags 
 	logLookup.Debug("Final datasources list:")
 
 	finalDsList := make([]string, 0, len(selected))
-	selectedDs := make([]Datasourcer, 0, len(selected))
+	selectedDs = make([]Datasourcer, 0, len(selected))
+	notLimitedDs = make([]Datasourcer, 0, len(selected))
 
 	for _, dsName := range selected {
 		inLimit := true
@@ -230,6 +231,8 @@ func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags 
 			}
 		}
 
+		notLimitedDs = append(notLimitedDs, dss.datasources[dsName])
+
 		if inLimit {
 			finalDsList = append(finalDsList, dsName)
 			selectedDs = append(selectedDs, dss.datasources[dsName])
@@ -238,5 +241,5 @@ func (dss *Datasources) Lookup(log *logrus.Entry, tagList []string, limitedTags 
 
 	logLookup.Debug(strings.Join(finalDsList, ","))
 
-	return selectedDs
+	return selectedDs, notLimitedDs
 }

@@ -25,14 +25,14 @@ func setupDo(path string, filename string) (context.Context, *logrus.Entry, data
 	dscachenotexist := mockdatasource.MockDatasource{Name: "dscachenotexist", FilePath: "db4", Tags: []string{"tagcachenotexist"}, FileNotExists: true}
 	dserrorfile := mockdatasource.MockDatasource{Name: "dserror", FilePath: "db4", Tags: []string{"tagcache"}, ErrorOpenFile: fmt.Errorf("fake error")}
 
-	dss.Insert([]string{"tag1", "tag2"}, []datasource.Type{datasource.Database}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&ds2})
-	dss.Insert([]string{"tag3"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds3, &ds4})
-	dss.Insert([]string{"tagsource"}, []datasource.Type{datasource.Database}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&ds1})
-	dss.Insert([]string{"tagcache"}, []datasource.Type{datasource.File}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&dscache})
-	dss.Insert([]string{"tagcachenotexist"}, []datasource.Type{datasource.File}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&dscachenotexist})
-	dss.Insert([]string{"tagerror"}, []datasource.Type{datasource.Database}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&ds5})
-	dss.Insert([]string{"tagerrorfile"}, []datasource.Type{datasource.File}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&dserrorfile})
-	dss.Insert([]string{""}, []datasource.Type{datasource.Database}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&ds2})
+	dss.Insert(true, []string{"tag1", "tag2"}, []datasource.Type{datasource.Database}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&ds2})
+	dss.Insert(true, []string{"tag3"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds3, &ds4})
+	dss.Insert(true, []string{"tagsource"}, []datasource.Type{datasource.Database}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&ds1})
+	dss.Insert(true, []string{"tagcache"}, []datasource.Type{datasource.File}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&dscache})
+	dss.Insert(true, []string{"tagcachenotexist"}, []datasource.Type{datasource.File}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&dscachenotexist})
+	dss.Insert(true, []string{"tagerror"}, []datasource.Type{datasource.Database}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&ds5})
+	dss.Insert(true, []string{"tagerrorfile"}, []datasource.Type{datasource.File}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&dserrorfile})
+	dss.Insert(true, []string{""}, []datasource.Type{datasource.Database}, []datasource.Engine{}, []*mockdatasource.MockDatasource{&ds2})
 	v := viper.New()
 	v.SetConfigName(filename)
 	v.AddConfigPath(path)

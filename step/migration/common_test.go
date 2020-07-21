@@ -15,8 +15,8 @@ func setupDo(path string, filename string) (context.Context, *logrus.Entry, data
 	ds1 := mockdatasource.MockDatasource{Name: "ds1", Database: "db1", User: "user1", UserPw: "security4ever", Transaction: false, Tags: []string{"tag1"}}
 	ds3 := mockdatasource.MockDatasource{Name: "ds3", Database: "db1", User: "user1", UserPw: "security4ever", Transaction: true, Tags: []string{"tag3"}}
 
-	dss.Insert([]string{"tag1"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds1})
-	dss.Insert([]string{"tag3"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds3})
+	dss.Insert(true, []string{"tag1"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds1})
+	dss.Insert(true, []string{"tag3"}, []datasource.Type{datasource.Database}, []datasource.Engine{datasource.Mysql}, []*mockdatasource.MockDatasource{&ds3})
 	v := viper.New()
 	v.SetConfigName(filename)
 	v.AddConfigPath(path)
