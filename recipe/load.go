@@ -111,7 +111,7 @@ func (ck *Cookbook) loadOneRecipe(ctx context.Context, log *logrus.Entry, config
 
 	for _, file := range files {
 		ext := filepath.Ext(file.Name())
-		if file.Mode().IsRegular() && (ext == ".yml" || ext == ".yaml" || ext == ".json" || ext == ".toml") {
+		if !file.Mode().IsDir() && (ext == ".yml" || ext == ".yaml" || ext == ".json" || ext == ".toml") {
 			name := strings.TrimSuffix(file.Name(), ext)
 			logRecipe := log.WithField("step", name)
 
